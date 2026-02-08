@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="format-detection" content="telephone=no">
+<title>Doppelganger - 性格診断</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a0f;--surface:#12121e;--surface2:#1a1a2e;--surface3:#242440;--accent:#6c5ce7;--accent2:#a29bfe;--pink:#e84393;--text:#e8e8ef;--text2:#7a7a9e;--success:#00b894;--warning:#fdcb6e;--danger:#e17055;--radius:14px;--shadow:0 8px 32px rgba(0,0,0,.5)}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;touch-action:manipulation}
+.screen{display:none;min-height:100vh;min-height:100dvh;padding:20px;padding-top:env(safe-area-inset-top,20px);position:relative}
+.screen.active{display:flex;flex-direction:column;align-items:center;justify-content:center}
+@keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeOut{from{opacity:1}to{opacity:0}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+@keyframes slideIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes glow{0%,100%{box-shadow:0 0 20px rgba(108,92,231,.2)}50%{box-shadow:0 0 40px rgba(108,92,231,.5)}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes ripple{0%{transform:scale(0);opacity:.6}100%{transform:scale(2.5);opacity:0}}
+@keyframes typeReveal{from{opacity:0;transform:scale(.9) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes barGrow{from{width:0}to{width:var(--target)}}
+
+/* === Background Particles === */
+#particles{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.screen{z-index:1}
+
+/* === Start Screen === */
+.start-content{text-align:center;max-width:500px;animation:fadeIn .8s ease}
+.logo-wrap{margin-bottom:24px}
+.logo{font-size:clamp(2rem,7vw,3rem);font-weight:900;letter-spacing:-.03em;background:linear-gradient(135deg,#6c5ce7,#a29bfe,#fd79a8,#e84393);background-size:200% 200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:float 4s ease-in-out infinite}
+.logo-sub{font-size:.75rem;letter-spacing:.3em;color:var(--text2);text-transform:uppercase;margin-top:4px}
+.subtitle{font-size:.95rem;color:var(--text2);margin-bottom:36px;line-height:1.8}
+.start-btn{padding:18px 56px;font-size:1.1rem;font-weight:700;border:none;border-radius:50px;background:-webkit-linear-gradient(135deg,var(--accent),#a29bfe);background:linear-gradient(135deg,var(--accent),#a29bfe);color:#fff;cursor:pointer;transition:all .3s;-webkit-appearance:none;box-shadow:0 4px 20px rgba(108,92,231,.4);position:relative;overflow:hidden}
+.start-btn:hover{transform:translateY(-3px);box-shadow:0 8px 30px rgba(108,92,231,.6)}
+.start-btn:active{transform:translateY(0)}
+.start-info{margin-top:28px;font-size:.8rem;color:var(--text2);line-height:1.6;opacity:.7}
+
+/* === Question Screen === */
+.question-screen{justify-content:flex-start;padding-top:16px}
+.progress-area{width:100%;max-width:600px;margin-bottom:20px}
+.progress-info{display:flex;justify-content:space-between;align-items:center;font-size:.8rem;color:var(--text2);margin-bottom:8px}
+.progress-bar{width:100%;height:5px;background:var(--surface2);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--pink));border-radius:3px;transition:width .5s cubic-bezier(.4,0,.2,1)}
+.layer-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:600;border:1px solid var(--surface3);color:var(--text2);margin-bottom:6px}
+.question-container{width:100%;max-width:600px;flex:1;display:flex;flex-direction:column;align-items:center;animation:fadeIn .3s ease}
+.q-cat{font-size:.75rem;color:var(--accent2);margin-bottom:10px;letter-spacing:.08em;text-transform:uppercase}
+.q-text{font-size:1rem;line-height:1.8;color:var(--text);text-align:center;margin-bottom:24px;padding:0 12px;min-height:60px}
+.choices{width:100%;max-width:520px}
+.choice-labels{display:flex;justify-content:space-between;gap:16px;margin-bottom:14px;padding:0 6px}
+.choice-label{font-size:.78rem;color:var(--text2);line-height:1.5;max-width:46%}
+.choice-label.right{text-align:right}
+.answer-btns{display:flex;gap:10px;justify-content:center;margin-bottom:16px}
+.answer-btn{width:52px;height:52px;border:2px solid var(--surface3);border-radius:50%;background:var(--surface);color:var(--text2);font-size:.95rem;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;position:relative;-webkit-appearance:none;touch-action:manipulation}
+.answer-btn:hover{border-color:var(--accent);color:var(--text);transform:scale(1.1)}
+.answer-btn.selected{color:#fff;transform:scale(1.1);animation:pulse .3s ease}
+.answer-btn:nth-child(1).selected{background:var(--accent);border-color:var(--accent)}
+.answer-btn:nth-child(2).selected{background:#7c6ef0;border-color:#7c6ef0}
+.answer-btn:nth-child(3).selected{background:var(--surface3);border-color:var(--accent2);color:var(--accent2)}
+.answer-btn:nth-child(4).selected{background:#c0539b;border-color:#c0539b}
+.answer-btn:nth-child(5).selected{background:var(--pink);border-color:var(--pink)}
+.scale-labels{display:flex;justify-content:space-between;font-size:.65rem;color:var(--text2);padding:0 10px;margin-bottom:20px;opacity:.6}
+.nav-btns{display:flex;gap:12px;margin-top:auto;padding:16px 0 24px}
+.nav-btn{padding:10px 24px;border:1px solid var(--surface3);border-radius:50px;background:transparent;color:var(--text2);cursor:pointer;font-size:.85rem;transition:all .2s;-webkit-appearance:none;touch-action:manipulation}
+.nav-btn:hover{border-color:var(--accent);color:var(--text)}
+.nav-btn:disabled{opacity:.25;cursor:not-allowed}
+.nav-btn:disabled:hover{border-color:var(--surface3);color:var(--text2)}
+
+/* === Analyzing Screen === */
+.analyzing{text-align:center;animation:fadeIn .5s ease}
+.analyze-spinner{width:80px;height:80px;border:3px solid var(--surface3);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 24px}
+.analyze-text{color:var(--text2);font-size:.9rem;line-height:1.6}
+.analyze-step{color:var(--accent2);font-size:.85rem;margin-top:8px;min-height:1.2em}
+
+/* === Result Screen === */
+.result-screen{justify-content:flex-start;padding:20px 16px 40px}
+.result-card{width:100%;max-width:520px;background:linear-gradient(145deg,var(--surface),var(--surface2));border:1px solid var(--surface3);border-radius:20px;padding:36px 28px;box-shadow:var(--shadow);animation:typeReveal .8s cubic-bezier(.2,.8,.2,1)}
+/* Type Illustration */
+.type-illust{width:100px;height:100px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;border-radius:50%;position:relative;font-size:2.8rem;animation:float 4s ease-in-out infinite}
+.type-illust.fam-Architects{background:radial-gradient(circle,rgba(108,92,231,.15),rgba(108,92,231,.05));border:2px solid rgba(108,92,231,.3);box-shadow:0 0 30px rgba(108,92,231,.15)}
+.type-illust.fam-Mystics{background:radial-gradient(circle,rgba(232,67,147,.15),rgba(232,67,147,.05));border:2px solid rgba(232,67,147,.3);box-shadow:0 0 30px rgba(232,67,147,.15)}
+.type-illust.fam-Commanders{background:radial-gradient(circle,rgba(0,184,148,.15),rgba(0,184,148,.05));border:2px solid rgba(0,184,148,.3);box-shadow:0 0 30px rgba(0,184,148,.15)}
+.type-illust.fam-Catalysts{background:radial-gradient(circle,rgba(253,203,110,.15),rgba(253,203,110,.05));border:2px solid rgba(253,203,110,.3);box-shadow:0 0 30px rgba(253,203,110,.15)}
+.type-illust-ring{position:absolute;width:100%;height:100%;border-radius:50%;border:1px solid;opacity:.3;animation:spin 20s linear infinite}
+.result-family{font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;margin-bottom:6px;text-align:center;font-weight:600}
+.result-type-num{font-size:.8rem;color:var(--text2);text-align:center;margin-bottom:6px}
+.result-type-name{font-size:clamp(1.5rem,5vw,2rem);font-weight:900;text-align:center;margin-bottom:4px;background:linear-gradient(135deg,var(--accent),var(--accent2),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.result-type-en{font-size:.9rem;color:var(--text2);text-align:center;margin-bottom:16px;font-style:italic}
+.result-catch{font-size:.95rem;color:var(--warning);text-align:center;margin-bottom:28px;line-height:1.6;padding:12px 16px;background:rgba(253,203,110,.06);border-radius:var(--radius);border:1px solid rgba(253,203,110,.15)}
+.axis-pills{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:24px}
+.axis-pill{padding:6px 14px;border-radius:20px;font-size:.75rem;font-weight:600;background:var(--surface);border:1px solid var(--surface3)}
+.result-section{margin-bottom:18px}
+.result-section h3{font-size:.78rem;color:var(--accent2);margin-bottom:8px;letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center;gap:6px}
+.result-section h3::before{content:'';display:inline-block;width:3px;height:14px;background:var(--accent);border-radius:2px}
+.result-section p{font-size:.88rem;line-height:1.75;color:var(--text)}
+.result-quote{background:var(--surface);border-left:3px solid var(--accent);padding:14px 18px;border-radius:0 var(--radius) var(--radius) 0;font-style:italic;color:var(--text2);font-size:.88rem;margin:20px 0;line-height:1.5}
+
+/* Jobs Section */
+.jobs-section{margin-top:18px}
+.jobs-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.job-tag{padding:6px 14px;border-radius:20px;font-size:.78rem;background:var(--surface);border:1px solid var(--surface3);color:var(--text);transition:all .2s}
+
+/* Compatibility Section */
+.compat-section{margin-top:20px;padding:20px;background:linear-gradient(135deg,rgba(108,92,231,.05),rgba(0,184,148,.05));border:1px solid rgba(108,92,231,.2);border-radius:var(--radius)}
+.compat-title{font-size:.8rem;color:var(--accent);font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.compat-item{margin-bottom:16px;padding:12px;background:var(--surface);border-radius:10px;border:1px solid var(--surface3)}
+.compat-label{font-size:.7rem;color:var(--accent2);font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
+.compat-type{font-size:.9rem;font-weight:700;color:var(--text);margin-bottom:4px}
+.compat-reason{font-size:.82rem;color:var(--text2);line-height:1.6}
+
+/* Contradiction Fingerprint */
+.contradiction-section{margin-top:24px;padding:20px;background:linear-gradient(135deg,rgba(232,67,147,.05),rgba(108,92,231,.05));border:1px solid rgba(232,67,147,.2);border-radius:var(--radius)}
+.contradiction-title{font-size:.8rem;color:var(--pink);font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.contradiction-item{margin-bottom:16px;padding:12px 14px;background:rgba(232,67,147,.03);border-radius:10px;border:1px solid rgba(232,67,147,.1)}
+.contradiction-header{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.contradiction-icon{color:var(--pink);font-size:1rem;flex-shrink:0}
+.contradiction-name{font-size:.75rem;color:var(--pink);font-weight:600}
+.contradiction-level{font-size:.65rem;padding:2px 8px;border-radius:10px;font-weight:600}
+.contradiction-level.large{background:rgba(232,67,147,.2);color:var(--pink)}
+.contradiction-level.medium{background:rgba(253,203,110,.2);color:var(--warning)}
+.contradiction-level.small{background:rgba(162,155,254,.2);color:var(--accent2)}
+.contradiction-text{font-size:.85rem;line-height:1.7;color:var(--text)}
+.no-contradiction{color:var(--text2);font-size:.82rem;font-style:italic}
+
+/* Radar Chart */
+.radar-wrap{width:100%;max-width:520px;margin:20px auto;background:var(--surface);border:1px solid var(--surface3);border-radius:var(--radius);padding:20px;text-align:center}
+.radar-wrap h3{font-size:.8rem;color:var(--accent2);margin-bottom:12px;letter-spacing:.06em}
+canvas#radarChart{max-width:320px;width:100%;height:auto}
+
+/* P-Score Spectrum (Bidirectional) */
+.spectrum-wrap{width:100%;max-width:520px;margin:20px auto;background:var(--surface);border:1px solid var(--surface3);border-radius:var(--radius);padding:20px}
+.spectrum-wrap h3{font-size:.8rem;color:var(--accent2);margin-bottom:6px;letter-spacing:.06em}
+.spectrum-note{font-size:.7rem;color:var(--text2);margin-bottom:16px;text-align:center;opacity:.7}
+.spectrum-row{margin-bottom:16px}
+.spectrum-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.spectrum-name{font-size:.75rem;color:var(--text2);font-weight:600}
+.spectrum-val{font-size:.7rem;color:var(--accent2);font-weight:600}
+.spectrum-labels{display:flex;justify-content:space-between;font-size:.68rem;margin-bottom:3px}
+.spectrum-lo{color:var(--accent2)}
+.spectrum-hi{color:var(--pink)}
+.spectrum-bar{position:relative;width:100%;height:8px;background:var(--surface2);border-radius:4px;overflow:visible}
+.spectrum-center{position:absolute;left:50%;top:-2px;width:1px;height:12px;background:var(--text2);opacity:.4;z-index:2}
+.spectrum-fill{position:absolute;top:0;height:100%;border-radius:4px;transition:all 1s cubic-bezier(.4,0,.2,1)}
+.spectrum-desc{font-size:.7rem;color:var(--text2);margin-top:4px;line-height:1.4;font-style:italic}
+
+/* P-Score Bars (raw detail) */
+.pscores-toggle{margin:16px auto 0;display:block;padding:10px 24px;border:1px solid var(--surface3);border-radius:50px;background:transparent;color:var(--text2);cursor:pointer;font-size:.8rem;transition:all .2s;-webkit-appearance:none;touch-action:manipulation}
+.pscores-toggle:hover{border-color:var(--accent);color:var(--text)}
+.pscores-detail{display:none;width:100%;max-width:520px;margin:16px auto 0;background:var(--surface);border:1px solid var(--surface3);border-radius:var(--radius);padding:20px}
+.pscores-detail.show{display:block;animation:fadeIn .4s ease}
+.pscore-row{display:flex;align-items:center;margin-bottom:8px;font-size:.78rem}
+.pscore-label{width:120px;color:var(--text2);flex-shrink:0}
+.pscore-bar-bg{flex:1;height:7px;background:var(--surface2);border-radius:4px;overflow:hidden;margin:0 10px}
+.pscore-bar-fill{height:100%;border-radius:4px;transition:width 1s cubic-bezier(.4,0,.2,1)}
+.pscore-val{width:32px;text-align:right;color:var(--text2);font-size:.75rem;font-weight:600}
+
+/* Retry */
+.retry-btn{margin:24px auto 0;display:block;padding:14px 40px;border:1px solid var(--accent);border-radius:50px;background:transparent;color:var(--accent2);cursor:pointer;font-size:.9rem;transition:all .3s}
+.retry-btn:hover{background:var(--accent);color:#fff}
+
+/* === Break Screen (Quote Card) === */
+.break-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(10,10,15,.92);z-index:100;display:flex;align-items:center;justify-content:center;animation:fadeIn .5s ease}
+.break-card{max-width:420px;width:90%;text-align:center;padding:40px 28px;background:linear-gradient(145deg,var(--surface),var(--surface2));border:1px solid var(--surface3);border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.6);animation:typeReveal .6s cubic-bezier(.2,.8,.2,1)}
+.break-progress-label{font-size:.75rem;color:var(--accent2);letter-spacing:.15em;text-transform:uppercase;margin-bottom:16px}
+.break-emoji{font-size:2.5rem;margin-bottom:16px;animation:float 3s ease-in-out infinite}
+.break-quote{font-size:1rem;line-height:1.8;color:var(--text);font-style:italic;margin-bottom:12px;padding:0 8px}
+.break-author{font-size:.8rem;color:var(--text2);margin-bottom:24px}
+.break-btn{padding:14px 40px;border:1px solid var(--accent);border-radius:50px;background:transparent;color:var(--accent2);cursor:pointer;font-size:.9rem;transition:all .3s;-webkit-appearance:none;touch-action:manipulation}
+.break-btn:hover{background:var(--accent);color:#fff}
+
+/* Mobile tweaks */
+@media(max-width:420px){
+  .answer-btn{width:46px;height:46px;font-size:.85rem}
+  .result-card{padding:28px 20px}
+  .choice-label{font-size:.72rem}
+}
+</style>
+</head>
+<body>
+
+<canvas id="particles"></canvas>
+
+<!-- Start -->
+<div id="startScreen" class="screen active">
+<div class="start-content">
+  <div class="logo-wrap">
+    <div class="logo">Doppelganger</div>
+    <div class="logo-sub">Personality Architecture</div>
+  </div>
+  <p class="subtitle">12次元の精神構造を解析し、<br>32タイプの中から<strong>あなたの本当の姿</strong>を映し出す</p>
+  <button class="start-btn" onclick="startDiagnosis()">診断を始める</button>
+  <p class="start-info">121問 ｜ 所要時間 約30〜40分<br>途中で戻ることもできます</p>
+</div>
+</div>
+
+<!-- Questions -->
+<div id="questionScreen" class="screen question-screen">
+<div class="progress-area">
+  <div class="progress-info">
+    <span id="progressText">1 / 121</span>
+    <span id="layerBadge" class="layer-badge"></span>
+    <span id="progressPct">0%</span>
+  </div>
+  <div class="progress-bar"><div id="progressFill" class="progress-fill" style="width:0%"></div></div>
+</div>
+<div class="question-container" id="questionContainer">
+  <div id="qCat" class="q-cat"></div>
+  <div id="qText" class="q-text"></div>
+  <div class="choices">
+    <div class="choice-labels">
+      <span id="labelA" class="choice-label"></span>
+      <span id="labelB" class="choice-label right"></span>
+    </div>
+    <div class="answer-btns" id="answerBtns">
+      <button class="answer-btn" onclick="answer(1)">1</button>
+      <button class="answer-btn" onclick="answer(2)">2</button>
+      <button class="answer-btn" onclick="answer(3)">3</button>
+      <button class="answer-btn" onclick="answer(4)">4</button>
+      <button class="answer-btn" onclick="answer(5)">5</button>
+    </div>
+    <div class="scale-labels"><span>A寄り</span><span>どちらでもない</span><span>B寄り</span></div>
+  </div>
+</div>
+<div class="nav-btns">
+  <button id="prevBtn" class="nav-btn" onclick="prevQ()" disabled>&larr; 戻る</button>
+  <button class="nav-btn" onclick="skipQ()">スキップ &rarr;</button>
+</div>
+</div>
+
+<!-- Break Overlay -->
+<div id="breakOverlay" class="break-overlay" style="display:none">
+<div class="break-card">
+  <div class="break-progress-label" id="breakLabel"></div>
+  <div class="break-emoji" id="breakEmoji"></div>
+  <div class="break-quote" id="breakQuote"></div>
+  <div class="break-author" id="breakAuthor"></div>
+  <button class="break-btn" onclick="closeBreak()">続ける</button>
+</div>
+</div>
+
+<!-- Analyzing -->
+<div id="analyzeScreen" class="screen">
+<div class="analyzing">
+  <div class="analyze-spinner"></div>
+  <div class="analyze-text">あなたの精神構造を解析しています...</div>
+  <div class="analyze-step" id="analyzeStep"></div>
+</div>
+</div>
+
+<!-- Result -->
+<div id="resultScreen" class="screen result-screen"></div>
+
+<script>
+// ============================================================
+// QUESTIONS DATA - 121 questions (v2.0 scenario-based)
+// ============================================================
+const Q=[
+// --- Layer 1: Core OS ---
+// 対人距離 Q1-Q10 → P3, P6
+{id:'Q1',cat:'対人距離',layer:'Core OS',text:'予定のない休日の朝。目が覚めて最初にすることは？',a:'誰にも連絡せず、一人で好きなことに没頭する',b:'「今日暇な人いる？」とグループLINEに送る',pv:[{p:'P3',d:1},{p:'P6',d:1}]},
+{id:'Q2',cat:'対人距離',layer:'Core OS',text:'友人と3時間カフェにいる。最高の3時間はどっち？',a:'人生観や本音を語り合い、気づいたら3時間経っていた',b:'次々と話題が変わり、笑いっぱなしで3時間が飛んだ',pv:[{p:'P3',d:1}]},
+{id:'Q3',cat:'対人距離',layer:'Core OS',text:'新しいプロジェクトチームに配属された。初日の昼休みは？',a:'一人で食べながら、メンバーの人間関係を観察する',b:'近くにいる人に「一緒に食べません？」と声をかける',pv:[{p:'P3',d:1},{p:'P6',d:1}]},
+{id:'Q4',cat:'対人距離',layer:'Core OS',text:'仲の良い友人に、特に用事はないけどLINEを送る？',a:'用がなければ送らない。1ヶ月空いても気にしない',b:'面白い動画やネタを見つけたら即シェア。毎日何かしら送る',pv:[{p:'P3',d:1}]},
+{id:'Q5',cat:'対人距離',layer:'Core OS',text:'電車で隣に知人が座った。肩が触れる距離。あなたは？',a:'さりげなく体をずらして空間を作る',b:'そのまま。むしろ近い方が話しやすくて好き',pv:[{p:'P3',d:1},{p:'P6',d:1}]},
+{id:'Q6',cat:'対人距離',layer:'Core OS',text:'飲み会で初対面の人の隣の席に。最初の30分は？',a:'相手から話しかけてくるまで自分のペースで過ごす',b:'自分から「何されてるんですか？」と会話を始める',pv:[{p:'P3',d:1}]},
+{id:'Q7',cat:'対人距離',layer:'Core OS',text:'引越し祝いのパーティーを開くなら？',a:'本当に大切な3人だけを呼んで、じっくり過ごしたい',b:'知り合い全員に声をかけて、20人以上で盛大にやりたい',pv:[{p:'P3',d:1},{p:'P6',d:1}]},
+{id:'Q8',cat:'対人距離',layer:'Core OS',text:'5人で旅行中、次の行き先で意見が分かれた。あなたは？',a:'みんなの意見を聞いて、一番良さそうなものに合わせる',b:'「じゃあこうしよう！」と自分の案で場をまとめる',pv:[{p:'P3',d:1},{p:'P4',d:1}]},
+{id:'Q9',cat:'対人距離',layer:'Core OS',text:'仕事で想定外のトラブル。自力で3時間、誰かに聞けば30分で解決しそう。',a:'まず自力でやってみる。それでもダメなら聞く',b:'即座に詳しい人に連絡する。早く解決する方が全員にとって良い',pv:[{p:'P3',d:1},{p:'P6',d:1}]},
+{id:'Q10',cat:'対人距離',layer:'Core OS',text:'転職が決まった。まだ正式発表前だけど…',a:'正式発表まで誰にも言わない。一人でじっくり味わう',b:'親友には速攻で連絡。「聞いて聞いて！」と言いたくて仕方ない',pv:[{p:'P3',d:1},{p:'P6',d:1}]},
+// 社会的面 Q11-Q20 → P1
+{id:'Q11',cat:'社会的面',layer:'Core OS',text:'職場の同僚があなたの休日の姿を見たら？',a:'「いつも通りだね」と言われるだろう',b:'「え、誰？」と二度見されるレベルで違う',pv:[{p:'P1',d:1}]},
+{id:'Q12',cat:'社会的面',layer:'Core OS',text:'日曜に知り合いの結婚式（知らない人多数）に出席。帰宅後のあなたは？',a:'「楽しかった！」とそのまま別の予定にも行ける',b:'玄関で靴も脱がずにソファに倒れ込む。明日まで誰とも話したくない',pv:[{p:'P1',d:1}]},
+{id:'Q13',cat:'社会的面',layer:'Core OS',text:'会議で的外れな意見が通りそうなとき。あなたは？',a:'「それは違うと思います」とその場で言える',b:'「まあいいか…」と飲み込んで、後でモヤモヤする',pv:[{p:'P1',d:1}]},
+{id:'Q14',cat:'社会的面',layer:'Core OS',text:'あなたの趣味、交友関係、お金の使い方。家族はどこまで知っている？',a:'ほぼ全部知っている。隠すことがない',b:'知らないことの方が多い。わざわざ話す必要を感じない',pv:[{p:'P1',d:1}]},
+{id:'Q15',cat:'社会的面',layer:'Core OS',text:'あなたのSNSを見た初対面の人が抱く印象と、実際のあなた。',a:'ほぼ一致する。飾らずそのまま出している',b:'全然違う。SNSは「見せたい自分」だけを厳選している',pv:[{p:'P1',d:1}]},
+{id:'Q16',cat:'社会的面',layer:'Core OS',text:'自信作のプレゼンに対して、同僚が陰で「微妙だった」と言っていたと知った。',a:'「へぇ」で終わり。自分が納得していれば問題ない',b:'何がダメだったか気になって、夜に思い返してしまう',pv:[{p:'P1',d:1}]},
+{id:'Q17',cat:'社会的面',layer:'Core OS',text:'あなたが本気でやりたいことが、周囲から「変わってるね」と言われる類のもの。',a:'全く気にならない。自分の人生だから好きにやる',b:'気になる。周囲にどう説明するか考えてからにする',pv:[{p:'P1',d:1}]},
+{id:'Q18',cat:'社会的面',layer:'Core OS',text:'飲み会で誰かが微妙な発言をして、場の空気がちょっと変わった。',a:'特に感じない。普通に会話を続ける',b:'瞬時に察知して、話題を変えたりフォローを入れる',pv:[{p:'P1',d:1}]},
+{id:'Q19',cat:'社会的面',layer:'Core OS',text:'あまり好きじゃない上司が「今度飲みに行こう」と誘ってきた。',a:'表情に出てしまう。断る理由を探してしどろもどろになる',b:'「ぜひ！」と笑顔で即答。スケジュールは後でうまく調整する',pv:[{p:'P1',d:1}]},
+{id:'Q20',cat:'社会的面',layer:'Core OS',text:'人と接しているとき、「今の自分は"素の自分"じゃないな」と感じることは？',a:'ない。いつも自然体でいるだけ',b:'しょっちゅうある。場面ごとに「モード」を切り替えている自覚がある',pv:[{p:'P1',d:1}]},
+// 価値観 Q21-Q30 → P2, P5
+{id:'Q21',cat:'価値観',layer:'Core OS',text:'友人が高級ブランドの新作バッグを嬉しそうに見せてきた。',a:'「へぇ」。正直何がいいのかわからない',b:'「それ○○のだよね！」デザインや素材の話で盛り上がれる',pv:[{p:'P2',d:-1}]},
+{id:'Q22',cat:'価値観',layer:'Core OS',text:'イヤホンが壊れた。同じ性能で2,000円と15,000円がある。差は耐久性と音質の微差。',a:'2,000円。十分使える。壊れたらまた買えばいい',b:'15,000円。微差でも良い方を選ぶ。安物を使うストレスが嫌',pv:[{p:'P2',d:-1},{p:'P5',d:1}]},
+{id:'Q23',cat:'価値観',layer:'Core OS',text:'すごく行きたいライブ。でも翌日は大事な仕事で体力的にきつい。',a:'行く。人生は楽しんでなんぼ。仕事はなんとかなる',b:'行かない。翌日のパフォーマンスを落とすのは割に合わない',pv:[{p:'P2',d:1}]},
+{id:'Q24',cat:'価値観',layer:'Core OS',text:'一番好きな趣味への月の出費。収入に対してどのくらい？',a:'できるだけお金をかけず楽しむ。工夫次第で十分',b:'生活費を切り詰めてでも投資する。ここだけは妥協しない',pv:[{p:'P5',d:1}]},
+{id:'Q25',cat:'価値観',layer:'Core OS',text:'旅行先で有名なパン屋。片道40分の坂道。駅前にもそこそこのパン屋がある。',a:'駅前で十分。40分歩く時間で他のことができる',b:'40分歩いてでも行く。「あの坂を登った」体験込みで価値がある',pv:[{p:'P2',d:-1}]},
+{id:'Q26',cat:'価値観',layer:'Core OS',text:'ノーブランドとブランド品。見た目・機能がほぼ同じで値段が3倍違う。',a:'ノーブランド一択。ロゴに金を払う意味がわからない',b:'ブランド品。品質保証・ストーリー・持つ満足感に値段分の価値がある',pv:[{p:'P2',d:-1}]},
+{id:'Q27',cat:'価値観',layer:'Core OS',text:'10万円のボーナス。使い道は？',a:'ずっと欲しかったモノを買う。手元に残る満足感',b:'旅行や体験に使う。思い出は一生もの',pv:[{p:'P2',d:-1},{p:'P5',d:1}]},
+{id:'Q28',cat:'価値観',layer:'Core OS',text:'スーパーAが10円安いが徒歩10分遠い。スーパーBは近いが割高。',a:'A。積み重ねれば大きな差になる。10分くらい歩ける',b:'B。10分の時間の方が10円より価値がある',pv:[{p:'P2',d:1}]},
+{id:'Q29',cat:'価値観',layer:'Core OS',text:'給料日。使い切れる額の臨時収入があった。',a:'好きなことに使う。「今」を最高にするのが最優先',b:'貯金か投資に回す。将来の選択肢を増やす方が合理的',pv:[{p:'P2',d:1}]},
+{id:'Q30',cat:'価値観',layer:'Core OS',text:'10年前の自分が「絶対正しい」と思っていた考え。今振り返ると？',a:'今でもほぼ同じ。芯がブレないことは誇り',b:'かなり変わった。変わること自体が成長だと思う',pv:[{p:'P2',d:-1},{p:'P5',d:1}]},
+// 深層心理 Q31-Q39
+{id:'Q31',cat:'深層心理',layer:'Core OS',text:'飲み会で思わず自分の悩みや弱さを話してしまった。翌朝の気持ちは？',a:'「なんであんなこと話したんだろう…」と後悔',b:'「話してスッキリした！聞いてもらえてよかった」と清々しい',pv:[{p:'P3',d:1},{p:'P11',d:1}]},
+{id:'Q32',cat:'深層心理',layer:'Core OS',text:'あなたにとって「居場所」とは？',a:'自分自身の中にある。どこかに属す必要を感じない',b:'「ここが自分の場所だ」と思えるコミュニティが必要',pv:[{p:'P6',d:-1}]},
+{id:'Q33',cat:'深層心理',layer:'Core OS',text:'SNSで同世代の投稿を見て、一番「くっ…」とくるのは？',a:'圧倒的な才能や実績を持っている人',b:'しがらみなく自由に生きている人',pv:[{p:'P7',d:1}]},
+{id:'Q34',cat:'深層心理',layer:'Core OS',text:'親しい友人とカフェで、ふと会話が途切れた30秒間。',a:'何か話さなきゃと焦る。沈黙が苦手',b:'窓の外を眺めて心地よい。黙っていられる関係が好き',pv:[{p:'P3',d:-1}]},
+{id:'Q35',cat:'深層心理',layer:'Core OS',text:'人生で一番の成功体験。今でも？',a:'思い出すと嬉しくなる。あの経験が今の自分の支えになっている',b:'もう振り返らない。次の目標に集中したい',pv:[{p:'P7',d:1}]},
+{id:'Q36',cat:'深層心理',layer:'Core OS',text:'「その趣味やめなよ」「その考え方おかしいよ」と大切な人に言われた。',a:'一理あるかも。柔軟に考えてみる',b:'絶対に譲らない。ここだけは誰にも侵されたくない',pv:[{p:'P5',d:1}]},
+{id:'Q37',cat:'深層心理',layer:'Core OS',text:'レストランで隣のテーブルの客が店員にひどい態度を取っている。',a:'自分には関係ない。見なかったことにする',b:'許せない。何か行動したくなる',pv:[{p:'P1',d:-1}]},
+{id:'Q38',cat:'深層心理',layer:'Core OS',text:'今の生活に大きな不満はない。でも面白そうなチャンスが来たら？',a:'変える必要なし。安定した今を維持したい',b:'面白そうなら飛び込む。変化のない人生は退屈',pv:[{p:'P10',d:1}]},
+{id:'Q39',cat:'深層心理',layer:'Core OS',text:'2つの転職先。データ上はA社が好条件。でもB社の面接で直感的に「ここだ」と感じた。',a:'A社。条件で判断すべき。直感は当てにならない',b:'B社。直感は経験の蓄積。理屈で説明できない「何か」を信じる',pv:[{p:'P2',d:-1}]},
+// --- Layer 2: Action Stance ---
+// 食・所有 Q41-Q49
+{id:'Q41',cat:'食・所有',layer:'Action',text:'レストラン選び。メニュー50種のビュッフェと、コース5品の隠れ家レストラン。',a:'ビュッフェ。色々試せるのが楽しい',b:'コース。厳選された一品一品を味わいたい',pv:[{p:'P2',d:1}]},
+{id:'Q42',cat:'食・所有',layer:'Action',text:'休日の食事。フードコートで手軽に済ますか、30分歩いて口コミ高評価の店に行くか。',a:'フードコート。食事にそこまでの手間をかけたくない',b:'歩いてでも行く。食事は「探す楽しさ」込みで体験',pv:[{p:'P2',d:-1},{p:'P6',d:-1}]},
+{id:'Q43',cat:'食・所有',layer:'Action',text:'新しい趣味を始めた。道具を揃えるなら？',a:'まず安いので十分。ハマるかもわからないし',b:'最初からいいものを買う。道具の質が体験を変える',pv:[{p:'P5',d:1},{p:'P2',d:-1}]},
+{id:'Q44',cat:'食・所有',layer:'Action',text:'好きなシリーズのグッズ。全部で20種類、今3つ持っている。',a:'好きな3つがあればそれで満足',b:'コンプしたい。揃えないと落ち着かない',pv:[{p:'P5',d:1},{p:'P7',d:1}]},
+{id:'Q45',cat:'食・所有',layer:'Action',text:'スマホの新モデルが発表。今のも十分使える。',a:'壊れるまで使う。わざわざ買い替える理由がない',b:'発売日にチェック。最新技術に触れたい',pv:[{p:'P2',d:-1},{p:'P10',d:1}]},
+{id:'Q46',cat:'食・所有',layer:'Action',text:'トマトを買う。1個80円の普通のトマトと、1個250円の有機トマト。',a:'80円。トマトはトマト。味の差は気にならない',b:'250円。食材の質は妥協したくない',pv:[{p:'P2',d:-1}]},
+{id:'Q47',cat:'食・所有',layer:'Action',text:'部屋にあるモノを見渡して。あなたにとってモノは？',a:'機能があればいい。必要最低限で暮らしたい',b:'自分の世界観そのもの。好きなもので空間を満たしたい',pv:[{p:'P5',d:1},{p:'P7',d:1}]},
+{id:'Q48',cat:'食・所有',layer:'Action',text:'料理をするとき。あなたにとって料理は？',a:'空腹を満たす手段。早く安く済ませたい',b:'創作活動。レシピを工夫したり盛り付けを考えるのが楽しい',pv:[{p:'P7',d:1},{p:'P5',d:1}]},
+{id:'Q49',cat:'食・所有',layer:'Action',text:'セールの勢いで3万円の服を買った。帰宅後のあなたは？',a:'「いい買い物した！」と満足。後悔しない性格',b:'「本当に必要だったか…」とレシートを眺めてしまう',pv:[{p:'P2',d:1},{p:'P9',d:1}]},
+// 移動・デジタル Q50-Q57
+{id:'Q50',cat:'移動・デジタル',layer:'Action',text:'カフェを選ぶ。渋谷の窓際 vs 郊外の静かな一軒家カフェ。',a:'渋谷。人の流れを見ながらの方がエネルギーが湧く',b:'郊外。静かで人が少ない方が落ち着く',pv:[{p:'P6',d:1}]},
+{id:'Q51',cat:'移動・デジタル',layer:'Action',text:'初めての街でランチ。駅前チェーン店と、路地裏の雰囲気ある個人店。',a:'チェーン店。ハズレがなく確実',b:'個人店。直感で「ここだ！」と思った店に入りたい',pv:[{p:'P2',d:-1}]},
+{id:'Q52',cat:'移動・デジタル',layer:'Action',text:'ネット上であなたの意見を発信するなら？',a:'絶対に匿名。リアルの自分と紐づけたくない',b:'実名。自分の発言に責任を持つのは当然',pv:[{p:'P1',d:-1}]},
+{id:'Q53',cat:'移動・デジタル',layer:'Action',text:'すごく会いたい人が電車で片道2時間の場所にいる。日帰りで会いに行く？',a:'2時間は遠すぎる。中間地点か、相手に来てもらいたい',b:'行く。会いたいなら距離は関係ない',pv:[{p:'P7',d:1}]},
+{id:'Q54',cat:'移動・デジタル',layer:'Action',text:'キャンプ場で電波が圏外。2日間スマホが使えない。',a:'むしろ最高。デジタルデトックスできる',b:'不安。連絡が取れないのが落ち着かない',pv:[{p:'P6',d:1}]},
+{id:'Q55',cat:'移動・デジタル',layer:'Action',text:'自然に目が覚める時間と、一番頭が冴える時間帯は？',a:'朝5〜6時に自然と目覚め、午前中が最も調子がいい',b:'昼まで寝ていたい。夜中の方が集中できる',pv:[{p:'P9',d:-1}]},
+{id:'Q56',cat:'移動・デジタル',layer:'Action',text:'スマホが「ピコン」と鳴った。作業中だけど…',a:'無視。後でまとめて確認すればいい',b:'すぐ見る。何の通知か気になって集中できなくなる',pv:[{p:'P6',d:1},{p:'P3',d:1}]},
+{id:'Q57',cat:'移動・デジタル',layer:'Action',text:'新しい家電を買うとき。情報収集は？',a:'信頼しているレビュアー1〜2人の意見で決める',b:'YouTube、価格.com、SNS…あらゆるソースを巡回する',pv:[{p:'P2',d:-1},{p:'P10',d:1}]},
+// 対人 Q58-Q65
+{id:'Q58',cat:'対人',layer:'Action',text:'友人との食事。会話の方向性は？',a:'「最近どう？」楽しくて無難な話題がいい',b:'「仕事ってなんのためにしてる？」踏み込んだ話の方が面白い',pv:[{p:'P1',d:-1},{p:'P4',d:1}]},
+{id:'Q59',cat:'対人',layer:'Action',text:'友人が「仕事辛い…」と相談してきた。あなたの第一声は？',a:'「大変だったね…話聞くよ」。まず気持ちを受け止める',b:'「何が具体的に辛い？こうしたらどう？」。解決に向けて動きたい',pv:[{p:'P2',d:1}]},
+{id:'Q60',cat:'対人',layer:'Action',text:'飲み会で先輩が明らかに間違ったことを言って場が盛り上がっている。',a:'場の空気に合わせて笑う。今は雰囲気が大事',b:'「でもそれって違いません？」と言う。間違いを放置できない',pv:[{p:'P1',d:-1},{p:'P4',d:1}]},
+{id:'Q61',cat:'対人',layer:'Action',text:'上司に「君、すごくいい仕事したね」と言われた。',a:'「いえいえ…」と照れて否定してしまう',b:'「ありがとうございます！」と笑顔で返す',pv:[{p:'P1',d:-1}]},
+{id:'Q62',cat:'対人',layer:'Action',text:'もう関わりたくない知人がいる。どうする？',a:'徐々に連絡を減らして自然消滅させる',b:'「距離を置きたい」とはっきり伝える',pv:[{p:'P3',d:-1},{p:'P12',d:-1}]},
+{id:'Q63',cat:'対人',layer:'Action',text:'友人の誕生日プレゼント。あなたの選び方は？',a:'相場に合った無難なものを贈る',b:'最近の会話を思い出して、「これだ！」というものを探す',pv:[{p:'P2',d:-1},{p:'P3',d:1}]},
+{id:'Q64',cat:'対人',layer:'Action',text:'チームで方針が決まらず議論が堂々巡り。あなたは？',a:'みんなの意見を聞いて、多数派の方向に沿う',b:'「じゃあ、こうしませんか」と自分の案を出して引っ張る',pv:[{p:'P4',d:1}]},
+{id:'Q65',cat:'対人',layer:'Action',text:'自分のミスで友人に迷惑をかけた。でも相手にも少し非がある気が…',a:'「ごめん！」とまず謝る。自分の非は素直に認める',b:'モヤモヤする。相手の非も含めてちゃんと話し合いたい',pv:[{p:'P1',d:1},{p:'P4',d:1}]},
+// 本能・背徳 Q66-Q74
+{id:'Q66',cat:'本能・背徳',layer:'Action',text:'気の合う人と出会った。最初の1ヶ月であなたは？',a:'ゆっくり距離を縮める。焦りたくない',b:'毎週会いたい。一気に仲良くなりたい',pv:[{p:'P12',d:1}]},
+{id:'Q67',cat:'本能・背徳',layer:'Action',text:'友人が「これ誰にも言わないで」と秘密を打ち明けてくれた。',a:'プレッシャー。秘密を預かるのは重い',b:'嬉しい。特別な信頼を感じてテンションが上がる',pv:[{p:'P1',d:1},{p:'P11',d:1}]},
+{id:'Q68',cat:'本能・背徳',layer:'Action',text:'レストランで会計時、明らかに金額が安く間違えている。',a:'「すみません、金額違うと思います」と指摘する',b:'ラッキー。黙って払って店を出る',pv:[{p:'P1',d:-1}]},
+{id:'Q69',cat:'本能・背徳',layer:'Action',text:'深夜2時、Wikipediaの記事をタブ20個開いて読みふけっている。それは…',a:'調べものをしているだけ。必要な情報が見つかったら閉じる',b:'気づいたら2時間経っていた。知ること自体が快感で止められない',pv:[{p:'P7',d:1}]},
+{id:'Q70',cat:'本能・背徳',layer:'Action',text:'親友が最近、別の友人グループとばかり遊んでいてあなたとの予定が減った。',a:'少しモヤッとする。自分との時間も大事にしてほしい',b:'全然いい。自分は自分。束縛する関係は望まない',pv:[{p:'P12',d:-1}]},
+{id:'Q71',cat:'本能・背徳',layer:'Action',text:'2人で何かを決めるとき。あなたのスタンスは？',a:'自分が決めたい。相手に任せるとモヤモヤする',b:'相手に委ねる方が楽。「どっちでもいいよ、決めて」',pv:[{p:'P4',d:-1}]},
+{id:'Q72',cat:'本能・背徳',layer:'Action',text:'嫌なことがあった日の夜。あなたのリセット方法は？',a:'原因を分析して対策を考える。頭で整理すれば落ち着く',b:'友人に愚痴る、泣く、大声で歌う。感情を出し切ってスッキリする',pv:[{p:'P8',d:1}]},
+{id:'Q73',cat:'本能・背徳',layer:'Action',text:'匿名のネット空間（掲示板やゲーム内チャット）でのあなた。',a:'リアルと変わらない。匿名でも言動は同じ',b:'結構違う。匿名だからこそ言える本音や別の自分がある',pv:[{p:'P1',d:1}]},
+{id:'Q74',cat:'本能・背徳',layer:'Action',text:'安定した今の仕事を辞めて、成功確率30%の挑戦ができるチャンス。',a:'辞めない。安定を捨てるリスクは取れない',b:'辞める。30%あれば十分。挑戦しない後悔の方が怖い',pv:[{p:'P2',d:-1},{p:'P10',d:1}]},
+// 活動・身体性 Q75-Q84
+{id:'Q75',cat:'活動・身体性',layer:'Action',text:'運動とあなたの関係。一番近いのは？',a:'正直嫌い。できればやりたくない',b:'生活の一部。運動しないと調子が狂う',pv:[{p:'P9',d:1}]},
+{id:'Q76',cat:'活動・身体性',layer:'Action',text:'海外旅行先で見たことのない料理。名前も読めない。',a:'安全策。ガイドブックに載っている店に行く',b:'「とりあえず頼んでみよう」。未知の味に挑戦するのが旅の醍醐味',pv:[{p:'P10',d:1}]},
+{id:'Q77',cat:'活動・身体性',layer:'Action',text:'次の休暇の過ごし方。どちらに惹かれる？',a:'お気に入りの温泉旅館でゆっくり。快適さが最優先',b:'初めての国でバックパッキング。刺激と冒険を求める',pv:[{p:'P10',d:1}]},
+{id:'Q78',cat:'活動・身体性',layer:'Action',text:'お酒はあなたにとって？',a:'飲まない、または付き合い程度。なくても全く困らない',b:'人との距離を縮める最高のツール。飲みの場が大好き',pv:[{p:'P1',d:-1}]},
+{id:'Q79',cat:'活動・身体性',layer:'Action',text:'友人に「競馬やってみない？」と誘われた。',a:'興味なし。お金を賭ける行為に魅力を感じない',b:'「やってみよう！」スリルや読みが当たる快感に興味がある',pv:[{p:'P8',d:1}]},
+{id:'Q80',cat:'活動・身体性',layer:'Action',text:'フルマラソンやサウナの水風呂など、肉体的にきつい体験。',a:'なぜわざわざ辛いことをするのか理解できない',b:'きついからこそ気持ちいい。限界を超える感覚がある',pv:[{p:'P7',d:1}]},
+{id:'Q81',cat:'活動・身体性',layer:'Action',text:'明日も仕事。今見ている動画がめちゃくちゃ面白い。深夜1時。',a:'続きを観る。睡眠を削っても面白いことを優先',b:'寝る。明日のコンディションが最優先。続きは明日',pv:[{p:'P9',d:1}]},
+{id:'Q82',cat:'活動・身体性',layer:'Action',text:'体の些細な変化（肩こり、胃の違和感など）に対して。',a:'あまり気づかない。言われてみれば…程度',b:'すぐ気づく。体の信号に常にアンテナを張っている',pv:[{p:'P8',d:1}]},
+{id:'Q83',cat:'活動・身体性',layer:'Action',text:'棚が欲しい。既製品を買うか、木材を買って自分で作るか。',a:'既製品を買う。手間を考えたら買った方が早い',b:'自分で作る。時間はかかるが「作る過程」が楽しい',pv:[{p:'P7',d:1},{p:'P9',d:-1}]},
+{id:'Q84',cat:'活動・身体性',layer:'Action',text:'毎朝同じカフェで同じコーヒーを頼む生活。',a:'退屈。たまには違う店や違うメニューを試したい',b:'最高。安心感があって、一日のスイッチが入る',pv:[{p:'P9',d:1},{p:'P10',d:-1}]},
+// 知性・感性 Q85-Q92
+{id:'Q85',cat:'知性・感性',layer:'Action',text:'友人との会話で一番笑えるのは？',a:'日常のほのぼのエピソードや、優しいボケ',b:'毒のあるブラックジョーク。ギリギリのラインが面白い',pv:[{p:'P1',d:1}]},
+{id:'Q86',cat:'知性・感性',layer:'Action',text:'美術館で意味不明な現代アート作品の前に立った。',a:'「わからないものはわからない」で通り過ぎる',b:'「これは何を表現してるんだろう」と立ち止まって考え込む',pv:[{p:'P10',d:1}]},
+{id:'Q87',cat:'知性・感性',layer:'Action',text:'2つの映画。A:伏線がすべて回収された完璧な脚本。B:解釈が分かれるオープンエンド。',a:'A。スッキリ終わる方が好き',b:'B。余白がある方が考える楽しみがある',pv:[{p:'P9',d:-1}]},
+{id:'Q88',cat:'知性・感性',layer:'Action',text:'新しいスキルを身につけたい。あなたの学び方は？',a:'入門書を1ページ目から順番に読む。基礎が大事',b:'まずやってみて、わからないところだけ調べる。体当たり型',pv:[{p:'P10',d:1}]},
+{id:'Q89',cat:'知性・感性',layer:'Action',text:'「あの人は深い」と感じる人。何が「深い」？',a:'膨大な知識を持っている。専門性が高い',b:'経験から紡がれた独自の哲学を持っている',pv:[{p:'P5',d:1},{p:'P7',d:1}]},
+{id:'Q90',cat:'知性・感性',layer:'Action',text:'もう一度人生をやり直せるなら？',a:'同じ人生を選ぶ。今の自分を作った選択に後悔はない',b:'全く違う人生を生きてみたい。別の可能性を知りたい',pv:[{p:'P7',d:1}]},
+{id:'Q91',cat:'知性・感性',layer:'Action',text:'大切な話をするとき。あなたが重視するのは？',a:'正確な言葉選び。論理的に伝わることが大事',b:'声のトーンや表情、間。言葉にならないニュアンスが大事',pv:[{p:'P2',d:-1}]},
+{id:'Q92',cat:'知性・感性',layer:'Action',text:'AさんとBさんが正反対のことを言っていて、どちらにも一理ある。',a:'どちらが正しいか結論を出したい。宙ぶらりんは気持ち悪い',b:'面白い。両方の視点を持ったまま考え続けるのが好き',pv:[{p:'P10',d:1},{p:'P2',d:-1}]},
+// 社会的責任 Q93-Q100
+{id:'Q93',cat:'社会的責任',layer:'Action',text:'有名人の不祥事がSNSで炎上している。',a:'興味なし。他人のことはどうでもいい',b:'「なぜこうなったのか」背景や構造まで考えてしまう',pv:[{p:'P1',d:1}]},
+{id:'Q94',cat:'社会的責任',layer:'Action',text:'「死」について。日常の中で考えることは？',a:'考えない。縁起でもないし、必要もない',b:'時々考える。有限だからこそ今をどう生きるかを意識する',pv:[{p:'P7',d:1}]},
+{id:'Q95',cat:'社会的責任',layer:'Action',text:'宝くじで5億円当たった。ただし条件は「一番大切な人との縁が完全に切れる」。',a:'受け取る。5億あれば新しい人間関係も築ける',b:'絶対に受け取らない。お金では代替できない関係がある',pv:[{p:'P5',d:1},{p:'P7',d:1}]},
+{id:'Q96',cat:'社会的責任',layer:'Action',text:'会社の規則で「在宅勤務は週2日まで」。でも今週は体調がイマイチ。',a:'出社する。規則は規則。例外を認めるとルールが崩れる',b:'在宅にする。ルールの目的は生産性。手段に固執しても意味がない',pv:[{p:'P1',d:-1},{p:'P2',d:-1}]},
+{id:'Q97',cat:'社会的責任',layer:'Action',text:'友人に「来週の飲み会の店、予約しといて」と頼んだ。',a:'正直あまり期待してない。自分でもフォローできるよう準備する',b:'信じて任せる。ちゃんとやってくれると信頼している',pv:[{p:'P12',d:1}]},
+{id:'Q98',cat:'社会的責任',layer:'Action',text:'ニュースで社会問題を知ったとき。あなたの反応は？',a:'「大変だな…」と思うが、自分にできることはない',b:'「何かできないか」と考える。行動したくなる',pv:[{p:'P4',d:1},{p:'P7',d:1}]},
+{id:'Q99',cat:'社会的責任',layer:'Action',text:'環境問題への取り組み。コストも手間もかかるが次世代のためになる。',a:'自分の生活が最優先。余裕がある範囲でやればいい',b:'多少の犠牲を払ってでも、次の世代に良い世界を残したい',pv:[{p:'P7',d:1},{p:'P4',d:1}]},
+{id:'Q100',cat:'社会的責任',layer:'Action',text:'親友が「10万円貸してほしい」と言ってきた。返せるかは微妙。',a:'断る。お金の貸し借りは友情を壊す',b:'貸す。困っている親友を助けないなんて友人じゃない',pv:[{p:'P2',d:-1},{p:'P3',d:1}]},
+// --- Layer 1.5: Deep Structure ---
+// P8: Volatility Q102-Q106
+{id:'Q102',cat:'情緒変動性',layer:'Deep',text:'朝、コーヒーをこぼした。その日の気分は？',a:'「あーあ」で終わり。5分後には忘れている',b:'なぜか一日中テンションが上がらない。小さなことが引き金になる',pv:[{p:'P8',d:1}]},
+{id:'Q103',cat:'情緒変動性',layer:'Deep',text:'友人に約束をドタキャンされた。あなたの怒りは？',a:'「まあ仕方ないか」。次の連絡ではもう忘れている',b:'3日経ってもモヤモヤする。次に会ったとき態度に出てしまうかも',pv:[{p:'P8',d:1}]},
+{id:'Q104',cat:'情緒変動性',layer:'Deep',text:'推しのライブチケットが当選。その瞬間あなたは？',a:'心の中でガッツポーズ。表情はほぼ変わらない',b:'「やったー！！」と声が出る。近くの人に「当たった！」と報告する',pv:[{p:'P8',d:1}]},
+{id:'Q105',cat:'情緒変動性',layer:'Deep',text:'大事なプレゼンが3日後。プレッシャーが大きい。あなたの体は？',a:'平常通り。精神的プレッシャーは感じても体には出ない',b:'食欲がなくなる、眠りが浅くなるなど、体が先に反応する',pv:[{p:'P8',d:1}]},
+{id:'Q106',cat:'情緒変動性',layer:'Deep',text:'友人が些細なことで大笑いしたり、急に落ち込んだりする人。一緒にいて？',a:'正直疲れる。振り回されている感じ',b:'自分も一緒に笑ったり心配したりする。感情が豊かで楽しい',pv:[{p:'P8',d:1}]},
+// P9: Discipline Q107-Q111
+{id:'Q107',cat:'秩序性',layer:'Deep',text:'来月、3泊4日の旅行。あなたの準備は？',a:'宿だけ取って現地でノリで決める。そのほうが楽しい',b:'観光地・レストラン・移動手段を事前リサーチ。タイムテーブルも作る',pv:[{p:'P9',d:1}]},
+{id:'Q108',cat:'秩序性',layer:'Deep',text:'急に友人が「今から遊びに行っていい？」と連絡してきた。あなたの部屋は？',a:'「30分待って！」と全力で片付ける。普段は自分基準のカオス',b:'「いつでもどうぞ」。常に人を呼べる状態にしている',pv:[{p:'P9',d:1}]},
+{id:'Q109',cat:'秩序性',layer:'Deep',text:'友人との待ち合わせ。集合時間に対してあなたは？',a:'5〜10分の遅刻は普通。相手もそんなに気にしないでしょ',b:'必ず10分前には到着。遅れる可能性があるなら30分前に出る',pv:[{p:'P9',d:1}]},
+{id:'Q110',cat:'秩序性',layer:'Deep',text:'確定申告の締め切りは3月15日。あなたはいつやる？',a:'3月14日の夜。追い込まれないとエンジンがかからない',b:'2月中に終わらせる。「やるべきこと」が残っている状態が嫌',pv:[{p:'P9',d:1}]},
+{id:'Q111',cat:'秩序性',layer:'Deep',text:'友人があなたの性格を一言で表すなら？',a:'「自由人」「マイペース」と言われがち',b:'「しっかりしてる」「きっちりしてる」と言われがち',pv:[{p:'P9',d:1}]},
+// P10: Frontier Q112-Q115
+{id:'Q112',cat:'探索欲',layer:'Deep',text:'全く興味のなかった分野のドキュメンタリーがNetflixのおすすめに出てきた。',a:'スルー。興味がないものに時間を使いたくない',b:'「面白そう！」とりあえず再生。知らない世界を覗くのが好き',pv:[{p:'P10',d:1}]},
+{id:'Q113',cat:'探索欲',layer:'Deep',text:'「みんなそうしてるから」「昔からそうだから」という理由で続いているルール。',a:'安心する。みんながやっていることには理由がある',b:'「でもなぜ？」と疑問に思う。根拠がないなら変えてもいいのでは',pv:[{p:'P10',d:1}]},
+{id:'Q114',cat:'探索欲',layer:'Deep',text:'あなたが正しいと信じていたことを、尊敬する人に「それは間違いだよ」と指摘された。',a:'動揺する。自分の信じてきたものを否定されるのは辛い',b:'ワクワクする。「え、そうなの？教えて！」と前のめりになる',pv:[{p:'P10',d:1}]},
+{id:'Q115',cat:'探索欲',layer:'Deep',text:'何の予定もない完全に自由な1日。あなたにとっての「最高」は？',a:'いつものカフェで好きな本を読む。安心できる日常が一番',b:'行ったことのない街をぶらぶら歩く。予定がないから面白い',pv:[{p:'P10',d:1}]},
+// P11: Exposure Q116-Q119
+{id:'Q116',cat:'感情露出度',layer:'Deep',text:'信頼している友人と深夜のファミレス。実は最近、仕事でかなり追い詰められている。',a:'「大丈夫だよ」と言って話題を変える。心配をかけたくない',b:'「実はさ…」と正直に打ち明ける。聞いてほしい',pv:[{p:'P11',d:1}]},
+{id:'Q117',cat:'感情露出度',layer:'Deep',text:'感動する映画を観て涙が出そう。隣に友人がいる。',a:'絶対に泣かない。こっそり涙を拭う',b:'普通に泣く。「やばい、泣いちゃった」と笑いながら言える',pv:[{p:'P11',d:1}]},
+{id:'Q118',cat:'感情露出度',layer:'Deep',text:'昔やっていた恥ずかしい趣味や痛い過去。友人との会話で触れられた。',a:'話題を変える。触れてほしくない',b:'「聞いてよ〜実はね…」と笑い話にする。むしろ鉄板ネタ',pv:[{p:'P11',d:1}]},
+{id:'Q119',cat:'感情露出度',layer:'Deep',text:'普段は強気な友人が、あなたの前で弱音を吐いた。「もう無理かも…」',a:'正直どう反応していいかわからない。少し気まずい',b:'「話してくれてありがとう」。信頼してくれたことが嬉しい',pv:[{p:'P11',d:1}]},
+// P12: Attachment Q120-Q123
+{id:'Q120',cat:'依存構造',layer:'Deep',text:'いつもすぐ返信をくれる親友が、LINEを既読スルーして2日経った。',a:'忙しいんだろう。返信が来たら来たでいい',b:'「何かあった？大丈夫？」と別の手段で連絡する。気になって仕方ない',pv:[{p:'P12',d:1}]},
+{id:'Q121',cat:'依存構造',layer:'Deep',text:'出会って3ヶ月の友人と、最近急に距離が縮まってきた。',a:'少し怖い。このペースで深まるのは息苦しいかも',b:'嬉しい。もっと一緒にいたい、もっと知りたい',pv:[{p:'P12',d:1}]},
+{id:'Q122',cat:'依存構造',layer:'Deep',text:'親友との関係が最近なぜかギクシャクしている気がする。あなたの頭の中は？',a:'「まあ、そういう時期もあるか」。あまり気にしない',b:'「嫌われた？何かした？」と不安でいっぱいになる',pv:[{p:'P12',d:1}]},
+{id:'Q123',cat:'依存構造',layer:'Deep',text:'重い荷物を持って階段を登っている。知人が「手伝おうか？」と声をかけてきた。',a:'「大丈夫です」と断る。頼ること自体が苦手',b:'「助かります！」と素直にお願いする。頼れるのは良い関係の証',pv:[{p:'P12',d:1}]}
+];
+
+// ============================================================
+// 32 TYPES DATA
+// ============================================================
+const TYPES={
+'Core-Logic-Open-Free-Flow':{n:1,nm:'静かなる賢者',en:'The Quiet Sage',fam:'Architects',d:'知識を愛し、自由に思索する穏やかな知性',s:'偏見がなく公平。深い知識。押しつけない優しさ',w:'受動的になりがち。自分の意見を主張できない',b:'一人で本を読み、考え、たまに信頼できる友人と深い議論をする',c:'「答えは急がない。考え続けることが答えだ」',q:'「なるほど、面白い視点だね」'},
+'Core-Logic-Open-Free-Drive':{n:2,nm:'孤高の開拓者',en:'The Lone Pioneer',fam:'Architects',d:'一人で新しい道を切り拓く、論理的な冒険者',s:'独立心が強い。論理と行動力を兼ね備える。先見性',w:'チームプレイが苦手。孤立しやすい',b:'誰も手をつけていない分野に一人で飛び込み、体系化する',c:'「道がないなら、自分で作る」',q:'「自分でやった方が早い」'},
+'Core-Logic-Open-Order-Flow':{n:3,nm:'静かなる守護者',en:'The Silent Guardian',fam:'Architects',d:'計画的で誠実。少数の大切な人を静かに守る',s:'信頼性が極めて高い。約束を守る。安定感',w:'変化に弱い。新しい環境で萎縮しやすい',b:'毎日のルーティンを大切にし、大切な人のために裏方で動く',c:'「約束は守る。それが俺の全てだ」',q:'「大丈夫、任せて」'},
+'Core-Logic-Open-Order-Drive':{n:4,nm:'戦略家',en:'The Strategist',fam:'Architects',d:'合理的に世界を構造化し、計画的に目標を達成する',s:'長期ビジョンを描ける。論理的な意思決定。実行力',w:'完璧主義。他者の感情を見落としがち',b:'目標を設定し、計画を立て、着実に実行する。無駄を嫌う',c:'「感情を排して、最善手を打つ」',q:'「まず、ゴールを明確にしよう」'},
+'Core-Logic-Veiled-Free-Flow':{n:5,nm:'影の観察者',en:'The Shadow Observer',fam:'Architects',d:'静かに世界を観察し、本質を見抜く隠れた知性',s:'洞察力が鋭い。偏りなく分析できる',w:'存在感が薄い。自分から動かない',b:'集団の端にいて全体を観察している。意見を求められたときだけ的確に答える',c:'「見ている。全部、見ている」',q:'「……（観察中）」'},
+'Core-Logic-Veiled-Free-Drive':{n:6,nm:'闇の設計者',en:'The Phantom Architect',fam:'Architects',d:'仮面の裏で自由に設計図を描く、見えない推進者',s:'自由な発想と実行力。表に出ずに影響を及ぼせる',w:'信頼を得るのに時間がかかる。理解されにくい',b:'表には出ないが、裏で仕組みを作り物事を動かしている',c:'「表に出る必要はない。仕組みが動けばいい」',q:'「俺が考えた通りに動いてるな」'},
+'Core-Logic-Veiled-Order-Flow':{n:7,nm:'鉄仮面の番人',en:'The Iron Sentinel',fam:'Architects',d:'感情を見せず、規律正しく体系を守る',s:'極めて信頼できる。感情に左右されない。一貫性',w:'冷たく見える。親密な関係を築きにくい',b:'決められたルールと手順を黙々と遂行する',c:'「感情は内側に。規律は外側に」',q:'「ルールはルールだ」'},
+'Core-Logic-Veiled-Order-Drive':{n:8,nm:'黒幕',en:'The Mastermind',fam:'Architects',d:'冷静沈着。裏で戦略を練り、確実に目標を遂行する',s:'戦略眼。長期計画の遂行力。感情に流されない意思決定',w:'他者を駒のように扱いがち。孤独になりやすい',b:'全体の構造を把握し最適な手順で計画を実行。表には理由を見せない',c:'「駒が動く。予定通りに」',q:'「すべて計算通り」'},
+'Core-Passion-Open-Free-Flow':{n:9,nm:'詩人',en:'The Poet',fam:'Mystics',d:'感受性豊かで自由。魂のままに漂い、世界に美を見出す',s:'豊かな感受性。創造性。他者の痛みに寄り添える',w:'現実的な判断が苦手。感情に飲まれやすい',b:'気の向くままに過ごし、美しいものや感動に心を動かされる',c:'「世界は美しい。それだけで十分だ」',q:'「なんか…いいよね、これ」'},
+'Core-Passion-Open-Free-Drive':{n:10,nm:'魂の創造者',en:'The Soul Creator',fam:'Mystics',d:'内なる情熱を形にする。自由で独創的な表現者',s:'創造力と実行力の両立。独自の世界観',w:'妥協を許さず衝突しがち。周囲を振り回すことも',b:'自分のビジョンに忠実に、作品やプロジェクトを生み出す',c:'「頭の中にある世界を、この手で形にする」',q:'「これを形にしたい」'},
+'Core-Passion-Open-Order-Flow':{n:11,nm:'静かなる癒し手',en:'The Gentle Healer',fam:'Mystics',d:'穏やかで計画的。深い共感力で人の痛みに寄り添う',s:'安心感を与える存在。共感力と信頼性の両立',w:'他者の感情を背負いすぎる。自分を後回しにしがち',b:'日常を大切にしながら、困っている人のそばにいる',c:'「あなたが泣いているなら、隣にいるよ」',q:'「無理しなくていいよ」'},
+'Core-Passion-Open-Order-Drive':{n:12,nm:'情熱の建築家',en:'The Passionate Builder',fam:'Mystics',d:'感情を燃料に、秩序ある世界を一つずつ築き上げる',s:'情熱と計画性の両立。ビジョンを着実に実現する力',w:'自分の理想に固執しすぎる。柔軟性に欠けることも',b:'信じるものに対して計画的に、しかし熱く取り組む',c:'「信じたものを、一つずつ積み上げる」',q:'「絶対にやり遂げる」'},
+'Core-Passion-Veiled-Free-Flow':{n:13,nm:'漂流者',en:'The Drifter',fam:'Mystics',d:'内面の嵐を隠し、風の向くままに漂う旅人',s:'適応力が高い。どこにでも馴染める。深い内面世界',w:'根無し草になりがち。自分が何を望んでいるかわからなくなる',b:'表面的には穏やかに流れに乗るが、内側では激しい感情が渦巻いている',c:'「どこにも属さない。でも、どこにでもいられる」',q:'「まあ、なんとかなるでしょ」'},
+'Core-Passion-Veiled-Free-Drive':{n:14,nm:'深淵の旅人',en:'The Abyss Walker',fam:'Mystics',d:'仮面の下に深い感情を隠し、未知の領域へ踏み込む',s:'強靭な精神力。深い感性と行動力の共存',w:'理解者が極めて少ない。孤独を抱えやすい',b:'表面上は飄々としているが、内側では強い使命感に突き動かされている',c:'「深いところに、本当の景色がある」',q:'「行ってみればわかる」'},
+'Core-Passion-Veiled-Order-Flow':{n:15,nm:'影の詩人',en:'The Shadow Poet',fam:'Mystics',d:'表には出さない感性で、世界を静かに記録する',s:'繊細な観察力。感情の深さ。内面の一貫性',w:'自分の感情を伝えられない。誤解されやすい',b:'日々のルーティンの中で、内面では豊かな感情が流れている',c:'「言葉にしない感情が、一番深い」',q:'「別に…なんでもない」'},
+'Core-Passion-Veiled-Order-Drive':{n:16,nm:'仮面の指揮者',en:'The Masked Conductor',fam:'Mystics',d:'穏やかな仮面の奥に、感情の嵐と揺るがない信念を隠し持つリーダー',s:'統率力。深い感性による洞察。時間と約束への絶対的な信頼性',w:'本心を見せられない。期待を表に出さない。フェードアウト型の別れ',b:'誰とでも話せるが心を開くのは極少数。時間厳守だが部屋はカオス',c:'「全員の味方に見えて、本当の姿を知る者はいない」',q:'「大丈夫、任せろ」（内心は嵐）'},
+'Social-Logic-Open-Free-Flow':{n:17,nm:'自由な知恵者',en:'The Free Thinker',fam:'Commanders',d:'社交的で合理的。縛られずに知識を共有する自由人',s:'柔軟性。広い視野。人を選ばない知的好奇心',w:'責任感が薄く見える。深いコミットメントを避けがち',b:'色々な人と会い、情報を交換し、気の向くままに知識を広げる',c:'「知識は共有してこそ価値がある」',q:'「面白い話があるんだけど聞いてくれる？」'},
+'Social-Logic-Open-Free-Drive':{n:18,nm:'冒険家',en:'The Adventurer',fam:'Commanders',d:'人を巻き込んで未知の世界へ突き進む、行動派の知性',s:'リーダーシップと自由さの両立。行動力',w:'落ち着きがない。長期的な維持管理が苦手',b:'「面白そう」と思ったら即行動。周りを巻き込む',c:'「地図の端に書いてある "ここから先は未知" が好き」',q:'「やってみようぜ！」'},
+'Social-Logic-Open-Order-Flow':{n:19,nm:'調停者',en:'The Mediator',fam:'Commanders',d:'公正で社交的。秩序を重んじ、人と人との間を繋ぐ',s:'バランス感覚。公平な判断。信頼される安定感',w:'自分の意見を持っていないように見える',b:'対立する意見の間に立ち、論理的に落としどころを見つける',c:'「正解は一つじゃない。落としどころを見つけよう」',q:'「どちらの言い分もわかるよ」'},
+'Social-Logic-Open-Order-Drive':{n:20,nm:'指揮官',en:'The Commander',fam:'Commanders',d:'合理的に人を率い、秩序をもって組織を目標へ導く',s:'明確なビジョン。実行力。人を活かす采配力',w:'支配的に見える。感情面への配慮が不足しがち',b:'目標を掲げ、計画を立て、チームを率いて達成する',c:'「全員が最大限の力を出せる布陣を組む」',q:'「次のステップはこれだ」'},
+'Social-Logic-Veiled-Free-Flow':{n:21,nm:'社交の狐',en:'The Social Fox',fam:'Commanders',d:'人当たりよく、本心を見せない。自由に泳ぐ社交の達人',s:'どんな場にも溶け込める。情報収集力',w:'信頼されにくい。深い関係を避けがち',b:'様々な場に顔を出し、情報を集め、本心は見せずに立ち回る',c:'「敵も味方も、まずは笑顔で迎える」',q:'「へぇ〜そうなんだ〜」（実は分析中）'},
+'Social-Logic-Veiled-Free-Drive':{n:22,nm:'策士',en:'The Tactician',fam:'Commanders',d:'仮面を使い分け、自由に戦略を実行する知的ハンター',s:'社交力と戦略眼。状況を読む力',w:'マキャベリスト的に見える。信頼関係が浅くなりがち',b:'目標のために最適な人脈とタイミングを見極め、確実に行動する',c:'「最善手は、相手が気づかないうちに打つ」',q:'「タイミングが全てだ」'},
+'Social-Logic-Veiled-Order-Flow':{n:23,nm:'鉄壁の外交官',en:'The Iron Diplomat',fam:'Commanders',d:'完璧な社交仮面と規律で、組織の秩序を守る',s:'完璧な礼儀。組織運営力。感情に左右されない安定性',w:'本心が見えない。プライベートで孤独を感じやすい',b:'公の場では完璧な振る舞い。私生活は別世界',c:'「私情を挟まない。それがプロだ」',q:'「お気持ちはわかります」（本心は別）'},
+'Social-Logic-Veiled-Order-Drive':{n:24,nm:'帝王',en:'The Emperor',fam:'Commanders',d:'社交力と戦略を武器に、人と組織を圧倒的に率いる',s:'カリスマ性。戦略的思考。組織を動かす絶対的な推進力',w:'権威的。周囲が本音を言えなくなる。孤独な王',b:'公の場では完璧なリーダー。裏では冷徹に戦略を練る',c:'「頂点に立つ者は、孤独を恐れてはならない」',q:'「結果で示せ」'},
+'Social-Passion-Open-Free-Flow':{n:25,nm:'太陽',en:'The Sun',fam:'Catalysts',d:'感情豊かで開放的。自由に輝き、周囲を照らす存在',s:'圧倒的な親しみやすさ。場を明るくする力',w:'責任感が薄く見える。深刻な場面で軽く見られがち',b:'どこにいても自然と人が集まる。笑顔と感情で場を作る',c:'「楽しければいい。笑ってればいい」',q:'「楽しければそれでいいじゃん！」'},
+'Social-Passion-Open-Free-Drive':{n:26,nm:'炎の伝道者',en:'The Firestarter',fam:'Catalysts',d:'情熱で人を動かし、新しいムーブメントを起こす',s:'圧倒的な情熱。人を巻き込む力。ビジョンを語る力',w:'燃え尽きやすい。計画性に欠ける',b:'信じることを熱く語り、共感者を集め、行動に移す',c:'「この熱を、世界に伝えたい」',q:'「これ、絶対変えられるって！」'},
+'Social-Passion-Open-Order-Flow':{n:27,nm:'共感者',en:'The Empath',fam:'Catalysts',d:'人の感情を受け止め、秩序ある形で支える優しき柱',s:'深い共感力。チームの潤滑油。安心感を与える存在',w:'他者の感情に引きずられる。自分の限界を超えて尽くしがち',b:'困っている人を見つけ、寄り添い、具体的なサポートをする',c:'「あなたの気持ち、ちゃんとわかるよ」',q:'「大丈夫？何かできることある？」'},
+'Social-Passion-Open-Order-Drive':{n:28,nm:'情熱のリーダー',en:'The Passionate Leader',fam:'Catalysts',d:'感情と計画性を武器に、人の心を掴んでチームを導く',s:'人望。情熱と実行力の両立',w:'感情的になると判断を誤る。理想が高すぎることも',b:'ビジョンを熱く語り、計画を立て、チーム全員のやる気を引き出す',c:'「心が動けば、人は動く」',q:'「みんなでやれば絶対できる！」'},
+'Social-Passion-Veiled-Free-Flow':{n:29,nm:'道化師',en:'The Trickster',fam:'Catalysts',d:'笑いの仮面の下に、繊細な感情を隠す自由人',s:'場を和ませる力。柔軟性。誰とでも打ち解けられる',w:'本心を見せられない。「いつも明るい人」という期待に疲れる',b:'ユーモアと軽さで場を和ませるが、一人になると別の顔を見せる',c:'「笑ってるうちは、大丈夫」',q:'「まあまあ、そんな深く考えなくても！」'},
+'Social-Passion-Veiled-Free-Drive':{n:30,nm:'カリスマ',en:'The Charisma',fam:'Catalysts',d:'感性と仮面を武器に、自由に人々を魅了し導く',s:'圧倒的な存在感。人心掌握力',w:'本当の自分を知る人がいない。孤独なカリスマ',b:'場に応じて最適なペルソナを纏い、感情を使って人を動かす',c:'「俺について来い。理由は後でわかる」',q:'「ついてこい」（でも内心は迷っている）'},
+'Social-Passion-Veiled-Order-Flow':{n:31,nm:'舞台の演者',en:'The Performer',fam:'Catalysts',d:'計画的に感情を演出し、完璧な「場」を作り上げる',s:'空気を読む力。場の演出力。秩序の中で人を動かす',w:'本当の自分と演じている自分の区別がつかなくなる',b:'場の空気を読み、最適なリアクションを計算して提供する',c:'「この場を最高にする。それが俺の仕事だ」',q:'「今日の会、いい感じだったでしょ？」'},
+'Social-Passion-Veiled-Order-Drive':{n:32,nm:'仮面の太陽',en:'The Masked Sun',fam:'Catalysts',d:'華やかな仮面の裏に、情熱と戦略と孤独を抱えるリーダー',s:'カリスマ性と実行力。感情を武器にしながら計画的に率いる',w:'常に「ON」でいなければならない疲労。素の自分を見失う危険',b:'公の場では魅力的なリーダー。仮面を外した瞬間、深い疲れと孤独が見える',c:'「みんなの太陽でいるために、自分の闇は隠す」',q:'「みんなのために頑張らないとね」'}
+};
+
+// ============================================================
+// JOBS DATA (per type code)
+// ============================================================
+const JOBS={
+'Core-Logic-Open-Free-Flow':['研究者','データサイエンティスト','図書館司書','哲学者','テクニカルライター'],
+'Core-Logic-Open-Free-Drive':['起業家','発明家','フリーランスエンジニア','探検家','コンサルタント'],
+'Core-Logic-Open-Order-Flow':['品質管理','システム管理者','経理・会計士','アーキビスト','公務員'],
+'Core-Logic-Open-Order-Drive':['プロジェクトマネージャー','経営コンサルタント','建築家','投資アナリスト','都市計画者'],
+'Core-Logic-Veiled-Free-Flow':['セキュリティアナリスト','翻訳者','学芸員','校正者','天文学者'],
+'Core-Logic-Veiled-Free-Drive':['システムアーキテクト','ゲームデザイナー','暗号技術者','バックエンドエンジニア','戦略プランナー'],
+'Core-Logic-Veiled-Order-Flow':['法務担当','監査役','品質保証エンジニア','薬剤師','公認会計士'],
+'Core-Logic-Veiled-Order-Drive':['CTO','投資ファンドマネージャー','情報参謀','戦略コンサルタント','チェスプレイヤー'],
+'Core-Passion-Open-Free-Flow':['詩人・作家','カウンセラー','フォトグラファー','ヨガインストラクター','花屋'],
+'Core-Passion-Open-Free-Drive':['アーティスト','映像クリエイター','起業家','UXデザイナー','作曲家'],
+'Core-Passion-Open-Order-Flow':['看護師','社会福祉士','教師','セラピスト','栄養士'],
+'Core-Passion-Open-Order-Drive':['プロデューサー','NPO代表','ブランドマネージャー','編集者','パティシエ'],
+'Core-Passion-Veiled-Free-Flow':['旅行ライター','フリーランサー','バリスタ','イラストレーター','占い師'],
+'Core-Passion-Veiled-Free-Drive':['ドキュメンタリー監督','冒険家','ジャーナリスト','探偵','文化人類学者'],
+'Core-Passion-Veiled-Order-Flow':['司書','手工芸作家','アロマセラピスト','校閲者','庭師'],
+'Core-Passion-Veiled-Order-Drive':['映画監督','指揮者','ブランド戦略家','プロダクトマネージャー','建築デザイナー'],
+'Social-Logic-Open-Free-Flow':['ジャーナリスト','マーケター','IT講師','ポッドキャスター','旅行プランナー'],
+'Social-Logic-Open-Free-Drive':['スタートアップ創業者','冒険ツアーガイド','イベントプロデューサー','営業マネージャー','プロダクトハンター'],
+'Social-Logic-Open-Order-Flow':['人事担当','調停者・仲裁人','カスタマーサクセス','行政書士','ファシリテーター'],
+'Social-Logic-Open-Order-Drive':['CEO','軍事指揮官','政治家','経営者','プログラムディレクター'],
+'Social-Logic-Veiled-Free-Flow':['外交官','情報アナリスト','リサーチャー','ロビイスト','ネットワークエンジニア'],
+'Social-Logic-Veiled-Free-Drive':['M&Aアドバイザー','政治参謀','プロデューサー','交渉人','ヘッドハンター'],
+'Social-Logic-Veiled-Order-Flow':['官僚','法律家','コンプライアンス担当','秘書','大使'],
+'Social-Logic-Veiled-Order-Drive':['企業経営者','政治リーダー','投資銀行家','最高戦略責任者','大学学長'],
+'Social-Passion-Open-Free-Flow':['エンターテイナー','YouTuber','パーティープランナー','保育士','ラジオDJ'],
+'Social-Passion-Open-Free-Drive':['社会起業家','伝道師・活動家','クリエイティブディレクター','コミュニティマネージャー','ブランドアンバサダー'],
+'Social-Passion-Open-Order-Flow':['カウンセラー','ソーシャルワーカー','看護師長','チームコーチ','学校教員'],
+'Social-Passion-Open-Order-Drive':['チームリーダー','NPOディレクター','スポーツ監督','校長','人材育成マネージャー'],
+'Social-Passion-Veiled-Free-Flow':['コメディアン','MC・司会者','バーテンダー','SNSインフルエンサー','セラピスト'],
+'Social-Passion-Veiled-Free-Drive':['俳優','カリスマ経営者','宗教指導者','ブランドプロデューサー','アートディレクター'],
+'Social-Passion-Veiled-Order-Flow':['イベントマネージャー','ウェディングプランナー','広報担当','演出家','舞台監督'],
+'Social-Passion-Veiled-Order-Drive':['政治家','企業トップ','カリスマコーチ','テレビプロデューサー','宗教指導者']
+};
+
+// ============================================================
+// COMPATIBILITY DATA (per type code)
+// ============================================================
+const COMPAT={
+'Core-Logic-Open-Free-Flow':{best:'Core-Passion-Open-Free-Drive',bestR:'あなたの論理と知識を、彼らの情熱が形にしてくれる。「考える人」と「創る人」の最高のコンビ。',grow:'Social-Passion-Open-Free-Drive',growR:'正反対の外向性と情熱があなたの殻を破る。彼らの熱さに触れることで、あなたの知性が覚醒する。'},
+'Core-Logic-Open-Free-Drive':{best:'Core-Passion-Open-Free-Flow',bestR:'あなたの行動力を、彼らの感受性が方向づけてくれる。お互いの「足りない部分」を補い合える稀有な関係。',grow:'Social-Logic-Open-Order-Drive',growR:'あなたの自由さと彼らの統率力がぶつかり、磨かれる。組織の中で輝く方法を教えてくれる存在。'},
+'Core-Logic-Open-Order-Flow':{best:'Core-Passion-Open-Order-Drive',bestR:'あなたの安定感と彼らの情熱が合わさると、揺るがないチームが生まれる。信頼で結ばれた理想のパートナー。',grow:'Social-Passion-Open-Free-Drive',growR:'彼らの奔放さがあなたの「守り」の殻を破る。変化への適応力を学べる。'},
+'Core-Logic-Open-Order-Drive':{best:'Core-Logic-Veiled-Order-Flow',bestR:'あなたの戦略を忠実に実行してくれる最高の右腕。言葉を超えた信頼関係を築ける。',grow:'Core-Passion-Open-Free-Flow',growR:'彼らの自由さと感性が、あなたの完璧主義に「遊び」を教えてくれる。'},
+'Core-Logic-Veiled-Free-Flow':{best:'Core-Passion-Veiled-Free-Flow',bestR:'お互いの「見せない」部分を理解し合える稀有な存在。沈黙が心地よい唯一の関係。',grow:'Social-Logic-Open-Free-Drive',growR:'彼らの行動力と外向性が、あなたの観察眼を世界に発信する力をくれる。'},
+'Core-Logic-Veiled-Free-Drive':{best:'Core-Logic-Veiled-Order-Flow',bestR:'あなたの設計図を黙々と実現してくれる存在。仮面の奥で通じ合える同志。',grow:'Social-Passion-Open-Order-Drive',growR:'表に立つリーダーの情熱が、あなたの「影の力」を正しく活かす方法を教えてくれる。'},
+'Core-Logic-Veiled-Order-Flow':{best:'Core-Logic-Open-Order-Drive',bestR:'あなたの一貫性と彼らのビジョンが組み合わさると、鉄壁のチームになる。',grow:'Social-Passion-Open-Free-Flow',growR:'彼らの明るさと自由さが、あなたの仮面の下の「温かさ」を引き出してくれる。'},
+'Core-Logic-Veiled-Order-Drive':{best:'Core-Logic-Veiled-Free-Drive',bestR:'二人の知略が合わされば、静かに世界を動かせる。言葉なしでわかり合える関係。',grow:'Social-Passion-Open-Free-Flow',growR:'彼らの無邪気さが、あなたの計算の外にある「人間らしさ」を思い出させてくれる。'},
+'Core-Passion-Open-Free-Flow':{best:'Core-Logic-Open-Free-Drive',bestR:'あなたの感性を、彼らの論理と行動力が現実にしてくれる。夢を語り合える最高の仲間。',grow:'Core-Logic-Open-Order-Drive',growR:'彼らの計画性が、あなたの豊かな感受性に「形」を与えてくれる。'},
+'Core-Passion-Open-Free-Drive':{best:'Core-Logic-Open-Free-Flow',bestR:'あなたの創造力を、彼らの知識が深めてくれる。互いの世界観が混ざり合い、新しい何かが生まれる。',grow:'Core-Logic-Open-Order-Drive',growR:'彼らの戦略眼が、あなたの情熱を「結果」に変える方法を教えてくれる。'},
+'Core-Passion-Open-Order-Flow':{best:'Core-Logic-Open-Order-Flow',bestR:'あなたの共感力と彼らの安定感が合わさり、周囲に安心を与える存在になる。',grow:'Social-Passion-Open-Free-Drive',growR:'彼らの情熱と行動力が、あなたの「自分を後回しにする」癖を打ち破る。'},
+'Core-Passion-Open-Order-Drive':{best:'Core-Logic-Open-Order-Flow',bestR:'あなたの情熱を、彼らの堅実さが支えてくれる。理想を現実にする最高のパートナー。',grow:'Core-Passion-Open-Free-Flow',growR:'彼らの自由さが、あなたの「こうあるべき」を柔らかくほぐしてくれる。'},
+'Core-Passion-Veiled-Free-Flow':{best:'Core-Logic-Veiled-Free-Flow',bestR:'お互いの静かな内面世界を共有できる。一緒にいるだけで癒される関係。',grow:'Social-Passion-Open-Free-Drive',growR:'彼らの表現力と情熱が、あなたの内に秘めた感情を解放する鍵になる。'},
+'Core-Passion-Veiled-Free-Drive':{best:'Core-Passion-Veiled-Order-Drive',bestR:'共に仮面の奥に深い感情を持つ者同士。本質的なレベルで理解し合える。',grow:'Social-Logic-Open-Free-Drive',growR:'彼らの合理的な社交性が、あなたの孤独な旅に「仲間」を連れてくる。'},
+'Core-Passion-Veiled-Order-Flow':{best:'Core-Passion-Open-Order-Flow',bestR:'あなたの言葉にできない感情を、彼らが優しく受け止めてくれる。安心して仮面を外せる存在。',grow:'Social-Passion-Open-Free-Flow',growR:'彼らの明るさが、あなたの内なる豊かさを「言葉」にする勇気をくれる。'},
+'Core-Passion-Veiled-Order-Drive':{best:'Core-Passion-Veiled-Free-Drive',bestR:'お互いの仮面を外せる唯一の存在。あなたの感性を論理で支えてくれる。',grow:'Social-Passion-Open-Free-Flow',growR:'彼らの自由な表現が、あなたの隠している「本当の太陽」を引き出す。'},
+'Social-Logic-Open-Free-Flow':{best:'Social-Passion-Open-Free-Flow',bestR:'知識と感情の交換が止まらない。一緒にいると世界が広がる楽しい関係。',grow:'Core-Logic-Veiled-Order-Drive',growR:'彼らの深い戦略眼が、あなたの広い知識に「深さ」を加える。'},
+'Social-Logic-Open-Free-Drive':{best:'Social-Passion-Open-Free-Drive',bestR:'論理と情熱のコンビで、一緒にいると冒険が止まらない。最高の共犯者。',grow:'Core-Logic-Open-Order-Drive',growR:'彼らの計画性が、あなたの冒険に「持続力」をもたらす。'},
+'Social-Logic-Open-Order-Flow':{best:'Social-Passion-Open-Order-Flow',bestR:'あなたの公正さと彼らの共感力で、最強の調和を生み出せる。',grow:'Core-Passion-Open-Free-Drive',growR:'彼らの独創性が、あなたの「バランス」の外にある可能性を見せてくれる。'},
+'Social-Logic-Open-Order-Drive':{best:'Core-Logic-Open-Order-Drive',bestR:'二人の論理と統率力が合わされば、どんなプロジェクトも成功に導ける。',grow:'Core-Passion-Open-Free-Flow',growR:'彼らの自由な感性が、あなたのリーダーシップに「人間味」を加える。'},
+'Social-Logic-Veiled-Free-Flow':{best:'Social-Logic-Veiled-Free-Drive',bestR:'情報と戦略を共有できる知的なパートナー。お互いの分析を補完し合える。',grow:'Social-Passion-Open-Free-Flow',growR:'彼らの飾らない明るさが、あなたの仮面の窮屈さを和らげてくれる。'},
+'Social-Logic-Veiled-Free-Drive':{best:'Social-Logic-Veiled-Free-Flow',bestR:'あなたの戦略を理解し、最適な情報を提供してくれる知的同志。',grow:'Core-Passion-Open-Free-Flow',growR:'彼らの純粋な感受性が、あなたの戦略的思考に「温かさ」を思い出させる。'},
+'Social-Logic-Veiled-Order-Flow':{best:'Social-Logic-Open-Order-Drive',bestR:'あなたの完璧な実務能力と彼らのビジョンが合わさり、組織を安定させる。',grow:'Social-Passion-Open-Free-Flow',growR:'彼らの自由さが、あなたの「公」と「私」の壁を少しだけ低くしてくれる。'},
+'Social-Logic-Veiled-Order-Drive':{best:'Core-Logic-Veiled-Order-Drive',bestR:'頂点に立つ者同士の信頼関係。戦略と実行で帝国を築ける。',grow:'Social-Passion-Open-Free-Flow',growR:'彼らの無邪気さが、孤独な王に「人としての温もり」を思い出させる。'},
+'Social-Passion-Open-Free-Flow':{best:'Social-Logic-Open-Free-Flow',bestR:'あなたの明るさと彼らの知性が合わさり、どんな場も最高の空間に変える。',grow:'Core-Logic-Veiled-Order-Drive',growR:'彼らの深い思慮が、あなたの「楽しさ」の先にある意味を教えてくれる。'},
+'Social-Passion-Open-Free-Drive':{best:'Social-Logic-Open-Free-Drive',bestR:'情熱と冒険心が共鳴する最強コンビ。一緒にいると不可能が可能になる気がする。',grow:'Core-Logic-Open-Order-Drive',growR:'彼らの冷静な計画性が、あなたの燃え尽きを防ぎ、情熱を持続させてくれる。'},
+'Social-Passion-Open-Order-Flow':{best:'Social-Logic-Open-Order-Flow',bestR:'あなたの共感力と彼らの公正さが合わさり、誰もが安心できる空間を作れる。',grow:'Core-Passion-Open-Free-Drive',growR:'彼らの独創性が、あなたの支援スタイルに新しい可能性を見せてくれる。'},
+'Social-Passion-Open-Order-Drive':{best:'Core-Logic-Open-Order-Flow',bestR:'あなたの情熱的リーダーシップを、彼らの安定した実行力が支える理想のチーム。',grow:'Core-Passion-Veiled-Free-Drive',growR:'彼らの深い内面が、あなたのリーダーシップに「静かな強さ」を教えてくれる。'},
+'Social-Passion-Veiled-Free-Flow':{best:'Core-Passion-Open-Free-Flow',bestR:'あなたの仮面を外せる数少ない存在。彼らの前では本当の感情を見せられる。',grow:'Core-Logic-Open-Order-Drive',growR:'彼らの論理と計画性が、あなたの「いつも明るい」仮面の重さを軽くしてくれる。'},
+'Social-Passion-Veiled-Free-Drive':{best:'Core-Passion-Veiled-Order-Drive',bestR:'仮面の奥の本当の姿を見せ合える。カリスマ同士の深い絆。',grow:'Core-Logic-Open-Free-Flow',growR:'彼らの静かな知性が、あなたの孤独な内面に安らぎを与えてくれる。'},
+'Social-Passion-Veiled-Order-Flow':{best:'Social-Passion-Open-Order-Drive',bestR:'あなたの演出力と彼らのリーダーシップが合わさり、完璧な「場」を作り上げる。',grow:'Core-Passion-Open-Free-Flow',growR:'彼らの素直な感受性が、あなたの「演じなくていい瞬間」を教えてくれる。'},
+'Social-Passion-Veiled-Order-Drive':{best:'Core-Passion-Veiled-Free-Drive',bestR:'お互いの仮面の裏にある深い感情を理解し合える。孤独を分かち合える唯一の存在。',grow:'Core-Passion-Open-Free-Flow',growR:'彼らの飾らない純粋さが、あなたの「仮面の太陽」の下にいる本当の自分を解放してくれる。'}
+};
+
+// ============================================================
+// STATE
+// ============================================================
+let cur=0;
+const ans=new Array(Q.length).fill(null);
+
+// ============================================================
+// PARTICLES BACKGROUND
+// ============================================================
+(function(){
+const cv=document.getElementById('particles'),cx=cv.getContext('2d');
+let W,H;const pts=[];
+function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight}
+window.addEventListener('resize',resize);resize();
+for(let i=0;i<40;i++)pts.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.5+.5,dx:(Math.random()-.5)*.3,dy:(Math.random()-.5)*.3,o:Math.random()*.3+.1});
+function draw(){cx.clearRect(0,0,W,H);pts.forEach(p=>{p.x+=p.dx;p.y+=p.dy;if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;cx.beginPath();cx.arc(p.x,p.y,p.r,0,Math.PI*2);cx.fillStyle=`rgba(108,92,231,${p.o})`;cx.fill()});requestAnimationFrame(draw)}
+draw();
+})();
+
+// ============================================================
+// SCREENS
+// ============================================================
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')}
+function startDiagnosis(){show('questionScreen');renderQ()}
+
+// ============================================================
+// QUESTION RENDERING
+// ============================================================
+function renderQ(){
+const q=Q[cur];
+document.getElementById('qCat').textContent=q.cat;
+document.getElementById('qText').textContent=q.text;
+document.getElementById('labelA').textContent=q.a;
+document.getElementById('labelB').textContent=q.b;
+const pct=Math.round(cur/Q.length*100);
+document.getElementById('progressText').textContent=`${cur+1} / ${Q.length}`;
+document.getElementById('progressPct').textContent=pct+'%';
+document.getElementById('progressFill').style.width=pct+'%';
+document.getElementById('layerBadge').textContent=q.layer;
+document.getElementById('prevBtn').disabled=cur===0;
+document.querySelectorAll('.answer-btn').forEach((b,i)=>{b.classList.toggle('selected',ans[cur]===i+1)});
+// animate
+const c=document.getElementById('questionContainer');
+c.style.animation='none';c.offsetHeight;c.style.animation='fadeIn .3s ease';
+}
+// ============================================================
+// BREAK QUOTES DATA
+// ============================================================
+const BREAK_QUOTES=[
+{p:'P7',hi:true,emoji:'🔥',q:'情熱なしに偉業が達成されたことはない。',a:'ヘーゲル'},
+{p:'P7',hi:false,emoji:'🌊',q:'静けさの中にこそ、本当の強さがある。',a:'老子'},
+{p:'P3',hi:true,emoji:'🌙',q:'孤独は優れた精神の学校である。',a:'コルトー'},
+{p:'P3',hi:false,emoji:'🤝',q:'人生で最も美しいものは、人と人との関係である。',a:'サン＝テグジュペリ'},
+{p:'P10',hi:true,emoji:'🧭',q:'冒険とは、知らない自分に出会う旅だ。',a:'アンドレ・ジッド'},
+{p:'P10',hi:false,emoji:'🏠',q:'幸福は自分の家で見つけるものだ。',a:'ゲーテ'},
+{p:'P1',hi:true,emoji:'🎭',q:'すべての人間は役者であり、世界は舞台である。',a:'シェイクスピア'},
+{p:'P1',hi:false,emoji:'☀️',q:'自分自身であることが、最大の勇気だ。',a:'カミュ'},
+{p:'P2',hi:true,emoji:'❤️',q:'心で見なくちゃ、ものごとはよく見えないってことさ。',a:'サン＝テグジュペリ'},
+{p:'P2',hi:false,emoji:'🔬',q:'知は力なり。',a:'フランシス・ベーコン'},
+{p:'P9',hi:true,emoji:'⏰',q:'規律は自由の母である。',a:'キケロ'},
+{p:'P9',hi:false,emoji:'🦋',q:'自由とは、自分自身の法則に従うことだ。',a:'ルソー'},
+{p:'P5',hi:true,emoji:'⚔️',q:'信念は力である。疑いは破壊する。',a:'フレデリック・ロバートソン'},
+{p:'P5',hi:false,emoji:'💧',q:'上善は水のごとし。',a:'老子'},
+{p:'P4',hi:true,emoji:'👑',q:'指導者とは、希望を配る人のことだ。',a:'ナポレオン'},
+{p:'P4',hi:false,emoji:'🌱',q:'最も偉大な栄光は、倒れないことではなく、倒れるたびに起き上がることだ。',a:'孔子'},
+{p:'P8',hi:true,emoji:'🌪️',q:'感情は人間の最も美しい資質である。',a:'ヴィクトル・ユゴー'},
+{p:'P8',hi:false,emoji:'🧊',q:'冷静さは最大の武器である。',a:'タレーラン'},
+{p:'P12',hi:true,emoji:'🔗',q:'一人では何もできない。全てを一緒にやれば何でもできる。',a:'ヘレン・ケラー'},
+{p:'P12',hi:false,emoji:'🦅',q:'孤独を知る者だけが、本当の自由を知る。',a:'ショーペンハウアー'}
+];
+const BREAK_POINTS=[19,39,59,79,99];
+
+function calcInterimScores(){
+  const raw={};for(let i=1;i<=12;i++)raw['P'+i]=[];
+  Q.forEach((q,idx)=>{
+    const a=ans[idx];if(a===null)return;
+    q.pv.forEach(pv=>{raw[pv.p].push(pv.d===1?a:6-a)});
+  });
+  const scores={};
+  for(let i=1;i<=12;i++){
+    const k='P'+i,arr=raw[k];
+    scores[k]=arr.length?((arr.reduce((a,b)=>a+b,0)/arr.length-1)/4)*100:50;
+  }
+  return scores;
+}
+
+function pickBreakQuote(){
+  const sc=calcInterimScores();
+  let best=null,bestDiff=0;
+  const pKeys=['P7','P3','P10','P1','P2','P9','P5','P4','P8','P12'];
+  for(const pk of pKeys){
+    const v=sc[pk];
+    const diff=Math.abs(v-50);
+    if(diff>bestDiff){bestDiff=diff;best={p:pk,hi:v>50}}
+  }
+  if(!best)best={p:'P7',hi:true};
+  const candidates=BREAK_QUOTES.filter(bq=>bq.p===best.p&&bq.hi===best.hi);
+  return candidates.length?candidates[0]:BREAK_QUOTES[0];
+}
+
+function showBreak(){
+  const bq=pickBreakQuote();
+  const milestone=Math.round((cur+1)/Q.length*100);
+  document.getElementById('breakLabel').textContent=`${milestone}% 完了`;
+  document.getElementById('breakEmoji').textContent=bq.emoji;
+  document.getElementById('breakQuote').textContent=`「${bq.q}」`;
+  document.getElementById('breakAuthor').textContent=`― ${bq.a}`;
+  document.getElementById('breakOverlay').style.display='flex';
+}
+function closeBreak(){
+  document.getElementById('breakOverlay').style.display='none';
+  if(cur<Q.length-1){cur++;renderQ()}else{showAnalyzing()}
+}
+
+function answer(v){
+ans[cur]=v;
+document.querySelectorAll('.answer-btn').forEach((b,i)=>b.classList.toggle('selected',i+1===v));
+setTimeout(()=>{
+  if(BREAK_POINTS.includes(cur)){showBreak();return}
+  if(cur<Q.length-1){cur++;renderQ()}else{showAnalyzing()}
+},200);
+}
+function skipQ(){if(cur<Q.length-1){cur++;renderQ()}else{showAnalyzing()}}
+function prevQ(){if(cur>0){cur--;renderQ()}}
+
+// ============================================================
+// ANALYZING ANIMATION
+// ============================================================
+function showAnalyzing(){
+show('analyzeScreen');
+const steps=['12次元のP変数を計算中...','5つの軸を判定中...','矛盾の指紋を検出中...','32タイプを照合中...','あなたの精神構造を描画中...'];
+let i=0;
+const el=document.getElementById('analyzeStep');
+const iv=setInterval(()=>{if(i<steps.length){el.textContent=steps[i];i++}else{clearInterval(iv);showResult()}},700);
+}
+
+// ============================================================
+// SCORING ENGINE
+// ============================================================
+function calcScores(){
+const raw={};for(let i=1;i<=12;i++)raw['P'+i]=[];
+Q.forEach((q,idx)=>{
+  const a=ans[idx];if(a===null)return;
+  q.pv.forEach(pv=>{raw[pv.p].push(pv.d===1?a:6-a)});
+});
+const scores={};
+for(let i=1;i<=12;i++){
+  const k='P'+i,arr=raw[k];
+  scores[k]=arr.length?((arr.reduce((a,b)=>a+b,0)/arr.length-1)/4)*100:50;
+}
+return {scores,raw};
+}
+
+function determineAxes(sc){
+const cV=(sc.P3+sc.P6+(100-sc.P12))/3;
+const eV=((100-sc.P2)+sc.P8)/2;
+const mV=(sc.P1+(100-sc.P11))/2;
+const sV=(sc.P9+(100-sc.P10))/2;
+const dV=(sc.P4+sc.P7+sc.P5)/3;
+return{
+  C:{v:cV,l:cV<=50?'Core':'Social'},
+  E:{v:eV,l:eV<=50?'Logic':'Passion'},
+  M:{v:mV,l:mV<=50?'Open':'Veiled'},
+  S:{v:sV,l:sV<=50?'Free':'Order'},
+  D:{v:dV,l:dV<=50?'Flow':'Drive'}
+};
+}
+
+// ============================================================
+// CONTRADICTION FINGERPRINT
+// ============================================================
+function detectContradictions(raw,scores){
+const labels={
+  P1:{name:'社会乖離値',hi:'仮面が厚い',lo:'素の自分を見せる',
+    lg:'あなたは表向き完璧な社会人を演じていますが、内面ではまったく別の自分がいますね？周囲はそのギャップに気づいていないかもしれません。',
+    md:'社交の場で「素の自分」と「演じる自分」の間で揺れる瞬間がありませんか？',
+    sm:'時々、人前での自分と本来の自分のズレに戸惑うことがあるかもしれません。'},
+  P2:{name:'合理性',hi:'論理重視',lo:'感性重視',
+    lg:'あなたはデータと論理で判断するタイプですが、最後の最後で直感に従ってしまいますね？その矛盾に自覚があるはずです。',
+    md:'頭では合理的な選択がわかっているのに、心が別の答えを囁く瞬間がありませんか？',
+    sm:'時々、論理と感覚の板挟みで迷うことがあるかもしれません。'},
+  P3:{name:'対人距離',hi:'少数深交',lo:'広く浅く',
+    lg:'あなたは誰とでもそつなく話せますが、本当に心を開いているのはごく少数ですね？その「社交的な孤独者」の仮面、自覚はあるはずです。',
+    md:'大人数でも楽しめるのに、ふと「本当にわかり合える人は少ない」と感じませんか？',
+    sm:'時々、人付き合いの距離感に迷うことがあるかもしれません。'},
+  P4:{name:'主従',hi:'リーダー型',lo:'フォロワー型',
+    lg:'あなたは場を仕切りたい欲求と、誰かに任せて楽になりたい欲求が交互に来ますね？周囲はあなたのどちらが本物かわからないかもしれません。',
+    md:'主導権を握りたい瞬間と、委ねたい瞬間が交互に来ませんか？',
+    sm:'時々、リードすべきか任せるべきか迷うことがあるかもしれません。'},
+  P5:{name:'聖域',hi:'不可侵領域あり',lo:'柔軟',
+    lg:'あなたは普段柔軟に見えますが、絶対に譲れない「聖域」がありますね？それに触れられたときの反応の激しさは、自分でも驚くほどでは？',
+    md:'普段は柔軟なのに、ある一線を越えられると急にスイッチが入りませんか？',
+    sm:'時々、自分の中の譲れないラインの強さに驚くことがあるかもしれません。'},
+  P6:{name:'孤高度',hi:'孤独を好む',lo:'人の中にいたい',
+    lg:'あなたは人といるのが好きなのに、突然一人になりたくなりますね？「群れの中の一匹狼」——その寂しさと自由の間で、いつも揺れている。',
+    md:'楽しい場にいるのに、ふと一人になりたくなる瞬間がありませんか？',
+    sm:'時々、社交と孤独のバランスに迷うことがあるかもしれません。'},
+  P7:{name:'覚醒動機',hi:'情熱的',lo:'穏やか',
+    lg:'あなたは普段は穏やかですが、スイッチが入ると手がつけられないほど燃えますね？その「静かなる炎」は周囲を驚かせるほどの威力がある。',
+    md:'普段は落ち着いているのに、あるテーマになると止まらなくなりませんか？',
+    sm:'時々、自分の中の情熱のスイッチに戸惑うことがあるかもしれません。'},
+  P8:{name:'情緒変動性',hi:'感情の波が大きい',lo:'安定',
+    lg:'あなたの外側は凪ですが、内側は嵐ですね？表面上は穏やかでも、内面では激しい感情が渦巻いている。その演技力に、自分でも疲れていませんか？',
+    md:'表面は冷静なのに、内面では感情が激しく動いている瞬間がありませんか？',
+    sm:'時々、見せている自分と感じている自分のズレを意識することがあるかもしれません。'},
+  P9:{name:'秩序性',hi:'計画的',lo:'自由',
+    lg:'あなたはある領域では完璧主義なのに、別の領域では驚くほど無頓着ですね？時間には厳格だけど部屋はカオス、あるいはその逆。',
+    md:'ある分野ではきっちりしているのに、別の分野では全くこだわらない自分に気づきませんか？',
+    sm:'時々、几帳面な自分とズボラな自分の落差に苦笑することがあるかもしれません。'},
+  P10:{name:'探索欲',hi:'冒険志向',lo:'安定志向',
+    lg:'あなたは新しいものに強烈に惹かれながら、安全圏を手放すことを恐れていますね？「冒険したいけど帰る場所がほしい」——その矛盾がクリエイティビティの源泉です。',
+    md:'新しいものに惹かれつつ、安定した日常も手放せないと感じませんか？',
+    sm:'時々、好奇心と慎重さの間で揺れることがあるかもしれません。'},
+  P11:{name:'感情露出度',hi:'感情を見せる',lo:'隠す',
+    lg:'あなたは本当は気持ちを打ち明けたいのに、自分を守る壁が邪魔をしていますね？「弱さを見せたい、でも見せられない」——その葛藤は、信頼できる人の前で最も強くなる。',
+    md:'信頼している人の前でさえ、本音を飲み込んでしまう瞬間がありませんか？',
+    sm:'時々、感情を出したいのに出せない自分にもどかしさを感じることがあるかもしれません。'},
+  P12:{name:'依存構造',hi:'繋がりを求める',lo:'独立志向',
+    lg:'あなたは一人でいることを好みつつ、誰かの存在を切実に必要としていますね？「距離を置きたいのに寂しい」——その矛盾こそが、あなたの人間関係の核心です。',
+    md:'独立していたいのに、ふと寂しさや不安を感じる瞬間がありませんか？',
+    sm:'時々、一人でいたい気持ちと誰かといたい気持ちが同時に来ることがあるかもしれません。'}
+};
+const result=[];
+for(const key in raw){
+  const arr=raw[key];
+  if(arr.length<3)continue;
+  const avg=arr.reduce((a,b)=>a+b,0)/arr.length;
+  const variance=arr.reduce((a,b)=>a+(b-avg)**2,0)/arr.length;
+  const sd=Math.sqrt(variance);
+  if(sd>=1.1){
+    const info=labels[key];
+    if(!info)continue;
+    let level,text;
+    if(sd>=1.6){level='大';text=info.lg}
+    else if(sd>=1.35){level='中';text=info.md}
+    else{level='小';text=info.sm}
+    const sc=scores?scores[key]:50;
+    result.push({p:key,sd:Math.round(sd*100)/100,level,text,name:info.name,score:Math.round(sc)});
+  }
+}
+result.sort((a,b)=>b.sd-a.sd);
+return result;
+}
+
+// ============================================================
+// RADAR CHART (Canvas)
+// ============================================================
+function drawRadar(canvasId,scores){
+const cv=document.getElementById(canvasId);if(!cv)return;
+const cx=cv.getContext('2d');
+const dpr=window.devicePixelRatio||1;
+const size=320;cv.width=size*dpr;cv.height=size*dpr;cv.style.width=size+'px';cv.style.height=size+'px';
+cx.scale(dpr,dpr);
+const ctr=size/2,R=size/2-40;
+const keys=['P1','P2','P3','P4','P5','P6','P7','P8','P9','P10','P11','P12'];
+const labels=['社会乖離','合理性','対人距離','主従','聖域','孤高度','覚醒動機','情緒変動','秩序性','探索欲','感情露出','依存構造'];
+const n=keys.length;const step=Math.PI*2/n;
+// Grid
+for(let ring=1;ring<=4;ring++){
+  const r=R*ring/4;
+  cx.beginPath();
+  for(let i=0;i<=n;i++){const a=-Math.PI/2+step*i;cx.lineTo(ctr+r*Math.cos(a),ctr+r*Math.sin(a))}
+  cx.strokeStyle='rgba(255,255,255,.08)';cx.lineWidth=1;cx.stroke();
+}
+// Axes
+for(let i=0;i<n;i++){
+  const a=-Math.PI/2+step*i;
+  cx.beginPath();cx.moveTo(ctr,ctr);cx.lineTo(ctr+R*Math.cos(a),ctr+R*Math.sin(a));
+  cx.strokeStyle='rgba(255,255,255,.06)';cx.stroke();
+}
+// Data polygon
+cx.beginPath();
+keys.forEach((k,i)=>{
+  const a=-Math.PI/2+step*i;const r=R*(scores[k]||50)/100;
+  const x=ctr+r*Math.cos(a),y=ctr+r*Math.sin(a);
+  i===0?cx.moveTo(x,y):cx.lineTo(x,y);
+});
+cx.closePath();
+cx.fillStyle='rgba(108,92,231,.2)';cx.fill();
+cx.strokeStyle='rgba(162,155,254,.7)';cx.lineWidth=2;cx.stroke();
+// Dots + labels
+keys.forEach((k,i)=>{
+  const a=-Math.PI/2+step*i;
+  const r=R*(scores[k]||50)/100;
+  const x=ctr+r*Math.cos(a),y=ctr+r*Math.sin(a);
+  cx.beginPath();cx.arc(x,y,3,0,Math.PI*2);cx.fillStyle='#a29bfe';cx.fill();
+  const lx=ctr+(R+22)*Math.cos(a),ly=ctr+(R+22)*Math.sin(a);
+  cx.fillStyle='rgba(255,255,255,.45)';cx.font='9px system-ui';cx.textAlign='center';cx.textBaseline='middle';
+  cx.fillText(labels[i],lx,ly);
+});
+}
+
+// ============================================================
+// SPECTRUM DISPLAY (Bidirectional Bars)
+// ============================================================
+function buildSpectrumHTML(scores){
+const specs=[
+  {k:'P1',nm:'社会乖離値',lo:'自然体・素直',hi:'仮面・役割切替',
+   loD:'人前でも素の自分を出せる。飾らず正直',hiD:'場面ごとに振る舞いを切り替える。内面と外面のギャップがある'},
+  {k:'P2',nm:'合理性',lo:'論理・効率重視',hi:'感性・直感重視',
+   loD:'データと根拠を重視し、効率的に判断する',hiD:'感覚や直感を信じ、体験や美的価値を大切にする'},
+  {k:'P3',nm:'対人距離',lo:'広く浅く',hi:'少数深交',
+   loD:'多くの人と軽やかに繋がることを好む',hiD:'少数の人と深い関係を築くことを好む'},
+  {k:'P4',nm:'主従',lo:'フォロワー型',hi:'リーダー型',
+   loD:'他者に委ねて協調することを好む',hiD:'自ら主導権を握り、方向性を示す'},
+  {k:'P5',nm:'聖域',lo:'柔軟・適応的',hi:'不可侵領域あり',
+   loD:'状況に応じて考えを変えられる柔軟さ',hiD:'絶対に譲れない価値観や領域がある'},
+  {k:'P6',nm:'孤高度',lo:'人の中にいたい',hi:'一人を好む',
+   loD:'人と一緒にいることでエネルギーを得る',hiD:'一人の時間と空間を必要とする'},
+  {k:'P7',nm:'覚醒動機',lo:'穏やか・安定',hi:'情熱・追求',
+   loD:'平穏で安定した日常を大切にする',hiD:'強い情熱で目標や興味を追求する'},
+  {k:'P8',nm:'情緒変動性',lo:'安定・一定',hi:'感情の波が大きい',
+   loD:'感情の起伏が少なく安定している',hiD:'喜怒哀楽の振れ幅が大きく感受性が豊か'},
+  {k:'P9',nm:'秩序性',lo:'自由・即興的',hi:'計画・規律的',
+   loD:'ルールに縛られず、その場の流れで動く',hiD:'計画を立て、規律正しく物事を進める'},
+  {k:'P10',nm:'探索欲',lo:'安定志向',hi:'冒険志向',
+   loD:'慣れた環境や方法を大切にする',hiD:'未知の領域に踏み込むことに喜びを感じる'},
+  {k:'P11',nm:'感情露出度',lo:'感情を隠す',hi:'感情を見せる',
+   loD:'内面を表に出さず、自分の中で処理する',hiD:'感情を素直に表現し、人と共有する'},
+  {k:'P12',nm:'依存構造',lo:'独立志向',hi:'繋がりを求める',
+   loD:'一人で完結でき、他者への依存が少ない',hiD:'人との絆や承認を強く求める'}
+];
+let html='<div class="spectrum-wrap"><h3>12次元 パーソナリティ・スペクトラム</h3><div class="spectrum-note">※ どちらが良い・悪いではありません。あなたの傾向を示しています</div>';
+specs.forEach(sp=>{
+  const v=Math.round(scores[sp.k]||50);
+  const isHigh=v>50;
+  const desc=isHigh?sp.hiD:sp.loD;
+  const fillLeft=v<=50?v:50;
+  const fillWidth=Math.abs(v-50);
+  const fillColor=isHigh?'var(--pink)':'var(--accent)';
+  html+=`<div class="spectrum-row">
+    <div class="spectrum-header"><span class="spectrum-name">${sp.k} ${sp.nm}</span><span class="spectrum-val">${v}</span></div>
+    <div class="spectrum-labels"><span class="spectrum-lo">${sp.lo}</span><span class="spectrum-hi">${sp.hi}</span></div>
+    <div class="spectrum-bar"><div class="spectrum-center"></div><div class="spectrum-fill" style="left:${fillLeft}%;width:${fillWidth}%;background:${fillColor}"></div></div>
+    <div class="spectrum-desc">${desc}</div>
+  </div>`;
+});
+html+='</div>';
+return html;
+}
+
+// ============================================================
+// JOBS & COMPATIBILITY HTML
+// ============================================================
+function buildJobsHTML(code){
+  const jobs=JOBS[code];
+  if(!jobs)return '';
+  return `<div class="result-section jobs-section"><h3>向いている職業</h3><div class="jobs-list">${jobs.map(j=>`<span class="job-tag">${j}</span>`).join('')}</div></div>`;
+}
+
+function buildCompatHTML(code){
+  const c=COMPAT[code];
+  if(!c)return '';
+  const bestType=TYPES[c.best];
+  const growType=TYPES[c.grow];
+  if(!bestType||!growType)return '';
+  return `<div class="compat-section">
+    <div class="compat-title">&#9829; 相性</div>
+    <div class="compat-item">
+      <div class="compat-label">&#x1F496; 最高の相性</div>
+      <div class="compat-type">Type ${String(bestType.n).padStart(2,'0')}: ${bestType.nm}（${bestType.en}）</div>
+      <div class="compat-reason">${c.bestR}</div>
+    </div>
+    <div class="compat-item">
+      <div class="compat-label">&#x1F331; 成長の相性</div>
+      <div class="compat-type">Type ${String(growType.n).padStart(2,'0')}: ${growType.nm}（${growType.en}）</div>
+      <div class="compat-reason">${c.growR}</div>
+    </div>
+  </div>`;
+}
+
+// ============================================================
+// RESULT DISPLAY
+// ============================================================
+function showResult(){
+const{scores,raw}=calcScores();
+const axes=determineAxes(scores);
+const code=[axes.C.l,axes.E.l,axes.M.l,axes.S.l,axes.D.l].join('-');
+const t=TYPES[code];
+const contras=detectContradictions(raw,scores);
+
+const fColors={Architects:'#6c5ce7',Mystics:'#e84393',Commanders:'#00b894',Catalysts:'#fdcb6e'};
+const fEmoji={Architects:'🏛️',Mystics:'🌙',Commanders:'⚔️',Catalysts:'🔥'};
+const fCol=t?fColors[t.fam]:'#6c5ce7';
+const fEm=t?fEmoji[t.fam]:'✨';
+
+const axInfo=[
+{k:'C',label:'接続',ax:axes.C},{k:'E',label:'処理',ax:axes.E},
+{k:'M',label:'仮面',ax:axes.M},{k:'S',label:'構造',ax:axes.S},{k:'D',label:'動因',ax:axes.D}
+];
+
+const pNames={P1:'社会乖離値',P2:'合理性',P3:'対人距離',P4:'主従',P5:'聖域',P6:'孤高度',P7:'覚醒動機',P8:'情緒変動性',P9:'秩序性',P10:'探索欲',P11:'感情露出度',P12:'依存構造'};
+const bCol=['#6c5ce7','#a29bfe','#fd79a8','#e84393','#00b894','#55efc4','#fdcb6e','#e17055','#74b9ff','#0984e3','#b2bec3','#636e72'];
+
+let bars='';
+for(let i=1;i<=12;i++){
+  const k='P'+i,v=Math.round(scores[k]);
+  bars+=`<div class="pscore-row"><span class="pscore-label">${k}: ${pNames[k]}</span><div class="pscore-bar-bg"><div class="pscore-bar-fill" style="width:${v}%;background:${bCol[i-1]}"></div></div><span class="pscore-val">${v}</span></div>`;
+}
+
+let contraHTML='';
+if(contras.length>0){
+  const levelCls={大:'large',中:'medium',小:'small'};
+  contraHTML=`<div class="contradiction-section"><div class="contradiction-title">&#9670; 矛盾の指紋 ― あなたの中の「二律背反」</div>`;
+  contras.slice(0,4).forEach(c=>{
+    contraHTML+=`<div class="contradiction-item">
+      <div class="contradiction-header">
+        <span class="contradiction-icon">&#8734;</span>
+        <span class="contradiction-name">${c.name}（${c.p}）</span>
+        <span class="contradiction-level ${levelCls[c.level]||'small'}">${c.level}</span>
+      </div>
+      <div class="contradiction-text">${c.text}</div>
+    </div>`;
+  });
+  contraHTML+='</div>';
+}else{
+  contraHTML='<div class="contradiction-section"><div class="contradiction-title">&#9670; 矛盾の指紋</div><div class="no-contradiction">目立つ矛盾パターンは検出されませんでした。あなたは一貫性の高いタイプです。</div></div>';
+}
+
+if(!t){
+  document.getElementById('resultScreen').innerHTML=`<div class="result-card"><p style="text-align:center;color:var(--danger)">タイプ判定エラー: コード "${code}" が見つかりません</p><button class="retry-btn" onclick="retry()">もう一度</button></div>`;
+  show('resultScreen');return;
+}
+
+document.getElementById('resultScreen').innerHTML=`
+<div class="result-card">
+  <div class="type-illust fam-${t.fam}"><div class="type-illust-ring" style="border-color:${fCol}"></div>${fEm}</div>
+  <div class="result-family" style="color:${fCol}">${t.fam}</div>
+  <div class="result-type-num">Type ${String(t.n).padStart(2,'0')}</div>
+  <div class="result-type-name">${t.nm}</div>
+  <div class="result-type-en">${t.en}</div>
+  <div class="result-catch">${t.c}</div>
+  <div class="axis-pills">${axInfo.map(a=>`<span class="axis-pill" style="border-color:${fCol}40;color:${fCol}">${a.label}: ${a.ax.l} (${Math.round(a.ax.v)})</span>`).join('')}</div>
+  <div class="result-section"><h3>一言で言うと</h3><p>${t.d}</p></div>
+  <div class="result-section"><h3>強み</h3><p>${t.s}</p></div>
+  <div class="result-section"><h3>弱み</h3><p>${t.w}</p></div>
+  <div class="result-section"><h3>行動パターン</h3><p>${t.b}</p></div>
+  <div class="result-quote">${t.q}</div>
+  ${buildJobsHTML(code)}
+  ${contraHTML}
+  ${buildCompatHTML(code)}
+</div>
+<div class="radar-wrap"><h3>12次元スペクトラム</h3><canvas id="radarChart"></canvas></div>
+${buildSpectrumHTML(scores)}
+<button class="pscores-toggle" onclick="document.getElementById('psd').classList.toggle('show')">P変数 数値詳細</button>
+<div id="psd" class="pscores-detail">${bars}</div>
+<button class="retry-btn" onclick="retry()">もう一度診断する</button>
+`;
+show('resultScreen');
+setTimeout(()=>drawRadar('radarChart',scores),100);
+}
+
+function retry(){cur=0;ans.fill(null);show('startScreen')}
+</script>
+</body>
+</html>
