@@ -1,0 +1,1612 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="format-detection" content="telephone=no">
+<title>Doppelganger - 性格診断</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a0f;--surface:#12121e;--surface2:#1a1a2e;--surface3:#242440;--accent:#6c5ce7;--accent2:#a29bfe;--pink:#e84393;--text:#e8e8ef;--text2:#7a7a9e;--success:#00b894;--warning:#fdcb6e;--danger:#e17055;--radius:14px;--shadow:0 8px 32px rgba(0,0,0,.5)}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;touch-action:manipulation}
+.screen{display:none;min-height:100vh;min-height:100dvh;padding:20px;padding-top:env(safe-area-inset-top,20px);position:relative}
+.screen.active{display:flex;flex-direction:column;align-items:center;justify-content:center}
+@keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeOut{from{opacity:1}to{opacity:0}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+@keyframes slideIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes glow{0%,100%{box-shadow:0 0 20px rgba(108,92,231,.2)}50%{box-shadow:0 0 40px rgba(108,92,231,.5)}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes ripple{0%{transform:scale(0);opacity:.6}100%{transform:scale(2.5);opacity:0}}
+@keyframes typeReveal{from{opacity:0;transform:scale(.9) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes barGrow{from{width:0}to{width:var(--target)}}
+
+/* === Background Particles === */
+#particles{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.screen{z-index:1}
+
+/* === Start Screen === */
+.start-content{text-align:center;max-width:500px;animation:fadeIn .8s ease}
+.logo-wrap{margin-bottom:24px}
+.logo{font-size:clamp(2rem,7vw,3rem);font-weight:900;letter-spacing:-.03em;background:linear-gradient(135deg,#6c5ce7,#a29bfe,#fd79a8,#e84393);background-size:200% 200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:float 4s ease-in-out infinite}
+.logo-sub{font-size:.75rem;letter-spacing:.3em;color:var(--text2);text-transform:uppercase;margin-top:4px}
+.subtitle{font-size:.95rem;color:var(--text2);margin-bottom:36px;line-height:1.8}
+.start-btn{padding:18px 56px;font-size:1.1rem;font-weight:700;border:none;border-radius:50px;background:-webkit-linear-gradient(135deg,var(--accent),#a29bfe);background:linear-gradient(135deg,var(--accent),#a29bfe);color:#fff;cursor:pointer;transition:all .3s;-webkit-appearance:none;box-shadow:0 4px 20px rgba(108,92,231,.4);position:relative;overflow:hidden}
+.start-btn:hover{transform:translateY(-3px);box-shadow:0 8px 30px rgba(108,92,231,.6)}
+.start-btn:active{transform:translateY(0)}
+.start-info{margin-top:28px;font-size:.8rem;color:var(--text2);line-height:1.6;opacity:.7}
+
+/* === Question Screen === */
+.question-screen{justify-content:flex-start;padding-top:16px}
+.progress-area{width:100%;max-width:600px;margin-bottom:20px}
+.progress-info{display:flex;justify-content:space-between;align-items:center;font-size:.8rem;color:var(--text2);margin-bottom:8px}
+.progress-bar{width:100%;height:5px;background:var(--surface2);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--pink));border-radius:3px;transition:width .5s cubic-bezier(.4,0,.2,1)}
+.layer-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:600;border:1px solid var(--surface3);color:var(--text2);margin-bottom:6px}
+.question-container{width:100%;max-width:600px;flex:1;display:flex;flex-direction:column;align-items:center;animation:fadeIn .3s ease}
+.q-cat{font-size:.75rem;color:var(--accent2);margin-bottom:10px;letter-spacing:.08em;text-transform:uppercase}
+.q-text{font-size:1rem;line-height:1.8;color:var(--text);text-align:center;margin-bottom:24px;padding:0 12px;min-height:60px}
+.choices{width:100%;max-width:520px}
+.choice-labels{display:flex;justify-content:space-between;gap:16px;margin-bottom:14px;padding:0 6px}
+.choice-label{font-size:.78rem;color:var(--text2);line-height:1.5;max-width:46%}
+.choice-label.right{text-align:right}
+.answer-btns{display:flex;gap:10px;justify-content:center;margin-bottom:16px}
+.answer-btn{width:52px;height:52px;border:2px solid var(--surface3);border-radius:50%;background:var(--surface);color:var(--text2);font-size:.95rem;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;position:relative;-webkit-appearance:none;touch-action:manipulation}
+.answer-btn:hover{border-color:var(--accent);color:var(--text);transform:scale(1.1)}
+.answer-btn.selected{color:#fff;transform:scale(1.1);animation:pulse .3s ease}
+.answer-btn:nth-child(1).selected{background:var(--accent);border-color:var(--accent)}
+.answer-btn:nth-child(2).selected{background:#7c6ef0;border-color:#7c6ef0}
+.answer-btn:nth-child(3).selected{background:var(--surface3);border-color:var(--accent2);color:var(--accent2)}
+.answer-btn:nth-child(4).selected{background:#c0539b;border-color:#c0539b}
+.answer-btn:nth-child(5).selected{background:var(--pink);border-color:var(--pink)}
+.scale-labels{display:flex;justify-content:space-between;font-size:.65rem;color:var(--text2);padding:0 10px;margin-bottom:20px;opacity:.6}
+.nav-btns{display:flex;gap:12px;margin-top:auto;padding:16px 0 24px}
+.nav-btn{padding:10px 24px;border:1px solid var(--surface3);border-radius:50px;background:transparent;color:var(--text2);cursor:pointer;font-size:.85rem;transition:all .2s;-webkit-appearance:none;touch-action:manipulation}
+.nav-btn:hover{border-color:var(--accent);color:var(--text)}
+.nav-btn:disabled{opacity:.25;cursor:not-allowed}
+.nav-btn:disabled:hover{border-color:var(--surface3);color:var(--text2)}
+
+/* === Analyzing Screen === */
+.analyzing{text-align:center;animation:fadeIn .5s ease}
+.analyze-spinner{width:80px;height:80px;border:3px solid var(--surface3);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 24px}
+.analyze-text{color:var(--text2);font-size:.9rem;line-height:1.6}
+.analyze-step{color:var(--accent2);font-size:.85rem;margin-top:8px;min-height:1.2em}
+
+/* === Result Screen === */
+.result-screen{justify-content:flex-start;padding:20px 16px 40px}
+.result-card{width:100%;max-width:520px;background:linear-gradient(145deg,var(--surface),var(--surface2));border:1px solid var(--surface3);border-radius:20px;padding:36px 28px;box-shadow:var(--shadow);animation:typeReveal .8s cubic-bezier(.2,.8,.2,1)}
+/* Type Illustration */
+.type-illust{width:100px;height:100px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;border-radius:50%;position:relative;font-size:2.8rem;animation:float 4s ease-in-out infinite}
+.type-illust.fam-Architects{background:radial-gradient(circle,rgba(108,92,231,.15),rgba(108,92,231,.05));border:2px solid rgba(108,92,231,.3);box-shadow:0 0 30px rgba(108,92,231,.15)}
+.type-illust.fam-Mystics{background:radial-gradient(circle,rgba(232,67,147,.15),rgba(232,67,147,.05));border:2px solid rgba(232,67,147,.3);box-shadow:0 0 30px rgba(232,67,147,.15)}
+.type-illust.fam-Commanders{background:radial-gradient(circle,rgba(0,184,148,.15),rgba(0,184,148,.05));border:2px solid rgba(0,184,148,.3);box-shadow:0 0 30px rgba(0,184,148,.15)}
+.type-illust.fam-Catalysts{background:radial-gradient(circle,rgba(253,203,110,.15),rgba(253,203,110,.05));border:2px solid rgba(253,203,110,.3);box-shadow:0 0 30px rgba(253,203,110,.15)}
+.type-illust-ring{position:absolute;width:100%;height:100%;border-radius:50%;border:1px solid;opacity:.3;animation:spin 20s linear infinite}
+.result-family{font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;margin-bottom:6px;text-align:center;font-weight:600}
+.result-type-num{font-size:.8rem;color:var(--text2);text-align:center;margin-bottom:6px}
+.result-type-name{font-size:clamp(1.5rem,5vw,2rem);font-weight:900;text-align:center;margin-bottom:4px;background:linear-gradient(135deg,var(--accent),var(--accent2),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.result-type-en{font-size:.9rem;color:var(--text2);text-align:center;margin-bottom:16px;font-style:italic}
+.result-catch{font-size:.95rem;color:var(--warning);text-align:center;margin-bottom:28px;line-height:1.6;padding:12px 16px;background:rgba(253,203,110,.06);border-radius:var(--radius);border:1px solid rgba(253,203,110,.15)}
+.axis-pills{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:24px}
+.axis-pill{padding:6px 14px;border-radius:20px;font-size:.75rem;font-weight:600;background:var(--surface);border:1px solid var(--surface3)}
+.result-section{margin-bottom:18px}
+.result-section h3{font-size:.78rem;color:var(--accent2);margin-bottom:8px;letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center;gap:6px}
+.result-section h3::before{content:'';display:inline-block;width:3px;height:14px;background:var(--accent);border-radius:2px}
+.result-section p{font-size:.88rem;line-height:1.75;color:var(--text)}
+.result-quote{background:var(--surface);border-left:3px solid var(--accent);padding:14px 18px;border-radius:0 var(--radius) var(--radius) 0;font-style:italic;color:var(--text2);font-size:.88rem;margin:20px 0;line-height:1.5}
+
+/* Jobs Section */
+.jobs-section{margin-top:18px}
+.jobs-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.job-tag{padding:6px 14px;border-radius:20px;font-size:.78rem;background:var(--surface);border:1px solid var(--surface3);color:var(--text);transition:all .2s}
+
+/* Compatibility Section */
+.compat-section{margin-top:20px;padding:20px;background:linear-gradient(135deg,rgba(108,92,231,.05),rgba(0,184,148,.05));border:1px solid rgba(108,92,231,.2);border-radius:var(--radius)}
+.compat-title{font-size:.8rem;color:var(--accent);font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.compat-item{margin-bottom:16px;padding:12px;background:var(--surface);border-radius:10px;border:1px solid var(--surface3)}
+.compat-label{font-size:.7rem;color:var(--accent2);font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
+.compat-type{font-size:.9rem;font-weight:700;color:var(--text);margin-bottom:4px}
+.compat-reason{font-size:.82rem;color:var(--text2);line-height:1.6}
+
+/* Contradiction Fingerprint */
+.contradiction-section{margin-top:24px;padding:20px;background:linear-gradient(135deg,rgba(232,67,147,.05),rgba(108,92,231,.05));border:1px solid rgba(232,67,147,.2);border-radius:var(--radius)}
+.contradiction-title{font-size:.8rem;color:var(--pink);font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.contradiction-item{margin-bottom:16px;padding:12px 14px;background:rgba(232,67,147,.03);border-radius:10px;border:1px solid rgba(232,67,147,.1)}
+.contradiction-header{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.contradiction-icon{color:var(--pink);font-size:1rem;flex-shrink:0}
+.contradiction-name{font-size:.75rem;color:var(--pink);font-weight:600}
+.contradiction-level{font-size:.65rem;padding:2px 8px;border-radius:10px;font-weight:600}
+.contradiction-level.large{background:rgba(232,67,147,.2);color:var(--pink)}
+.contradiction-level.medium{background:rgba(253,203,110,.2);color:var(--warning)}
+.contradiction-level.small{background:rgba(162,155,254,.2);color:var(--accent2)}
+.contradiction-text{font-size:.85rem;line-height:1.7;color:var(--text)}
+.no-contradiction{color:var(--text2);font-size:.82rem;font-style:italic}
+
+/* Radar Chart */
+.radar-wrap{width:100%;max-width:520px;margin:20px auto;background:var(--surface);border:1px solid var(--surface3);border-radius:var(--radius);padding:20px;text-align:center}
+.radar-wrap h3{font-size:.8rem;color:var(--accent2);margin-bottom:12px;letter-spacing:.06em}
+canvas#radarChart{max-width:320px;width:100%;height:auto}
+
+/* P-Score Spectrum (Bidirectional) */
+.spectrum-wrap{width:100%;max-width:520px;margin:20px auto;background:var(--surface);border:1px solid var(--surface3);border-radius:var(--radius);padding:20px}
+.spectrum-wrap h3{font-size:.8rem;color:var(--accent2);margin-bottom:6px;letter-spacing:.06em}
+.spectrum-note{font-size:.7rem;color:var(--text2);margin-bottom:16px;text-align:center;opacity:.7}
+.spectrum-row{margin-bottom:16px}
+.spectrum-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.spectrum-name{font-size:.75rem;color:var(--text2);font-weight:600}
+.spectrum-val{font-size:.7rem;color:var(--accent2);font-weight:600}
+.spectrum-labels{display:flex;justify-content:space-between;font-size:.68rem;margin-bottom:3px}
+.spectrum-lo{color:var(--accent2)}
+.spectrum-hi{color:var(--pink)}
+.spectrum-bar{position:relative;width:100%;height:8px;background:var(--surface2);border-radius:4px;overflow:visible}
+.spectrum-center{position:absolute;left:50%;top:-2px;width:1px;height:12px;background:var(--text2);opacity:.4;z-index:2}
+.spectrum-fill{position:absolute;top:0;height:100%;border-radius:4px;transition:all 1s cubic-bezier(.4,0,.2,1)}
+.spectrum-desc{font-size:.7rem;color:var(--text2);margin-top:4px;line-height:1.4;font-style:italic}
+
+/* P-Score Bars (raw detail) */
+.pscores-toggle{margin:16px auto 0;display:block;padding:10px 24px;border:1px solid var(--surface3);border-radius:50px;background:transparent;color:var(--text2);cursor:pointer;font-size:.8rem;transition:all .2s;-webkit-appearance:none;touch-action:manipulation}
+.pscores-toggle:hover{border-color:var(--accent);color:var(--text)}
+.pscores-detail{display:none;width:100%;max-width:520px;margin:16px auto 0;background:var(--surface);border:1px solid var(--surface3);border-radius:var(--radius);padding:20px}
+.pscores-detail.show{display:block;animation:fadeIn .4s ease}
+.pscore-row{display:flex;align-items:center;margin-bottom:8px;font-size:.78rem}
+.pscore-label{width:120px;color:var(--text2);flex-shrink:0}
+.pscore-bar-bg{flex:1;height:7px;background:var(--surface2);border-radius:4px;overflow:hidden;margin:0 10px}
+.pscore-bar-fill{height:100%;border-radius:4px;transition:width 1s cubic-bezier(.4,0,.2,1)}
+.pscore-val{width:32px;text-align:right;color:var(--text2);font-size:.75rem;font-weight:600}
+
+/* Retry */
+.retry-btn{margin:24px auto 0;display:block;padding:14px 40px;border:1px solid var(--accent);border-radius:50px;background:transparent;color:var(--accent2);cursor:pointer;font-size:.9rem;transition:all .3s}
+.retry-btn:hover{background:var(--accent);color:#fff}
+
+/* === Relational Style Section === */
+.relational-section{border-top:1px solid var(--surface3);padding-top:16px;margin-top:20px}
+.relational-section h3{font-size:1rem;margin-bottom:6px}
+.relational-intro{font-size:.78rem;color:var(--text2);margin-bottom:16px;line-height:1.6}
+.relational-item{margin-bottom:18px;padding:14px 16px;background:var(--surface);border-radius:12px;border:1px solid var(--surface3)}
+.relational-label{font-size:.85rem;font-weight:700;color:var(--text);margin-bottom:6px;display:flex;align-items:center;justify-content:space-between}
+.relational-score{font-size:.75rem;font-weight:600;color:var(--accent2);background:var(--surface2);padding:2px 8px;border-radius:10px}
+.relational-scale{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:.7rem;color:var(--text2)}
+.relational-bar-bg{flex:1;height:5px;background:var(--surface2);border-radius:3px;overflow:hidden}
+.relational-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--pink));transition:width .8s ease}
+.relational-item p{font-size:.82rem;line-height:1.75;color:var(--text);margin:0}
+.relational-core{margin-top:16px;padding:16px 18px;background:linear-gradient(135deg,rgba(108,92,231,.08),rgba(232,67,147,.08));border:1px solid rgba(108,92,231,.2);border-radius:12px}
+.relational-core-title{font-size:.82rem;font-weight:700;color:var(--accent2);margin-bottom:8px}
+.relational-core p{font-size:.82rem;line-height:1.75;color:var(--text);margin:0}
+
+/* === Break Screen (Quote Card) === */
+.break-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(10,10,15,.92);z-index:100;display:flex;align-items:center;justify-content:center;animation:fadeIn .5s ease}
+.break-card{max-width:420px;width:90%;text-align:center;padding:40px 28px;background:linear-gradient(145deg,var(--surface),var(--surface2));border:1px solid var(--surface3);border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.6);animation:typeReveal .6s cubic-bezier(.2,.8,.2,1)}
+.break-progress-label{font-size:.75rem;color:var(--accent2);letter-spacing:.15em;text-transform:uppercase;margin-bottom:16px}
+.break-emoji{font-size:2.5rem;margin-bottom:16px;animation:float 3s ease-in-out infinite}
+.break-quote{font-size:1rem;line-height:1.8;color:var(--text);font-style:italic;margin-bottom:12px;padding:0 8px}
+.break-author{font-size:.8rem;color:var(--text2);margin-bottom:24px}
+.break-btn{padding:14px 40px;border:1px solid var(--accent);border-radius:50px;background:transparent;color:var(--accent2);cursor:pointer;font-size:.9rem;transition:all .3s;-webkit-appearance:none;touch-action:manipulation}
+.break-btn:hover{background:var(--accent);color:#fff}
+
+/* Mobile tweaks */
+@media(max-width:420px){
+  .answer-btn{width:46px;height:46px;font-size:.85rem}
+  .result-card{padding:28px 20px}
+  .choice-label{font-size:.72rem}
+}
+</style>
+</head>
+<body>
+
+<canvas id="particles"></canvas>
+
+<!-- Start -->
+<div id="startScreen" class="screen active">
+<div class="start-content">
+  <div class="logo-wrap">
+    <div class="logo">Doppelganger</div>
+    <div class="logo-sub">Personality Architecture</div>
+  </div>
+  <p class="subtitle">15次元の精神構造を解析し、<br>32タイプの中から<strong>あなたの本当の姿</strong>を映し出す</p>
+  <button class="start-btn" onclick="startDiagnosis()">診断を始める</button>
+  <p class="start-info">136問 ｜ 所要時間 約35〜45分<br>途中で戻ることもできます</p>
+</div>
+</div>
+
+<!-- Questions -->
+<div id="questionScreen" class="screen question-screen">
+<div class="progress-area">
+  <div class="progress-info">
+    <span id="progressText">1 / 121</span>
+    <span id="layerBadge" class="layer-badge"></span>
+    <span id="progressPct">0%</span>
+  </div>
+  <div class="progress-bar"><div id="progressFill" class="progress-fill" style="width:0%"></div></div>
+</div>
+<div class="question-container" id="questionContainer">
+  <div id="qCat" class="q-cat"></div>
+  <div id="qText" class="q-text"></div>
+  <div class="choices">
+    <div class="choice-labels">
+      <span id="labelA" class="choice-label"></span>
+      <span id="labelB" class="choice-label right"></span>
+    </div>
+    <div class="answer-btns" id="answerBtns">
+      <button class="answer-btn" onclick="answer(1)">1</button>
+      <button class="answer-btn" onclick="answer(2)">2</button>
+      <button class="answer-btn" onclick="answer(3)">3</button>
+      <button class="answer-btn" onclick="answer(4)">4</button>
+      <button class="answer-btn" onclick="answer(5)">5</button>
+    </div>
+    <div class="scale-labels"><span>A寄り</span><span>どちらでもない</span><span>B寄り</span></div>
+  </div>
+</div>
+<div class="nav-btns">
+  <button id="prevBtn" class="nav-btn" onclick="prevQ()" disabled>&larr; 戻る</button>
+  <button class="nav-btn" onclick="skipQ()">スキップ &rarr;</button>
+</div>
+</div>
+
+<!-- Break Overlay -->
+<div id="breakOverlay" class="break-overlay" style="display:none">
+<div class="break-card">
+  <div class="break-progress-label" id="breakLabel"></div>
+  <div class="break-emoji" id="breakEmoji"></div>
+  <div class="break-quote" id="breakQuote"></div>
+  <div class="break-author" id="breakAuthor"></div>
+  <button class="break-btn" onclick="closeBreak()">続ける</button>
+</div>
+</div>
+
+<!-- Analyzing -->
+<div id="analyzeScreen" class="screen">
+<div class="analyzing">
+  <div class="analyze-spinner"></div>
+  <div class="analyze-text">あなたの精神構造を解析しています...</div>
+  <div class="analyze-step" id="analyzeStep"></div>
+</div>
+</div>
+
+<!-- Result -->
+<div id="resultScreen" class="screen result-screen"></div>
+
+<script>
+// ============================================================
+// QUESTIONS DATA - 121 questions (v2.0 scenario-based)
+// ============================================================
+const Q=[
+// --- Layer 1: Core OS ---
+// 対人距離 Q1-Q10 → P3, P6
+{id:'Q1',cat:'対人距離',layer:'Core OS',text:'予定のない休日の朝。目が覚めて最初にすることは？',a:'誰にも連絡せず、一人で好きなことに没頭する',b:'「今日暇な人いる？」とグループLINEに送る',pv:[{p:'P3',d:1},{p:'P6',d:1}]},
+{id:'Q2',cat:'対人距離',layer:'Core OS',text:'友人と3時間カフェにいる。最高の3時間はどっち？',a:'人生観や本音を語り合い、気づいたら3時間経っていた',b:'次々と話題が変わり、笑いっぱなしで3時間が飛んだ',pv:[{p:'P3',d:1}]},
+{id:'Q3',cat:'対人距離',layer:'Core OS',text:'新しいプロジェクトチームに配属された。初日の昼休みは？',a:'一人で食べながら、メンバーの人間関係を観察する',b:'近くにいる人に「一緒に食べません？」と声をかける',pv:[{p:'P3',d:1},{p:'P6',d:1}]},
+{id:'Q4',cat:'対人距離',layer:'Core OS',text:'仲の良い友人に、特に用事はないけどLINEを送る？',a:'用がなければ送らない。1ヶ月空いても気にしない',b:'面白い動画やネタを見つけたら即シェア。毎日何かしら送る',pv:[{p:'P3',d:1}]},
+{id:'Q5',cat:'対人距離',layer:'Core OS',text:'電車で隣に知人が座った。肩が触れる距離。あなたは？',a:'さりげなく体をずらして空間を作る',b:'そのまま。むしろ近い方が話しやすくて好き',pv:[{p:'P3',d:1},{p:'P6',d:1}]},
+{id:'Q6',cat:'対人距離',layer:'Core OS',text:'飲み会で初対面の人の隣の席に。最初の30分は？',a:'相手から話しかけてくるまで自分のペースで過ごす',b:'自分から「何されてるんですか？」と会話を始める',pv:[{p:'P3',d:1}]},
+{id:'Q7',cat:'対人距離',layer:'Core OS',text:'引越し祝いのパーティーを開くなら？',a:'本当に大切な3人だけを呼んで、じっくり過ごしたい',b:'知り合い全員に声をかけて、20人以上で盛大にやりたい',pv:[{p:'P3',d:1},{p:'P6',d:1}]},
+{id:'Q8',cat:'対人距離',layer:'Core OS',text:'5人で旅行中、次の行き先で意見が分かれた。あなたは？',a:'みんなの意見を聞いて、一番良さそうなものに合わせる',b:'「じゃあこうしよう！」と自分の案で場をまとめる',pv:[{p:'P3',d:1},{p:'P4',d:1}]},
+{id:'Q9',cat:'対人距離',layer:'Core OS',text:'仕事で想定外のトラブル。自力で3時間、誰かに聞けば30分で解決しそう。',a:'まず自力でやってみる。それでもダメなら聞く',b:'即座に詳しい人に連絡する。早く解決する方が全員にとって良い',pv:[{p:'P3',d:1},{p:'P6',d:1}]},
+{id:'Q10',cat:'対人距離',layer:'Core OS',text:'転職が決まった。まだ正式発表前だけど…',a:'正式発表まで誰にも言わない。一人でじっくり味わう',b:'親友には速攻で連絡。「聞いて聞いて！」と言いたくて仕方ない',pv:[{p:'P3',d:1},{p:'P6',d:1}]},
+// 社会的面 Q11-Q20 → P1
+{id:'Q11',cat:'社会的面',layer:'Core OS',text:'職場の同僚があなたの休日の姿を見たら？',a:'「いつも通りだね」と言われるだろう',b:'「え、誰？」と二度見されるレベルで違う',pv:[{p:'P1',d:1}]},
+{id:'Q12',cat:'社会的面',layer:'Core OS',text:'日曜に知り合いの結婚式（知らない人多数）に出席。帰宅後のあなたは？',a:'「楽しかった！」とそのまま別の予定にも行ける',b:'玄関で靴も脱がずにソファに倒れ込む。明日まで誰とも話したくない',pv:[{p:'P1',d:1}]},
+{id:'Q13',cat:'社会的面',layer:'Core OS',text:'会議で的外れな意見が通りそうなとき。あなたは？',a:'「それは違うと思います」とその場で言える',b:'「まあいいか…」と飲み込んで、後でモヤモヤする',pv:[{p:'P1',d:1}]},
+{id:'Q14',cat:'社会的面',layer:'Core OS',text:'あなたの趣味、交友関係、お金の使い方。家族はどこまで知っている？',a:'ほぼ全部知っている。隠すことがない',b:'知らないことの方が多い。わざわざ話す必要を感じない',pv:[{p:'P1',d:1}]},
+{id:'Q15',cat:'社会的面',layer:'Core OS',text:'あなたのSNSを見た初対面の人が抱く印象と、実際のあなた。',a:'ほぼ一致する。飾らずそのまま出している',b:'全然違う。SNSは「見せたい自分」だけを厳選している',pv:[{p:'P1',d:1}]},
+{id:'Q16',cat:'社会的面',layer:'Core OS',text:'自信作のプレゼンに対して、同僚が陰で「微妙だった」と言っていたと知った。',a:'「へぇ」で終わり。自分が納得していれば問題ない',b:'何がダメだったか気になって、夜に思い返してしまう',pv:[{p:'P1',d:1}]},
+{id:'Q17',cat:'社会的面',layer:'Core OS',text:'あなたが本気でやりたいことが、周囲から「変わってるね」と言われる類のもの。',a:'全く気にならない。自分の人生だから好きにやる',b:'気になる。周囲にどう説明するか考えてからにする',pv:[{p:'P1',d:1}]},
+{id:'Q18',cat:'社会的面',layer:'Core OS',text:'飲み会で誰かが微妙な発言をして、場の空気がちょっと変わった。',a:'特に感じない。普通に会話を続ける',b:'瞬時に察知して、話題を変えたりフォローを入れる',pv:[{p:'P1',d:1}]},
+{id:'Q19',cat:'社会的面',layer:'Core OS',text:'あまり好きじゃない上司が「今度飲みに行こう」と誘ってきた。',a:'表情に出てしまう。断る理由を探してしどろもどろになる',b:'「ぜひ！」と笑顔で即答。スケジュールは後でうまく調整する',pv:[{p:'P1',d:1}]},
+{id:'Q20',cat:'社会的面',layer:'Core OS',text:'人と接しているとき、「今の自分は"素の自分"じゃないな」と感じることは？',a:'ない。いつも自然体でいるだけ',b:'しょっちゅうある。場面ごとに「モード」を切り替えている自覚がある',pv:[{p:'P1',d:1}]},
+// 価値観 Q21-Q30 → P2, P5
+{id:'Q21',cat:'価値観',layer:'Core OS',text:'友人が高級ブランドの新作バッグを嬉しそうに見せてきた。',a:'「へぇ」。正直何がいいのかわからない',b:'「それ○○のだよね！」デザインや素材の話で盛り上がれる',pv:[{p:'P2',d:-1}]},
+{id:'Q22',cat:'価値観',layer:'Core OS',text:'イヤホンが壊れた。同じ性能で2,000円と15,000円がある。差は耐久性と音質の微差。',a:'2,000円。十分使える。壊れたらまた買えばいい',b:'15,000円。微差でも良い方を選ぶ。安物を使うストレスが嫌',pv:[{p:'P2',d:-1},{p:'P5',d:1}]},
+{id:'Q23',cat:'価値観',layer:'Core OS',text:'すごく行きたいライブ。でも翌日は大事な仕事で体力的にきつい。',a:'行く。人生は楽しんでなんぼ。仕事はなんとかなる',b:'行かない。翌日のパフォーマンスを落とすのは割に合わない',pv:[{p:'P2',d:1}]},
+{id:'Q24',cat:'価値観',layer:'Core OS',text:'一番好きな趣味への月の出費。収入に対してどのくらい？',a:'できるだけお金をかけず楽しむ。工夫次第で十分',b:'生活費を切り詰めてでも投資する。ここだけは妥協しない',pv:[{p:'P5',d:1}]},
+{id:'Q25',cat:'価値観',layer:'Core OS',text:'旅行先で有名なパン屋。片道40分の坂道。駅前にもそこそこのパン屋がある。',a:'駅前で十分。40分歩く時間で他のことができる',b:'40分歩いてでも行く。「あの坂を登った」体験込みで価値がある',pv:[{p:'P2',d:-1}]},
+{id:'Q26',cat:'価値観',layer:'Core OS',text:'ノーブランドとブランド品。見た目・機能がほぼ同じで値段が3倍違う。',a:'ノーブランド一択。ロゴに金を払う意味がわからない',b:'ブランド品。品質保証・ストーリー・持つ満足感に値段分の価値がある',pv:[{p:'P2',d:-1}]},
+{id:'Q27',cat:'価値観',layer:'Core OS',text:'10万円のボーナス。使い道は？',a:'ずっと欲しかったモノを買う。手元に残る満足感',b:'旅行や体験に使う。思い出は一生もの',pv:[{p:'P2',d:-1},{p:'P5',d:1}]},
+{id:'Q28',cat:'価値観',layer:'Core OS',text:'スーパーAが10円安いが徒歩10分遠い。スーパーBは近いが割高。',a:'A。積み重ねれば大きな差になる。10分くらい歩ける',b:'B。10分の時間の方が10円より価値がある',pv:[{p:'P2',d:1}]},
+{id:'Q29',cat:'価値観',layer:'Core OS',text:'給料日。使い切れる額の臨時収入があった。',a:'好きなことに使う。「今」を最高にするのが最優先',b:'貯金か投資に回す。将来の選択肢を増やす方が合理的',pv:[{p:'P2',d:1}]},
+{id:'Q30',cat:'価値観',layer:'Core OS',text:'10年前の自分が「絶対正しい」と思っていた考え。今振り返ると？',a:'今でもほぼ同じ。芯がブレないことは誇り',b:'かなり変わった。変わること自体が成長だと思う',pv:[{p:'P2',d:-1},{p:'P5',d:1}]},
+// 深層心理 Q31-Q39
+{id:'Q31',cat:'深層心理',layer:'Core OS',text:'飲み会で思わず自分の悩みや弱さを話してしまった。翌朝の気持ちは？',a:'「なんであんなこと話したんだろう…」と後悔',b:'「話してスッキリした！聞いてもらえてよかった」と清々しい',pv:[{p:'P3',d:1},{p:'P11',d:1}]},
+{id:'Q32',cat:'深層心理',layer:'Core OS',text:'あなたにとって「居場所」とは？',a:'自分自身の中にある。どこかに属す必要を感じない',b:'「ここが自分の場所だ」と思えるコミュニティが必要',pv:[{p:'P6',d:-1}]},
+{id:'Q33',cat:'深層心理',layer:'Core OS',text:'SNSで同世代の投稿を見て、一番「くっ…」とくるのは？',a:'圧倒的な才能や実績を持っている人',b:'しがらみなく自由に生きている人',pv:[{p:'P7',d:1}]},
+{id:'Q34',cat:'深層心理',layer:'Core OS',text:'親しい友人とカフェで、ふと会話が途切れた30秒間。',a:'何か話さなきゃと焦る。沈黙が苦手',b:'窓の外を眺めて心地よい。黙っていられる関係が好き',pv:[{p:'P3',d:-1}]},
+{id:'Q35',cat:'深層心理',layer:'Core OS',text:'人生で一番の成功体験。今でも？',a:'思い出すと嬉しくなる。あの経験が今の自分の支えになっている',b:'もう振り返らない。次の目標に集中したい',pv:[{p:'P7',d:1}]},
+{id:'Q36',cat:'深層心理',layer:'Core OS',text:'「その趣味やめなよ」「その考え方おかしいよ」と大切な人に言われた。',a:'一理あるかも。柔軟に考えてみる',b:'絶対に譲らない。ここだけは誰にも侵されたくない',pv:[{p:'P5',d:1}]},
+{id:'Q37',cat:'深層心理',layer:'Core OS',text:'レストランで隣のテーブルの客が店員にひどい態度を取っている。',a:'自分には関係ない。見なかったことにする',b:'許せない。何か行動したくなる',pv:[{p:'P1',d:-1}]},
+{id:'Q38',cat:'深層心理',layer:'Core OS',text:'今の生活に大きな不満はない。でも面白そうなチャンスが来たら？',a:'変える必要なし。安定した今を維持したい',b:'面白そうなら飛び込む。変化のない人生は退屈',pv:[{p:'P10',d:1}]},
+{id:'Q39',cat:'深層心理',layer:'Core OS',text:'2つの転職先。データ上はA社が好条件。でもB社の面接で直感的に「ここだ」と感じた。',a:'A社。条件で判断すべき。直感は当てにならない',b:'B社。直感は経験の蓄積。理屈で説明できない「何か」を信じる',pv:[{p:'P2',d:-1}]},
+// --- Layer 2: Action Stance ---
+// 食・所有 Q41-Q49
+{id:'Q41',cat:'食・所有',layer:'Action',text:'レストラン選び。メニュー50種のビュッフェと、コース5品の隠れ家レストラン。',a:'ビュッフェ。色々試せるのが楽しい',b:'コース。厳選された一品一品を味わいたい',pv:[{p:'P2',d:1}]},
+{id:'Q42',cat:'食・所有',layer:'Action',text:'休日の食事。フードコートで手軽に済ますか、30分歩いて口コミ高評価の店に行くか。',a:'フードコート。食事にそこまでの手間をかけたくない',b:'歩いてでも行く。食事は「探す楽しさ」込みで体験',pv:[{p:'P2',d:-1},{p:'P6',d:-1}]},
+{id:'Q43',cat:'食・所有',layer:'Action',text:'新しい趣味を始めた。道具を揃えるなら？',a:'まず安いので十分。ハマるかもわからないし',b:'最初からいいものを買う。道具の質が体験を変える',pv:[{p:'P5',d:1},{p:'P2',d:-1}]},
+{id:'Q44',cat:'食・所有',layer:'Action',text:'好きなシリーズのグッズ。全部で20種類、今3つ持っている。',a:'好きな3つがあればそれで満足',b:'コンプしたい。揃えないと落ち着かない',pv:[{p:'P5',d:1},{p:'P7',d:1}]},
+{id:'Q45',cat:'食・所有',layer:'Action',text:'スマホの新モデルが発表。今のも十分使える。',a:'壊れるまで使う。わざわざ買い替える理由がない',b:'発売日にチェック。最新技術に触れたい',pv:[{p:'P2',d:-1},{p:'P10',d:1}]},
+{id:'Q46',cat:'食・所有',layer:'Action',text:'トマトを買う。1個80円の普通のトマトと、1個250円の有機トマト。',a:'80円。トマトはトマト。味の差は気にならない',b:'250円。食材の質は妥協したくない',pv:[{p:'P2',d:-1}]},
+{id:'Q47',cat:'食・所有',layer:'Action',text:'部屋にあるモノを見渡して。あなたにとってモノは？',a:'機能があればいい。必要最低限で暮らしたい',b:'自分の世界観そのもの。好きなもので空間を満たしたい',pv:[{p:'P5',d:1},{p:'P7',d:1}]},
+{id:'Q48',cat:'食・所有',layer:'Action',text:'料理をするとき。あなたにとって料理は？',a:'空腹を満たす手段。早く安く済ませたい',b:'創作活動。レシピを工夫したり盛り付けを考えるのが楽しい',pv:[{p:'P7',d:1},{p:'P5',d:1}]},
+{id:'Q49',cat:'食・所有',layer:'Action',text:'セールの勢いで3万円の服を買った。帰宅後のあなたは？',a:'「いい買い物した！」と満足。後悔しない性格',b:'「本当に必要だったか…」とレシートを眺めてしまう',pv:[{p:'P2',d:1},{p:'P9',d:1}]},
+// 移動・デジタル Q50-Q57
+{id:'Q50',cat:'移動・デジタル',layer:'Action',text:'カフェを選ぶ。渋谷の窓際 vs 郊外の静かな一軒家カフェ。',a:'渋谷。人の流れを見ながらの方がエネルギーが湧く',b:'郊外。静かで人が少ない方が落ち着く',pv:[{p:'P6',d:1}]},
+{id:'Q51',cat:'移動・デジタル',layer:'Action',text:'初めての街でランチ。駅前チェーン店と、路地裏の雰囲気ある個人店。',a:'チェーン店。ハズレがなく確実',b:'個人店。直感で「ここだ！」と思った店に入りたい',pv:[{p:'P2',d:-1}]},
+{id:'Q52',cat:'移動・デジタル',layer:'Action',text:'ネット上であなたの意見を発信するなら？',a:'絶対に匿名。リアルの自分と紐づけたくない',b:'実名。自分の発言に責任を持つのは当然',pv:[{p:'P1',d:-1}]},
+{id:'Q53',cat:'移動・デジタル',layer:'Action',text:'すごく会いたい人が電車で片道2時間の場所にいる。日帰りで会いに行く？',a:'2時間は遠すぎる。中間地点か、相手に来てもらいたい',b:'行く。会いたいなら距離は関係ない',pv:[{p:'P7',d:1}]},
+{id:'Q54',cat:'移動・デジタル',layer:'Action',text:'キャンプ場で電波が圏外。2日間スマホが使えない。',a:'むしろ最高。デジタルデトックスできる',b:'不安。連絡が取れないのが落ち着かない',pv:[{p:'P6',d:1}]},
+{id:'Q55',cat:'移動・デジタル',layer:'Action',text:'自然に目が覚める時間と、一番頭が冴える時間帯は？',a:'朝5〜6時に自然と目覚め、午前中が最も調子がいい',b:'昼まで寝ていたい。夜中の方が集中できる',pv:[{p:'P9',d:-1}]},
+{id:'Q56',cat:'移動・デジタル',layer:'Action',text:'スマホが「ピコン」と鳴った。作業中だけど…',a:'無視。後でまとめて確認すればいい',b:'すぐ見る。何の通知か気になって集中できなくなる',pv:[{p:'P6',d:1},{p:'P3',d:1}]},
+{id:'Q57',cat:'移動・デジタル',layer:'Action',text:'新しい家電を買うとき。情報収集は？',a:'信頼しているレビュアー1〜2人の意見で決める',b:'YouTube、価格.com、SNS…あらゆるソースを巡回する',pv:[{p:'P2',d:-1},{p:'P10',d:1}]},
+// 対人 Q58-Q65
+{id:'Q58',cat:'対人',layer:'Action',text:'友人との食事。会話の方向性は？',a:'「最近どう？」楽しくて無難な話題がいい',b:'「仕事ってなんのためにしてる？」踏み込んだ話の方が面白い',pv:[{p:'P1',d:-1},{p:'P4',d:1}]},
+{id:'Q59',cat:'対人',layer:'Action',text:'友人が「仕事辛い…」と相談してきた。あなたの第一声は？',a:'「大変だったね…話聞くよ」。まず気持ちを受け止める',b:'「何が具体的に辛い？こうしたらどう？」。解決に向けて動きたい',pv:[{p:'P2',d:1}]},
+{id:'Q60',cat:'対人',layer:'Action',text:'飲み会で先輩が明らかに間違ったことを言って場が盛り上がっている。',a:'場の空気に合わせて笑う。今は雰囲気が大事',b:'「でもそれって違いません？」と言う。間違いを放置できない',pv:[{p:'P1',d:-1},{p:'P4',d:1}]},
+{id:'Q61',cat:'対人',layer:'Action',text:'上司に「君、すごくいい仕事したね」と言われた。',a:'「いえいえ…」と照れて否定してしまう',b:'「ありがとうございます！」と笑顔で返す',pv:[{p:'P1',d:-1}]},
+{id:'Q62',cat:'対人',layer:'Action',text:'もう関わりたくない知人がいる。どうする？',a:'徐々に連絡を減らして自然消滅させる',b:'「距離を置きたい」とはっきり伝える',pv:[{p:'P3',d:-1},{p:'P12',d:-1}]},
+{id:'Q63',cat:'対人',layer:'Action',text:'友人の誕生日プレゼント。あなたの選び方は？',a:'相場に合った無難なものを贈る',b:'最近の会話を思い出して、「これだ！」というものを探す',pv:[{p:'P2',d:-1},{p:'P3',d:1}]},
+{id:'Q64',cat:'対人',layer:'Action',text:'チームで方針が決まらず議論が堂々巡り。あなたは？',a:'みんなの意見を聞いて、多数派の方向に沿う',b:'「じゃあ、こうしませんか」と自分の案を出して引っ張る',pv:[{p:'P4',d:1}]},
+{id:'Q65',cat:'対人',layer:'Action',text:'自分のミスで友人に迷惑をかけた。でも相手にも少し非がある気が…',a:'「ごめん！」とまず謝る。自分の非は素直に認める',b:'モヤモヤする。相手の非も含めてちゃんと話し合いたい',pv:[{p:'P1',d:1},{p:'P4',d:1}]},
+// 本能・背徳 Q66-Q74
+{id:'Q66',cat:'本能・背徳',layer:'Action',text:'気の合う人と出会った。最初の1ヶ月であなたは？',a:'ゆっくり距離を縮める。焦りたくない',b:'毎週会いたい。一気に仲良くなりたい',pv:[{p:'P12',d:1}]},
+{id:'Q67',cat:'本能・背徳',layer:'Action',text:'友人が「これ誰にも言わないで」と秘密を打ち明けてくれた。',a:'プレッシャー。秘密を預かるのは重い',b:'嬉しい。特別な信頼を感じてテンションが上がる',pv:[{p:'P1',d:1},{p:'P11',d:1}]},
+{id:'Q68',cat:'本能・背徳',layer:'Action',text:'レストランで会計時、明らかに金額が安く間違えている。',a:'「すみません、金額違うと思います」と指摘する',b:'ラッキー。黙って払って店を出る',pv:[{p:'P1',d:-1}]},
+{id:'Q69',cat:'本能・背徳',layer:'Action',text:'深夜2時、Wikipediaの記事をタブ20個開いて読みふけっている。それは…',a:'調べものをしているだけ。必要な情報が見つかったら閉じる',b:'気づいたら2時間経っていた。知ること自体が快感で止められない',pv:[{p:'P7',d:1}]},
+{id:'Q70',cat:'本能・背徳',layer:'Action',text:'親友が最近、別の友人グループとばかり遊んでいてあなたとの予定が減った。',a:'少しモヤッとする。自分との時間も大事にしてほしい',b:'全然いい。自分は自分。束縛する関係は望まない',pv:[{p:'P12',d:-1}]},
+{id:'Q71',cat:'本能・背徳',layer:'Action',text:'2人で何かを決めるとき。あなたのスタンスは？',a:'自分が決めたい。相手に任せるとモヤモヤする',b:'相手に委ねる方が楽。「どっちでもいいよ、決めて」',pv:[{p:'P4',d:-1}]},
+{id:'Q72',cat:'本能・背徳',layer:'Action',text:'嫌なことがあった日の夜。あなたのリセット方法は？',a:'原因を分析して対策を考える。頭で整理すれば落ち着く',b:'友人に愚痴る、泣く、大声で歌う。感情を出し切ってスッキリする',pv:[{p:'P8',d:1}]},
+{id:'Q73',cat:'本能・背徳',layer:'Action',text:'匿名のネット空間（掲示板やゲーム内チャット）でのあなた。',a:'リアルと変わらない。匿名でも言動は同じ',b:'結構違う。匿名だからこそ言える本音や別の自分がある',pv:[{p:'P1',d:1}]},
+{id:'Q74',cat:'本能・背徳',layer:'Action',text:'安定した今の仕事を辞めて、成功確率30%の挑戦ができるチャンス。',a:'辞めない。安定を捨てるリスクは取れない',b:'辞める。30%あれば十分。挑戦しない後悔の方が怖い',pv:[{p:'P2',d:-1},{p:'P10',d:1}]},
+// 活動・身体性 Q75-Q84
+{id:'Q75',cat:'活動・身体性',layer:'Action',text:'運動とあなたの関係。一番近いのは？',a:'正直嫌い。できればやりたくない',b:'生活の一部。運動しないと調子が狂う',pv:[{p:'P9',d:1}]},
+{id:'Q76',cat:'活動・身体性',layer:'Action',text:'海外旅行先で見たことのない料理。名前も読めない。',a:'安全策。ガイドブックに載っている店に行く',b:'「とりあえず頼んでみよう」。未知の味に挑戦するのが旅の醍醐味',pv:[{p:'P10',d:1}]},
+{id:'Q77',cat:'活動・身体性',layer:'Action',text:'次の休暇の過ごし方。どちらに惹かれる？',a:'お気に入りの温泉旅館でゆっくり。快適さが最優先',b:'初めての国でバックパッキング。刺激と冒険を求める',pv:[{p:'P10',d:1}]},
+{id:'Q78',cat:'活動・身体性',layer:'Action',text:'お酒はあなたにとって？',a:'飲まない、または付き合い程度。なくても全く困らない',b:'人との距離を縮める最高のツール。飲みの場が大好き',pv:[{p:'P1',d:-1}]},
+{id:'Q79',cat:'活動・身体性',layer:'Action',text:'友人に「競馬やってみない？」と誘われた。',a:'興味なし。お金を賭ける行為に魅力を感じない',b:'「やってみよう！」スリルや読みが当たる快感に興味がある',pv:[{p:'P8',d:1}]},
+{id:'Q80',cat:'活動・身体性',layer:'Action',text:'フルマラソンやサウナの水風呂など、肉体的にきつい体験。',a:'なぜわざわざ辛いことをするのか理解できない',b:'きついからこそ気持ちいい。限界を超える感覚がある',pv:[{p:'P7',d:1}]},
+{id:'Q81',cat:'活動・身体性',layer:'Action',text:'明日も仕事。今見ている動画がめちゃくちゃ面白い。深夜1時。',a:'続きを観る。睡眠を削っても面白いことを優先',b:'寝る。明日のコンディションが最優先。続きは明日',pv:[{p:'P9',d:1}]},
+{id:'Q82',cat:'活動・身体性',layer:'Action',text:'体の些細な変化（肩こり、胃の違和感など）に対して。',a:'あまり気づかない。言われてみれば…程度',b:'すぐ気づく。体の信号に常にアンテナを張っている',pv:[{p:'P8',d:1}]},
+{id:'Q83',cat:'活動・身体性',layer:'Action',text:'棚が欲しい。既製品を買うか、木材を買って自分で作るか。',a:'既製品を買う。手間を考えたら買った方が早い',b:'自分で作る。時間はかかるが「作る過程」が楽しい',pv:[{p:'P7',d:1},{p:'P9',d:-1}]},
+{id:'Q84',cat:'活動・身体性',layer:'Action',text:'毎朝同じカフェで同じコーヒーを頼む生活。',a:'退屈。たまには違う店や違うメニューを試したい',b:'最高。安心感があって、一日のスイッチが入る',pv:[{p:'P9',d:1},{p:'P10',d:-1}]},
+// 知性・感性 Q85-Q92
+{id:'Q85',cat:'知性・感性',layer:'Action',text:'友人との会話で一番笑えるのは？',a:'日常のほのぼのエピソードや、優しいボケ',b:'毒のあるブラックジョーク。ギリギリのラインが面白い',pv:[{p:'P1',d:1}]},
+{id:'Q86',cat:'知性・感性',layer:'Action',text:'美術館で意味不明な現代アート作品の前に立った。',a:'「わからないものはわからない」で通り過ぎる',b:'「これは何を表現してるんだろう」と立ち止まって考え込む',pv:[{p:'P10',d:1}]},
+{id:'Q87',cat:'知性・感性',layer:'Action',text:'2つの映画。A:伏線がすべて回収された完璧な脚本。B:解釈が分かれるオープンエンド。',a:'A。スッキリ終わる方が好き',b:'B。余白がある方が考える楽しみがある',pv:[{p:'P9',d:-1}]},
+{id:'Q88',cat:'知性・感性',layer:'Action',text:'新しいスキルを身につけたい。あなたの学び方は？',a:'入門書を1ページ目から順番に読む。基礎が大事',b:'まずやってみて、わからないところだけ調べる。体当たり型',pv:[{p:'P10',d:1}]},
+{id:'Q89',cat:'知性・感性',layer:'Action',text:'「あの人は深い」と感じる人。何が「深い」？',a:'膨大な知識を持っている。専門性が高い',b:'経験から紡がれた独自の哲学を持っている',pv:[{p:'P5',d:1},{p:'P7',d:1}]},
+{id:'Q90',cat:'知性・感性',layer:'Action',text:'もう一度人生をやり直せるなら？',a:'同じ人生を選ぶ。今の自分を作った選択に後悔はない',b:'全く違う人生を生きてみたい。別の可能性を知りたい',pv:[{p:'P7',d:1}]},
+{id:'Q91',cat:'知性・感性',layer:'Action',text:'大切な話をするとき。あなたが重視するのは？',a:'正確な言葉選び。論理的に伝わることが大事',b:'声のトーンや表情、間。言葉にならないニュアンスが大事',pv:[{p:'P2',d:-1}]},
+{id:'Q92',cat:'知性・感性',layer:'Action',text:'AさんとBさんが正反対のことを言っていて、どちらにも一理ある。',a:'どちらが正しいか結論を出したい。宙ぶらりんは気持ち悪い',b:'面白い。両方の視点を持ったまま考え続けるのが好き',pv:[{p:'P10',d:1},{p:'P2',d:-1}]},
+// 社会的責任 Q93-Q100
+{id:'Q93',cat:'社会的責任',layer:'Action',text:'有名人の不祥事がSNSで炎上している。',a:'興味なし。他人のことはどうでもいい',b:'「なぜこうなったのか」背景や構造まで考えてしまう',pv:[{p:'P1',d:1}]},
+{id:'Q94',cat:'社会的責任',layer:'Action',text:'「死」について。日常の中で考えることは？',a:'考えない。縁起でもないし、必要もない',b:'時々考える。有限だからこそ今をどう生きるかを意識する',pv:[{p:'P7',d:1}]},
+{id:'Q95',cat:'社会的責任',layer:'Action',text:'宝くじで5億円当たった。ただし条件は「一番大切な人との縁が完全に切れる」。',a:'受け取る。5億あれば新しい人間関係も築ける',b:'絶対に受け取らない。お金では代替できない関係がある',pv:[{p:'P5',d:1},{p:'P7',d:1}]},
+{id:'Q96',cat:'社会的責任',layer:'Action',text:'会社の規則で「在宅勤務は週2日まで」。でも今週は体調がイマイチ。',a:'出社する。規則は規則。例外を認めるとルールが崩れる',b:'在宅にする。ルールの目的は生産性。手段に固執しても意味がない',pv:[{p:'P1',d:-1},{p:'P2',d:-1}]},
+{id:'Q97',cat:'社会的責任',layer:'Action',text:'友人に「来週の飲み会の店、予約しといて」と頼んだ。',a:'正直あまり期待してない。自分でもフォローできるよう準備する',b:'信じて任せる。ちゃんとやってくれると信頼している',pv:[{p:'P12',d:1}]},
+{id:'Q98',cat:'社会的責任',layer:'Action',text:'ニュースで社会問題を知ったとき。あなたの反応は？',a:'「大変だな…」と思うが、自分にできることはない',b:'「何かできないか」と考える。行動したくなる',pv:[{p:'P4',d:1},{p:'P7',d:1}]},
+{id:'Q99',cat:'社会的責任',layer:'Action',text:'環境問題への取り組み。コストも手間もかかるが次世代のためになる。',a:'自分の生活が最優先。余裕がある範囲でやればいい',b:'多少の犠牲を払ってでも、次の世代に良い世界を残したい',pv:[{p:'P7',d:1},{p:'P4',d:1}]},
+{id:'Q100',cat:'社会的責任',layer:'Action',text:'親友が「10万円貸してほしい」と言ってきた。返せるかは微妙。',a:'断る。お金の貸し借りは友情を壊す',b:'貸す。困っている親友を助けないなんて友人じゃない',pv:[{p:'P2',d:-1},{p:'P3',d:1}]},
+// --- Layer 1.5: Deep Structure ---
+// P8: Volatility Q102-Q106
+{id:'Q102',cat:'情緒変動性',layer:'Deep',text:'朝、コーヒーをこぼした。その日の気分は？',a:'「あーあ」で終わり。5分後には忘れている',b:'なぜか一日中テンションが上がらない。小さなことが引き金になる',pv:[{p:'P8',d:1}]},
+{id:'Q103',cat:'情緒変動性',layer:'Deep',text:'友人に約束をドタキャンされた。あなたの怒りは？',a:'「まあ仕方ないか」。次の連絡ではもう忘れている',b:'3日経ってもモヤモヤする。次に会ったとき態度に出てしまうかも',pv:[{p:'P8',d:1}]},
+{id:'Q104',cat:'情緒変動性',layer:'Deep',text:'推しのライブチケットが当選。その瞬間あなたは？',a:'心の中でガッツポーズ。表情はほぼ変わらない',b:'「やったー！！」と声が出る。近くの人に「当たった！」と報告する',pv:[{p:'P8',d:1}]},
+{id:'Q105',cat:'情緒変動性',layer:'Deep',text:'大事なプレゼンが3日後。プレッシャーが大きい。あなたの体は？',a:'平常通り。精神的プレッシャーは感じても体には出ない',b:'食欲がなくなる、眠りが浅くなるなど、体が先に反応する',pv:[{p:'P8',d:1}]},
+{id:'Q106',cat:'情緒変動性',layer:'Deep',text:'友人が些細なことで大笑いしたり、急に落ち込んだりする人。一緒にいて？',a:'正直疲れる。振り回されている感じ',b:'自分も一緒に笑ったり心配したりする。感情が豊かで楽しい',pv:[{p:'P8',d:1}]},
+// P9: Discipline Q107-Q111
+{id:'Q107',cat:'秩序性',layer:'Deep',text:'来月、3泊4日の旅行。あなたの準備は？',a:'宿だけ取って現地でノリで決める。そのほうが楽しい',b:'観光地・レストラン・移動手段を事前リサーチ。タイムテーブルも作る',pv:[{p:'P9',d:1}]},
+{id:'Q108',cat:'秩序性',layer:'Deep',text:'急に友人が「今から遊びに行っていい？」と連絡してきた。あなたの部屋は？',a:'「30分待って！」と全力で片付ける。普段は自分基準のカオス',b:'「いつでもどうぞ」。常に人を呼べる状態にしている',pv:[{p:'P9',d:1}]},
+{id:'Q109',cat:'秩序性',layer:'Deep',text:'友人との待ち合わせ。集合時間に対してあなたは？',a:'5〜10分の遅刻は普通。相手もそんなに気にしないでしょ',b:'必ず10分前には到着。遅れる可能性があるなら30分前に出る',pv:[{p:'P9',d:1}]},
+{id:'Q110',cat:'秩序性',layer:'Deep',text:'確定申告の締め切りは3月15日。あなたはいつやる？',a:'3月14日の夜。追い込まれないとエンジンがかからない',b:'2月中に終わらせる。「やるべきこと」が残っている状態が嫌',pv:[{p:'P9',d:1}]},
+{id:'Q111',cat:'秩序性',layer:'Deep',text:'友人があなたの性格を一言で表すなら？',a:'「自由人」「マイペース」と言われがち',b:'「しっかりしてる」「きっちりしてる」と言われがち',pv:[{p:'P9',d:1}]},
+// P10: Frontier Q112-Q115
+{id:'Q112',cat:'探索欲',layer:'Deep',text:'全く興味のなかった分野のドキュメンタリーがNetflixのおすすめに出てきた。',a:'スルー。興味がないものに時間を使いたくない',b:'「面白そう！」とりあえず再生。知らない世界を覗くのが好き',pv:[{p:'P10',d:1}]},
+{id:'Q113',cat:'探索欲',layer:'Deep',text:'「みんなそうしてるから」「昔からそうだから」という理由で続いているルール。',a:'安心する。みんながやっていることには理由がある',b:'「でもなぜ？」と疑問に思う。根拠がないなら変えてもいいのでは',pv:[{p:'P10',d:1}]},
+{id:'Q114',cat:'探索欲',layer:'Deep',text:'あなたが正しいと信じていたことを、尊敬する人に「それは間違いだよ」と指摘された。',a:'動揺する。自分の信じてきたものを否定されるのは辛い',b:'ワクワクする。「え、そうなの？教えて！」と前のめりになる',pv:[{p:'P10',d:1}]},
+{id:'Q115',cat:'探索欲',layer:'Deep',text:'何の予定もない完全に自由な1日。あなたにとっての「最高」は？',a:'いつものカフェで好きな本を読む。安心できる日常が一番',b:'行ったことのない街をぶらぶら歩く。予定がないから面白い',pv:[{p:'P10',d:1}]},
+// P11: Exposure Q116-Q119
+{id:'Q116',cat:'感情露出度',layer:'Deep',text:'信頼している友人と深夜のファミレス。実は最近、仕事でかなり追い詰められている。',a:'「大丈夫だよ」と言って話題を変える。心配をかけたくない',b:'「実はさ…」と正直に打ち明ける。聞いてほしい',pv:[{p:'P11',d:1}]},
+{id:'Q117',cat:'感情露出度',layer:'Deep',text:'感動する映画を観て涙が出そう。隣に友人がいる。',a:'絶対に泣かない。こっそり涙を拭う',b:'普通に泣く。「やばい、泣いちゃった」と笑いながら言える',pv:[{p:'P11',d:1}]},
+{id:'Q118',cat:'感情露出度',layer:'Deep',text:'昔やっていた恥ずかしい趣味や痛い過去。友人との会話で触れられた。',a:'話題を変える。触れてほしくない',b:'「聞いてよ〜実はね…」と笑い話にする。むしろ鉄板ネタ',pv:[{p:'P11',d:1}]},
+{id:'Q119',cat:'感情露出度',layer:'Deep',text:'普段は強気な友人が、あなたの前で弱音を吐いた。「もう無理かも…」',a:'正直どう反応していいかわからない。少し気まずい',b:'「話してくれてありがとう」。信頼してくれたことが嬉しい',pv:[{p:'P11',d:1}]},
+// P12: Attachment Q120-Q123
+{id:'Q120',cat:'依存構造',layer:'Deep',text:'いつもすぐ返信をくれる親友が、LINEを既読スルーして2日経った。',a:'忙しいんだろう。返信が来たら来たでいい',b:'「何かあった？大丈夫？」と別の手段で連絡する。気になって仕方ない',pv:[{p:'P12',d:1}]},
+{id:'Q121',cat:'依存構造',layer:'Deep',text:'出会って3ヶ月の友人と、最近急に距離が縮まってきた。',a:'少し怖い。このペースで深まるのは息苦しいかも',b:'嬉しい。もっと一緒にいたい、もっと知りたい',pv:[{p:'P12',d:1}]},
+{id:'Q122',cat:'依存構造',layer:'Deep',text:'親友との関係が最近なぜかギクシャクしている気がする。あなたの頭の中は？',a:'「まあ、そういう時期もあるか」。あまり気にしない',b:'「嫌われた？何かした？」と不安でいっぱいになる',pv:[{p:'P12',d:1}]},
+{id:'Q123',cat:'依存構造',layer:'Deep',text:'重い荷物を持って階段を登っている。知人が「手伝おうか？」と声をかけてきた。',a:'「大丈夫です」と断る。頼ること自体が苦手',b:'「助かります！」と素直にお願いする。頼れるのは良い関係の証',pv:[{p:'P12',d:1}]},
+// --- Layer 2.5: Relational Dynamics ---
+// P13: Dialogue Structure（対話構造）Q124-Q128
+{id:'Q124',cat:'対話構造',layer:'Relational',text:'親友が「もう会社辞めたい…」と泣きながら電話してきた。あなたの脳内で最初に動くのは？',a:'「状況を整理しよう。何が一番キツい？ 辞めるなら次の策を考えよう」と解決モードが起動する',b:'「辛かったね…今から会える？ とりあえず話聞くよ」と感情受容モードが起動する',pv:[{p:'P13',d:-1}]},
+{id:'Q125',cat:'対話構造',layer:'Relational',text:'SNSで友人が明らかに間違った健康情報をシェアしている。あなたは？',a:'「それ、根拠ないよ」と訂正する。間違いを放置する方が不誠実',b:'スルーする。正しさより関係性の方が大事',pv:[{p:'P13',d:-1}]},
+{id:'Q126',cat:'対話構造',layer:'Relational',text:'恋人（またはパートナー）と将来について話しているとき、あなたが最も心地いいのは？',a:'具体的な計画を立てる会話。「5年後にはこうなっていたい」',b:'お互いの気持ちを確認し合う会話。「一緒にいられて幸せだね」',pv:[{p:'P13',d:-1}]},
+{id:'Q127',cat:'対話構造',layer:'Relational',text:'友人同士が揉めて、あなたに「どっちが悪いと思う？」と聞いてきた。',a:'客観的に状況を分析して、フェアな意見を伝える',b:'「どっちの気持ちもわかるよ」と両方の感情に寄り添う',pv:[{p:'P13',d:-1}]},
+{id:'Q128',cat:'対話構造',layer:'Relational',text:'あなたが本当に落ち込んでいるとき、一番救われる相手の対応は？',a:'「こうすれば解決できるんじゃない？」と具体的な打開策を提示してくれる',b:'何も言わずに隣にいてくれる。「大変だったね」とだけ言ってくれる',pv:[{p:'P13',d:-1}]},
+// P14: Love Expression（愛着表現）Q129-Q133
+{id:'Q129',cat:'愛着表現',layer:'Relational',text:'大切な人の誕生日。あなたの「最高の愛情表現」は？',a:'何週間も前からリサーチして、相手が「なぜこれを知ってるの！？」と驚くプレゼントを用意する',b:'手紙を書く。普段は絶対に言わない気持ちを、言葉にして渡す',pv:[{p:'P14',d:1}]},
+{id:'Q130',cat:'愛着表現',layer:'Relational',text:'パートナーが仕事で大きな成果を出した。あなたの第一声は？',a:'黙って抱きしめる、またはご褒美ディナーに連れ出す。行動で祝う',b:'「本当にすごいね、ずっと頑張ってたの知ってるよ」と言葉で伝える',pv:[{p:'P14',d:1}]},
+{id:'Q131',cat:'愛着表現',layer:'Relational',text:'好きな人に「私のこと好き？」と聞かれた。本心では大好き。あなたは？',a:'照れて言えない。代わりに相手の好きな料理を作ったり、行動で示す',b:'「好きだよ」と即答できる。言葉にしないと伝わらないと思っている',pv:[{p:'P14',d:1}]},
+{id:'Q132',cat:'愛着表現',layer:'Relational',text:'大切な友人が引っ越すことになった。あなたの別れ方は？',a:'引っ越し当日に手伝いに行く。荷造りしながら「いつでも来いよ」とだけ言う',b:'手紙やLINEで長文を送る。「出会えてよかった」と気持ちを言葉にする',pv:[{p:'P14',d:1}]},
+{id:'Q133',cat:'愛着表現',layer:'Relational',text:'あなたが「この人は自分を大切にしてくれている」と最も強く感じるのは？',a:'忙しいのに時間を作ってくれたとき。駆けつけてくれたとき。行動で示されたとき',b:'「あなたが大事だよ」「いつもありがとう」と真剣な目で言われたとき',pv:[{p:'P14',d:1}]},
+// P15: Conflict Style（葛藤対処）Q134-Q138
+{id:'Q134',cat:'葛藤対処',layer:'Relational',text:'恋人と大喧嘩した夜。あなたは？',a:'一旦距離を置く。頭を冷やしてから話したい。今話しても火に油を注ぐだけ',b:'「逃げるな、今ちゃんと話そう」。モヤモヤを抱えたまま眠れない',pv:[{p:'P15',d:1}]},
+{id:'Q135',cat:'葛藤対処',layer:'Relational',text:'仲の良い友人に、ずっと気になっていた不満がある。どうする？',a:'言わない。関係を壊すリスクを取るくらいなら、自分が我慢する方がマシ',b:'「実はさ…」と切り出す。言わないまま溜まっていく方が関係を壊すと思う',pv:[{p:'P15',d:1}]},
+{id:'Q136',cat:'葛藤対処',layer:'Relational',text:'職場で自分の企画を後輩に横取りされた気がする。あなたは？',a:'モヤモヤするけど黙っている。「器が小さい人」と思われたくない',b:'「あの企画の経緯、ちょっと確認させて」と本人に直接聞く',pv:[{p:'P15',d:1}]},
+{id:'Q137',cat:'葛藤対処',layer:'Relational',text:'パートナーの友人があなたに対して失礼な態度を取った。パートナーはそれに気づいていない。',a:'何も言わない。パートナーの交友関係に口を出すべきじゃない',b:'「あの人のあの態度、正直キツかった」とパートナーに正直に伝える',pv:[{p:'P15',d:1}]},
+{id:'Q138',cat:'葛藤対処',layer:'Relational',text:'10年来の親友と、人生で初めて本気でぶつかった。翌日のあなたは？',a:'連絡しない。お互い頭を冷やす時間が必要。待つ',b:'翌朝「昨日はごめん。でも話したいことがある」と連絡する',pv:[{p:'P15',d:1}]}
+];
+
+// ============================================================
+// 32 TYPES DATA
+// ============================================================
+const TYPES={
+'Core-Logic-Open-Free-Flow':{n:1,nm:'静かなる賢者',en:'The Quiet Sage',fam:'Architects',
+d:'知識を愛し、自由に思索する穏やかな知性',
+s:'偏見がなく公平で、あらゆる意見に耳を傾けられる器の広さを持っています。深い知識と洞察力で、周囲が見落としている本質を一言で言い当てることがあります。押しつけがましさが一切ないため、あなたの言葉は不思議なほど人の心に残ります',
+w:'受動的になりがちで、自分から行動を起こすことに大きなエネルギーを消費します。「わかっているのに動けない」自分に苛立つことがあるはずです。また、他人からの評価を気にしないように見えて、実は「理解されない孤独」を静かに抱えています',
+b:'一人で本を読み、考え、たまに信頼できる友人と深い議論をする',
+c:'「答えは急がない。考え続けることが答えだ」',q:'「なるほど、面白い視点だね」',
+soul:'あなたの魂は「理解すること」そのものを生きる糧にしています。世界を観察し、分析し、自分なりの体系に落とし込む――その静かな知的作業の中にこそ、あなたは最も深い充足を感じます。しかし、あなたの内側には誰も気づかない葛藤があります。「もっと知りたい」という飽くなき好奇心と、「知れば知るほど、何もわかっていなかったことに気づく」という底なしの謙虚さ。この二つが同居しているため、あなたは決して傲慢にはなれません。他人が「もう十分だ」と思うところで、あなたはまだ問い続けています。その姿は周囲からは「穏やかで控えめな人」に見えますが、あなたの頭の中では常に嵐のような思考が渦巻いているのです。あなたが本当に恐れているのは、浅い理解で満足してしまうこと。そして本当に求めているのは、この思考の旅を共に歩ける数少ない同志です。',
+daily:'LINEの返信は遅いです。既読をつけてから「何と返すべきか」を考え込んでしまい、気づけば3時間経っています。悪気は一切ありません。買い物では、目的のもの以外に興味を示さず最短ルートで帰宅しますが、本屋だけは例外で2時間は出てきません。パーティーでは隅に移動し、たまたま隣にいた一人と深い話を始め、気づけば二人で哲学的な議論をしています。寝る前にスマホで調べ物を始めると、Wikipediaのリンクを辿り続けて気づけば深夜2時。「もう寝よう」と思った直後に新しい疑問が浮かび、結局3時まで起きています。',
+relations:'他人からは「穏やかで優しい人」「何を考えているかわからない人」と両極端に見られます。あなたは相手の話を深く理解しようとするため、聞き上手として信頼されますが、自分の本音を語ることは稀です。「全部わかっているのに何も言わない」と誤解されることもあります。親密な関係では、相手の知的好奇心の深さによって心を開く度合いが決まります。表面的な会話が続く相手とは、どれだけ長く付き合っても距離が縮まりません。',
+careers:[
+{job:'研究者・データサイエンティスト',why:'「なぜ？」を追求し続けることが仕事になる環境は、あなたの魂が最も喜ぶ場所です。締め切りに追われるより、じっくり考える時間が保証される研究職は、あなたの思考の深さが最大の武器になります。'},
+{job:'テクニカルライター・編集者',why:'複雑なことを「わかりやすく整理する」能力は、あなたが自然にやっていることです。他の人が混乱する情報の山を、美しい構造に変換できるのはあなたの特権です。'},
+{job:'哲学者・思想家・大学教員',why:'答えのない問いに向き合い続けることに耐えられる精神力。それは才能です。多くの人が「答えがないなら考えても無駄」と諦める場所で、あなたはまだ歩き続けられます。'}
+]},
+'Core-Logic-Open-Free-Drive':{n:2,nm:'孤高の開拓者',en:'The Lone Pioneer',fam:'Architects',
+d:'一人で新しい道を切り拓く、論理的な冒険者',
+s:'独立心が極めて強く、誰の許可も必要としない行動力を持っています。論理的に考え、合理的に判断しながらも、「まだ誰もやっていないこと」への嗅覚が鋭く、先見性があります。周囲が躊躇する場面で迷いなく一歩を踏み出せるのは、あなたの最大の強みです',
+w:'「自分でやった方が早い」が口癖になっていませんか？チームプレイが苦手なのではなく、他人のペースに合わせることにストレスを感じるのです。結果として孤立しやすく、いつの間にか周囲との間に壁ができていることがあります。また、自分の判断に自信があるがゆえに、他者の助言を無意識に軽視してしまうことも',
+b:'誰も手をつけていない分野に一人で飛び込み、体系化する',
+c:'「道がないなら、自分で作る」',q:'「自分でやった方が早い」',
+soul:'あなたの魂の根底には「自分の足で立ち、自分の道を歩く」という揺るがない信念があります。誰かに教わった道を歩くことに、あなたは本能的な違和感を覚えます。「正解」と言われているルートを見て、「本当にそうか？」と疑い、そして自分で検証しに行く。その衝動は止められません。あなたが恐れているのは、依存すること。誰かに頼らなければ生きていけない状態に陥ることが、あなたにとって最大の恐怖です。しかし、その恐れの裏側には「理解してくれる人がいたら、どれだけ楽だろう」という、決して口にしない渇望が眠っています。一人で切り拓いた道の先で、ふと振り返ったとき誰もいない――その寂しさを知っているからこそ、あなたは立ち止まらずに歩き続けるのです。走り続けることで、寂しさを感じる暇をなくしている。あなたの行動力の源泉は、実はそこにあるのかもしれません。',
+daily:'旅行は一人で行きます。計画は最低限で、現地で直感的に動くスタイル。同行者がいると「この人のペースに合わせなきゃ」というストレスが発生するため、結局一人の方が楽しめます。仕事では、会議で全員が悩んでいる問題の答えがもう見えていることがあり、「なぜみんなわからないんだろう」と内心思っています（でも言いません）。新しいガジェットやツールを見つけると即座に試し、使いこなしてから人に勧めます。趣味にハマると一気に深掘りし、プロ級の知識を身につけますが、ある日突然興味を失って次に移ります。',
+relations:'「すごい人だけど、ちょっと近寄りがたい」と思われていることが多いです。あなたは壁を作っているつもりはなくても、独立心の強さが周囲に「一人で大丈夫な人」という印象を与えています。実は心を開いた相手には驚くほど面倒見が良いのですが、その姿を知る人は非常に少ないです。人間関係で最もストレスを感じるのは「依存されること」。相手が自立しているほど、あなたは安心して関係を深められます。',
+careers:[
+{job:'起業家・フリーランスエンジニア',why:'「上司の指示に従う」という構造自体がストレス源であるあなたには、自分のルールで勝負できる環境が必要です。リスクを取ることへの恐怖が少なく、論理的に勝算を計算できるため、独立は最も自然な選択です。'},
+{job:'発明家・R&Dエンジニア',why:'「まだ誰もやっていないこと」に価値を感じるあなたの性質は、研究開発の現場で最も輝きます。既存の枠にはまらない発想と、それを形にする実行力の組み合わせは稀有な才能です。'},
+{job:'コンサルタント・アドバイザー',why:'複数の分野を横断的に理解し、構造的に問題を解決する力はコンサルティングに最適です。組織に属さず「外部の専門家」として関わることで、あなたの独立心も満たされます。'}
+]},
+'Core-Logic-Open-Order-Flow':{n:3,nm:'静かなる守護者',en:'The Silent Guardian',fam:'Architects',
+d:'計画的で誠実。少数の大切な人を静かに守る',
+s:'「この人に任せておけば大丈夫」——周囲にそう思わせる信頼性は、あなたの最大の資産です。約束を必ず守り、期限を必ず遵守し、言ったことは必ず実行する。その一貫性は、長い時間をかけて周囲からの揺るがない信頼を築いています',
+w:'変化への適応が苦手です。新しい環境、新しいルール、新しい人間関係——それらは全てあなたのエネルギーを大きく消費します。「今のやり方で十分うまくいっているのに、なぜ変える必要があるのか」という思いが強く、変革期に大きなストレスを抱えることがあります。また、自分の貢献を自らアピールすることが苦手なため、正当な評価を受けられないこともあります',
+b:'毎日のルーティンを大切にし、大切な人のために裏方で動く',
+c:'「約束は守る。それが俺の全てだ」',q:'「大丈夫、任せて」',
+soul:'あなたの魂が最も深く求めているのは「安定した世界を守ること」です。それは保守的というより、あなたが築いてきたもの——信頼、関係、日常——を大切にしたいという切実な願いです。あなたは派手な成果を上げることより、誰かが困らないように事前に手を打つことに喜びを感じます。誰も気づかない裏方の仕事を黙々とこなし、トラブルが起きる前に防いでいる。その功績は表に出ることがほとんどありませんが、あなたがいなくなった瞬間に全てが崩れ始めることで、ようやく周囲はあなたの存在の大きさに気づきます。あなたが密かに恐れているのは、大切なものを守れなくなること。そして、あなたが決して口にしない本音は「たまには自分も守られたい」ということ。いつも守る側にいるあなたが、ふと疲れを見せた瞬間——それに気づいてくれる人が、あなたにとって本当に大切な存在です。',
+daily:'スマホのカレンダーとリマインダーは完璧に管理されています。友人の誕生日も、仕事の締め切りも、歯医者の予約も。朝のルーティンは毎日同じで、それが崩れると一日の調子が狂います。冷蔵庫の中身を把握しており、足りないものを買い足すタイミングが絶妙。カフェでは「いつもの席」があり、そこが埋まっているとなんとなく落ち着きません。大切な人が体調を崩すと、頼まれていないのに薬やお粥を持って現れます。LINEの返信は必ずその日中にします。',
+relations:'「いつも頼りになる」「何も言わなくてもわかってくれる」と思われています。しかし、それは裏を返せば「頼られる側」に固定されているということでもあります。あなた自身が辛いとき、誰に頼ればいいかわからなくなることがありませんか？「大丈夫？」と聞かれると反射的に「大丈夫」と答えてしまう癖は、あなたの優しさであると同時に、心の壁でもあります。本当に楽になれるのは、あなたの「大丈夫じゃない日」を受け入れてくれる相手です。',
+careers:[
+{job:'品質管理・システム管理者',why:'「問題が起きる前に防ぐ」というあなたの本能的な行動パターンが、そのまま仕事の成果になります。ミスを見逃さない目と、ルールを徹底する几帳面さは、品質管理において最高の武器です。'},
+{job:'経理・会計士・行政書士',why:'数字の正確さと期限の遵守が命であるこの分野は、あなたの「約束を守る」という核心的な価値観と完全に一致します。地味に見える仕事ですが、あなたはその「地味さ」にこそ誇りを感じられる人です。'},
+{job:'看護師・介護士・バックオフィス',why:'「誰かを支える」ことに本質的な充足を感じるあなたにとって、ケアの仕事は天職です。目立たなくても、自分がいることで誰かの生活が支えられている——その実感が、あなたのエネルギー源になります。'}
+]},
+'Core-Logic-Open-Order-Drive':{n:4,nm:'戦略家',en:'The Strategist',fam:'Architects',
+d:'合理的に世界を構造化し、計画的に目標を達成する',
+s:'5年後、10年後を見据えた長期ビジョンを描ける力。複雑な状況を構造化し、最適な手順に分解し、着実に実行する。その能力は周囲の人間が「なぜそこまで先が読めるのか」と驚くほどです。感情に流されない意思決定ができるため、危機的状況でこそ真価を発揮します',
+w:'完璧主義が暴走することがあります。計画通りに進まないと強いストレスを感じ、自分にも他人にも厳しくなります。「効率」を追求するあまり、他者の感情や「非効率だけど大切なプロセス」を切り捨ててしまうことも。ストレスが極限に達すると、普段は冷静なあなたが突然感情的になり、自分でも驚くことがあるはずです',
+b:'目標を設定し、計画を立て、着実に実行する。無駄を嫌う',
+c:'「感情を排して、最善手を打つ」',q:'「まず、ゴールを明確にしよう」',
+soul:'あなたの魂の核心には「世界を合理的に理解し、制御したい」という強い欲求があります。カオスに秩序を持ち込むこと、曖昧なものを明確にすること、非効率を効率に変えること——それがあなたの存在理由です。しかし、あなたの内面には大きな矛盾があります。人間の感情や非合理的な行動を「理解できない」と思いながらも、自分自身が最も非合理的な瞬間——たとえば、理由もなく不安になったり、論理では説明できない執着を持ったりする瞬間——に気づいているのです。あなたが本当に恐れているのは「コントロールを失うこと」。計画が崩れること、予測できない事態に直面すること、自分の感情に振り回されること。その恐怖が、あなたをさらなる計画と準備に駆り立てます。しかし皮肉なことに、あなたの人生で最も大切な出来事の多くは「計画外」から生まれています。',
+daily:'ToDoリストは常に最新で、優先順位が色分けされています。朝起きたらまず今日のタスクを確認し、頭の中でシミュレーションしてから動き出します。会議では発言が少ないように見えて、実は全体の議論を俯瞰し、最も効率的な結論を頭の中で組み立てています。発言するときは的確で短い。レストランではメニューを開いてから30秒で注文が決まります。選択肢を比較検討するのではなく、瞬時に最適解を算出しているのです。旅行の計画を立てるのが好きですが、実は「計画を立てること自体」が旅行よりも楽しかったりします。',
+relations:'「頼りになるけど、ちょっと怖い」と思われています。あなたの的確すぎる指摘は、時に相手の心を抉ることがあります。あなたにとっては「事実を伝えただけ」でも、相手は「冷たい」と感じることがある。この認識のズレに気づくことが、あなたの人間関係を劇的に改善するカギです。本当に心を許した相手には、意外なほど甘えん坊な一面を見せることがありますが、その姿を知る人はごく僅かです。',
+careers:[
+{job:'プロジェクトマネージャー・経営コンサルタント',why:'「複雑な問題を構造化し、実行可能な計画に落とす」というあなたが自然にやっていることが、そのまま高い報酬に変わる仕事です。他の人が「複雑すぎる」と投げ出す課題こそ、あなたの出番です。'},
+{job:'建築家・都市計画者',why:'空間を合理的に構造化し、長期的な視点で設計する——この仕事はあなたの思考パターンそのものです。「100年後にも残る設計」を考えられる忍耐力と先見性は、あなたの最大の強みです。'},
+{job:'投資アナリスト・ファンドマネージャー',why:'データから構造を読み取り、感情に流されず意思決定する力。市場が恐怖で支配されているときこそ冷静でいられるあなたの特性は、投資の世界で最も希少な資質です。'}
+]},
+'Core-Logic-Veiled-Free-Flow':{n:5,nm:'影の観察者',en:'The Shadow Observer',fam:'Architects',
+d:'静かに世界を観察し、本質を見抜く隠れた知性',
+s:'あなたの洞察力は異常なレベルです。会議室に入った瞬間に「誰と誰が対立しているか」「本当に決まっていることは何か」を見抜いています。偏りなく物事を分析できるため、どの立場の人からも「あの人に聞けば間違いない」と信頼される存在です。感情的にならず、事実を積み上げて結論を出すあなたの判断は、後になって正しかったことが証明されます',
+w:'存在感の薄さは、あなたの能力に見合った評価を受けられない最大の原因です。「何もしていないように見える」のに実は全部見ている。その落差に、時々あなた自身が傷ついているはずです。また、自分から動くことに対する根深い抵抗感があり、どれだけ能力があっても「待ちの姿勢」から抜け出せないことがあります。ストレスが溜まると完全にシャットダウンし、誰とも連絡を取らなくなることも',
+b:'集団の端にいて全体を観察している。意見を求められたときだけ的確に答える',
+c:'「見ている。全部、見ている」',q:'「……（観察中）」',
+soul:'あなたの魂は「見ること」で世界と繋がっています。多くの人は「話すこと」「行動すること」で存在を示しますが、あなたは「観察すること」によって、誰よりも深く世界を理解しています。教室の一番後ろの席から、クラス全体の人間関係の地図が見えていた子供時代。その頃から、あなたの目は人間の本音を見抜いていました。しかし、あなたが抱えている最大の葛藤は「見えすぎること」の孤独です。他人の嘘も、建前も、無意識の動機も——見えてしまう。それを指摘すれば関係が壊れ、黙っていれば自分が苦しくなる。あなたはその間で、いつも沈黙を選んできました。あなたが恐れているのは「見られること」。観察する側にいることが安全地帯であり、自分が観察の対象になることを本能的に避けています。しかし、本当は「あなた自身を見てくれる人」を切望しているのです。',
+daily:'飲み会では聞き役に徹しています。しかしあなたの頭の中では「Aさんは今日テンションが低い、何かあったな」「BさんとCさんの関係性が先月と変わった」といった分析が高速で走っています。会話にはあまり参加しませんが、帰り道に誰かが「そういえば、あの時の一言が核心を突いてたよね」と思い出すのは、大抵あなたの発言です。SNSは見る専門で、投稿はほとんどしません。いいねすら押さないことも。映画や本の感想を聞かれると、他の人が気づかなかった伏線や構造を指摘して驚かれます。',
+relations:'「何を考えているかわからない」と言われることに慣れていますが、内心では少し寂しいと感じています。あなたは他人を深く理解しているのに、自分は理解されていない——この非対称性があなたの人間関係の核心的な課題です。あなたが心を開くのは、あなたの沈黙を「理解している」と受け取ってくれる人。一緒にいて無理に会話をしなくていい関係が、あなたにとって最も安心できるものです。逆に「もっと話してよ」と要求されると、心が閉じます。',
+careers:[
+{job:'セキュリティアナリスト・情報分析官',why:'見えないものを見る力、異常を察知する鋭さ——あなたの「観察」という本能が、セキュリティの世界では最高の才能になります。他の人が見逃すパターンを、あなたは直感的に捉えます。'},
+{job:'翻訳者・校正者・学芸員',why:'テキストや作品の細部に宿る意図を読み取る力。目立たない仕事ですが、あなたのように「正確に理解し、正確に伝える」ことに価値を見出せる人にとっては天職です。'},
+{job:'UXリサーチャー・心理学研究者',why:'人間の行動を観察し、その背後にある動機を分析する——あなたが日常的にやっていることが、そのまま専門スキルになります。ユーザーが「何を言っているか」ではなく「何を求めているか」を見抜く力は、この分野で最も重要な資質です。'}
+]},
+'Core-Logic-Veiled-Free-Drive':{n:6,nm:'闇の設計者',en:'The Phantom Architect',fam:'Architects',
+d:'仮面の裏で自由に設計図を描く、見えない推進者',
+s:'自由な発想と確実な実行力を兼ね備え、しかもそれを表に出さない。あなたは「気づいたら仕組みが出来上がっていた」という魔法を使えます。誰にも気づかれずに物事を動かせる能力は、組織の中で最も希少なスキルの一つです。表舞台のリーダーが注目を浴びている裏で、実はあなたが全ての設計図を描いていた——そんなことが日常的に起きています',
+w:'あなたの最大の弱点は「信頼を得るのに時間がかかりすぎる」ことです。意図を見せないため、周囲からは「何を考えているかわからない人」と警戒されることがあります。また、表に出ないことへの美学がある一方で、「自分の功績が正当に評価されない」ことへの不満が静かに蓄積していくことも。その不満を表に出さないため、ある日突然爆発するか、黙って去るかのどちらかになりがちです',
+b:'表には出ないが、裏で仕組みを作り物事を動かしている',
+c:'「表に出る必要はない。仕組みが動けばいい」',q:'「俺が考えた通りに動いてるな」',
+soul:'あなたの魂が求めているのは「仕組みを作ること」そのものです。注目されること、称賛されることには興味がありません。あなたにとっての最大の報酬は「自分が設計した通りに世界が動いている」という静かな確信です。将棋の棋士が30手先を読むように、あなたは人や組織の動きを設計し、その通りに事が運ぶ快感を知っています。しかし、あなたの中には深い矛盾があります。「誰にも知られたくない」と思いながら、「本当に理解してくれる人がいたら」という渇望。あなたの設計図の美しさを理解できる人は極めて少なく、その孤独はあなたが自覚している以上に深いものです。あなたが恐れているのは「透明人間になること」。影響力を持ちたいけれど、注目されたくない。この矛盾を抱えたまま、あなたは今日も裏側で世界を少しだけ動かしています。',
+daily:'プロジェクトで問題が起きたとき、あなたはまず全体の構造を頭の中で再設計します。そして、表向きは「ちょっと提案なんですが」と控えめに切り出しながら、実は全体の方向を変える一手を打ちます。周囲は気づいていませんが、半年前にあなたが何気なく提案した小さな変更が、今の成功の土台になっています。家ではスマートホームのような自動化が好きで、「ボタン一つで全部動く」環境を構築します。料理も好きですが、レシピを独自に改良し、なぜその手順が最適かを論理的に説明できます。',
+relations:'あなたを「いい人」と思っている人は多いですが、「よく知っている」と言える人はほとんどいません。あなたは相手に合わせた仮面を自然に使い分けているため、「あの人は誰といても同じだけど、本当の姿は見たことがない」と感じている人が周囲にいるはずです。信頼関係を築くのに時間がかかりますが、一度築いた関係は非常に深く、裏切ることがありません。ただし、信頼を裏切られた場合の切り替えも瞬時で、二度とチャンスを与えません。',
+careers:[
+{job:'システムアーキテクト・バックエンドエンジニア',why:'表に見えない「仕組み」を設計し、全体を支える——これはあなたの本能的な行動パターンそのものです。ユーザーは美しいUIしか見ませんが、それを動かしているバックエンドの設計者こそがあなたの居場所です。'},
+{job:'ゲームデザイナー・戦略プランナー',why:'ルールと仕組みを設計し、その中でプレイヤーが自然に動く世界を作る。あなたの「見えない影響力」への美学が、最も純粋に発揮される仕事です。'},
+{job:'投資戦略家・ベンチャーキャピタリスト',why:'表に出ずに大きな影響を及ぼし、複数の駒を同時に動かす。VCの世界はあなたの「設計者」としての本能と完璧にマッチします。'}
+]},
+'Core-Logic-Veiled-Order-Flow':{n:7,nm:'鉄仮面の番人',en:'The Iron Sentinel',fam:'Architects',
+d:'感情を見せず、規律正しく体系を守る',
+s:'あなたの最大の強みは「何があっても揺るがない」という絶対的な安定感です。周囲が感情的になり混乱する中、あなただけが冷静に状況を把握し、やるべきことを淡々と遂行します。感情に左右されない一貫性は、長期間にわたって周囲からの信頼を積み上げ、いつの間にか「あの人がいないと回らない」という存在になっています',
+w:'「冷たい人」と誤解されることが最大の課題です。あなたには豊かな感情がありますが、それを外に出すことが極端に苦手です。感謝も愛情も心の中では強く感じているのに、表に出るのは「いつも通りの淡々とした態度」だけ。大切な人に気持ちを伝えられないまま、関係が静かに冷えていくことがあります。また、ルールを守ることに固執するあまり、例外や柔軟な対応が必要な場面で判断が遅れることも',
+b:'決められたルールと手順を黙々と遂行する',
+c:'「感情は内側に。規律は外側に」',q:'「ルールはルールだ」',
+soul:'あなたの魂の深部には、実は激しい感情が眠っています。しかし、あなたはそれを表に出すことの「危険性」を本能的に知っているのです。感情を見せれば、冷静な判断が鈍る。弱さを見せれば、守るべきものを守れなくなる。だから、あなたは鉄の仮面をかぶり続けます。しかし、その仮面の内側では、あなたは誰よりも繊細に世界を感じ取っています。同僚の何気ない一言に深く傷つき、友人の小さな成功を自分のことのように喜んでいる。それなのに、外に出る表現は常に「無表情」か「事務的な対応」だけ。あなたが恐れているのは「感情を出した瞬間に、全てが崩れること」。一度感情の蓋を開けたら、もう戻れないのではないか——その恐怖が、あなたを仮面の中に閉じ込めています。でも本当は、安全な場所で、信頼できる一人の前で、その蓋を開けたいと思っているはずです。',
+daily:'仕事のデスクは常に整頓されています。ペンの位置も、ファイルの並びも、毎日同じ。それが崩れると落ち着きません。メールの返信は定型文のようですが、実は一言一言を慎重に選んでいます。感情を込めたいのに、書くと事務的になってしまう自分にもどかしさを感じることも。プレゼントを渡すとき「はい、これ」とぶっきらぼうに差し出しますが、実は何時間もかけて選んでいます。帰宅後は静かに一人の時間を過ごしますが、その中で日中に見せられなかった感情をゆっくり処理しています。',
+relations:'あなたの周囲の人は、二つのグループに分かれます。「冷たい人」と思っている多数派と、「本当は誰よりも優しい人」と知っている少数派。後者の人々は、あなたの不器用な優しさ——言葉では表現しないけれど、行動で示す愛情——を理解しています。あなたが最も苦しむのは「気持ちを言葉にしなければならない場面」。記念日や感謝の場面で、心にはあふれるほどの感情があるのに、口から出るのは素っ気ない一言だけ。手紙や文章にすると、驚くほど豊かな表現ができることに、あなた自身が気づいていないかもしれません。',
+careers:[
+{job:'法務担当・監査役・コンプライアンス',why:'規律を守り、例外を許さない——あなたにとってはストレスではなく自然な行動です。他の人が「面倒」と感じるルール遵守の仕事は、あなたにとっては「安心」の源。その一貫性が組織を法的リスクから守ります。'},
+{job:'薬剤師・品質保証エンジニア',why:'0.1mgの誤差も許されない世界で、感情に流されず正確に作業を続けられる。あなたの「鉄の正確さ」は、人の命を守るという最も崇高な形で活かされます。'},
+{job:'図書館司書・アーカイビスト',why:'体系を守り、秩序を維持する。静かな環境で、ルールに従って情報を管理する仕事は、あなたの「番人」としての本能と深く共鳴します。'}
+]},
+'Core-Logic-Veiled-Order-Drive':{n:8,nm:'黒幕',en:'The Mastermind',fam:'Architects',
+d:'冷静沈着。裏で戦略を練り、確実に目標を遂行する',
+s:'あなたの戦略眼は、チェスのグランドマスターのそれに匹敵します。20手先を読み、感情に流されず、最善手を打ち続ける。周囲が混乱し動揺する場面でも、あなたの頭の中では冷静に選択肢が比較検討されています。長期計画を立て、それを数年がかりで遂行する忍耐力も持ち合わせています。あなたがいなければ実現しなかったプロジェクトは、思っている以上に多いはずです',
+w:'人を「駒」として見てしまう傾向があります。効率的に目標を達成するために人を配置する——それは戦略としては正しくても、関わる人間の感情を無視しています。気づけば周囲は「利用されている」と感じ、あなたの周りから人が離れていきます。そして最も恐ろしいのは、その孤独にすら「計算通り」と自分に言い聞かせてしまうこと。本当は寂しいのに、弱さを認めることが最大の敗北だと感じている——その頑なさが、あなたを真の孤独に追い込んでいます',
+b:'全体の構造を把握し最適な手順で計画を実行。表には理由を見せない',
+c:'「駒が動く。予定通りに」',q:'「すべて計算通り」',
+soul:'あなたの魂は「支配」を求めているように見えて、実は「安全」を求めています。全てをコントロール下に置きたいのは、コントロールできない状況が怖いからです。予測不能な事態、計算外の感情、思い通りにならない人間関係——それらはあなたにとって「脅威」であり、だからこそ事前に全てを計算し、管理しようとします。しかし、あなたが最も制御できないものは、あなた自身の感情です。普段は完璧に理性で抑え込んでいますが、深夜、一人になったとき、その仮面が少しだけ緩む瞬間があるはずです。「本当にこのままでいいのか」「誰かに全てを委ねてみたい」——そんな考えが浮かび、すぐに「馬鹿なことを考えるな」と打ち消す。あなたの内面で起きているこのドラマは、誰にも見せたことがないはずです。あなたが最も必要としているのは、あなたの戦略を見抜いた上で、それでもそばにいてくれる存在。計算では手に入らない関係が、あなたの人生に最も欠けているピースです。',
+daily:'複数のプロジェクトを同時進行で管理しています。頭の中に常に「全体マップ」があり、各要素の進捗と相互関係をリアルタイムで把握しています。会話中も相手の発言を「将来どう使えるか」という視点で聞いていることがあり、自分でも「こんな計算をしてしまう自分」に嫌気がさすことがあります。食事は効率重視で同じメニューを選びがちですが、重要な会食では相手の好みを事前にリサーチし、完璧な店を選びます。寝る前に明日のシナリオを3パターンほどシミュレーションしてから眠りにつきます。',
+relations:'あなたの周囲には二種類の人間しかいません。あなたの能力を認めて距離を保つ人と、あなたに恐怖を感じて離れていく人。どちらの場合も、あなたとの関係には常に緊張感が伴います。あなたは「信頼」を最も重視しますが、その基準が極めて高いため、信頼に足る人間が非常に少ないのです。しかし、稀にあなたの仮面の裏側を見てしまった人——あなたが疲れて弱さを見せた瞬間に立ち会った人——は、あなたの最も忠実な味方になります。なぜなら、その人だけが「完璧な黒幕」の裏にいる「孤独な人間」を知っているからです。',
+careers:[
+{job:'CTO・最高戦略責任者',why:'組織全体を俯瞰し、複数のチームを同時に動かし、長期戦略を実行する。あなたが「自然にやっていること」が、企業の最高レベルの意思決定にそのまま活かされます。'},
+{job:'投資ファンドマネージャー・ヘッジファンド運用',why:'感情を排除し、データに基づいて意思決定する力。他者が恐怖で売るときに買い、歓喜で買うときに売る——あなたの冷静さは、この世界で最も希少で高く評価される資質です。'},
+{job:'戦略コンサルタント・情報参謀',why:'全体の構造を把握し、最適な一手を提案する。クライアントが気づいていない問題を指摘し、解決策を設計する力は、あなたの「黒幕」としての本能から来ています。'}
+]},
+'Core-Passion-Open-Free-Flow':{n:9,nm:'詩人',en:'The Poet',fam:'Mystics',
+d:'感受性豊かで自由。魂のままに漂い、世界に美を見出す',
+s:'あなたの感受性は、他の人には聞こえない音を聞き取るアンテナのようなものです。街角の光の加減、音楽の一節、友人の声のわずかな変化——あなたはそこに他の人が見逃す「美」と「意味」を見出します。他者の痛みに自然と寄り添えるのは、あなた自身が繊細に傷ついてきた経験があるからです。その共感力は、周囲の人にとって癒しそのものです',
+w:'現実的な判断が苦手で、締め切りや予算といった「数字」に追われると途端に苦しくなります。感情に飲まれやすく、悲しいニュースを見ただけで一日中立ち直れないことがあります。また、「やりたくないことをやらなければならない」状況が続くと、魂が枯れるように生気を失っていきます。周囲からは「もう少ししっかりしてほしい」と思われることもありますが、それはあなたの世界の見方が根本的に違うだけです',
+b:'気の向くままに過ごし、美しいものや感動に心を動かされる',
+c:'「世界は美しい。それだけで十分だ」',q:'「なんか…いいよね、これ」',
+soul:'あなたの魂は「感じること」のために存在しています。多くの人が「何を達成するか」で人生を測る中、あなたは「何を感じるか」で人生の価値を決めています。夕焼けを見て胸が締め付けられる感覚。初めて聴いた曲に涙が溢れる瞬間。友人の笑顔に世界のすべてが肯定される体験。あなたにとって、それらは「成果」や「効率」よりもはるかに大切なものです。しかし、あなたの内面には深い葛藤があります。この「感じすぎる」性質は、あなたに美しい世界を見せると同時に、圧倒的な痛みも運んできます。世界の残酷さ、人間の無関心、自分の無力さ——それらを感じ取ってしまうあなたは、時に「感じないでいられたら楽なのに」と思うことがあるはずです。でも、あなたは感じることをやめられません。なぜなら、感じなくなった瞬間、あなたはあなたではなくなるからです。',
+daily:'カフェでは窓際の席を選び、外を行き交う人々を眺めながら空想にふけります。音楽は歌詞よりも「空気感」で選びます。雨の日には特別なプレイリストがあり、晴れの日とは全く違う音楽を聴いています。本は3冊同時に読みかけていて、その日の気分で手に取る本が変わります。LINEのスタンプ選びに異様なこだわりがあり、その時の感情にぴったり合うスタンプが見つからないと文字で送るのをためらうことも。買い物では「必要なもの」より「心が動いたもの」を買ってしまい、使い道のない美しい小物が部屋に増えていきます。',
+relations:'あなたは「一緒にいるだけで癒される人」と思われていますが、実はあなた自身が最も癒しを必要としている一人です。他人の感情を受け取りすぎて疲弊することが多く、一人の時間が不可欠です。人間関係で最も辛いのは「感じ方を否定されること」。「考えすぎだよ」「気にしすぎ」と言われると、心のシャッターが閉まります。あなたが本当に安心できるのは、「感じること」を肯定してくれる人のそばです。',
+careers:[
+{job:'詩人・作家・フォトグラファー',why:'あなたが自然にやっている「世界の美を見つけ、切り取る」行為が、そのまま作品になります。他の人が見過ごす瞬間に価値を見出せるのは、あなたの感受性だけが持つ特権です。'},
+{job:'カウンセラー・セラピスト',why:'他者の痛みに自然と寄り添えるあなたの共感力は、傷ついた人にとって最も必要とされる力です。「何も言わなくても、この人にはわかってもらえる」——そう感じさせる力があなたにはあります。'},
+{job:'フラワーデザイナー・空間デザイナー',why:'美的感覚と感性で空間を創り上げる仕事は、あなたの魂が喜ぶ場所です。論理ではなく「感じること」が正解になる世界で、あなたは最も自由に呼吸できます。'}
+]},
+'Core-Passion-Open-Free-Drive':{n:10,nm:'魂の創造者',en:'The Soul Creator',fam:'Mystics',
+d:'内なる情熱を形にする。自由で独創的な表現者',
+s:'創造力と実行力の両立は、極めて稀な才能です。多くの「感性の人」はアイデアを形にすることが苦手ですが、あなたはビジョンを見るだけでなく、それを実際に創り上げる力を持っています。独自の世界観は唯一無二で、あなたの創るものには「この人にしか出せない空気」が宿ります',
+w:'妥協を許さない性質が、周囲との衝突を生みます。あなたにとって「80%の完成度で出す」ことは敗北ですが、締め切りやチームワークを優先する人たちにはそれが理解されません。また、インスピレーションが湧かない期間が来ると、自分の才能を疑い始め、深い自己嫌悪に陥ることがあります。その浮き沈みの激しさに、周囲はついていけないことも',
+b:'自分のビジョンに忠実に、作品やプロジェクトを生み出す',
+c:'「頭の中にある世界を、この手で形にする」',q:'「これを形にしたい」',
+soul:'あなたの魂は「創ること」に突き動かされています。頭の中に浮かぶビジョン——それは色であったり、形であったり、ストーリーであったり——を現実世界に引きずり出すことが、あなたの存在理由です。完成した作品は、あなたの分身です。だからこそ、批判されると人格を否定されたように感じてしまう。「作品が嫌い」と言われることは「あなたが嫌い」と同義なのです。あなたの内面では「創りたい」衝動と「創れない」恐怖が常に戦っています。白紙のキャンバス、空のドキュメント、何もないステージ——それらの前に立つとき、あなたは「何か素晴らしいものを生み出せるはず」という期待と「何も出てこなかったらどうしよう」という恐怖を同時に感じています。この葛藤を知らない人はあなたを「才能のある自由人」だと思っていますが、実際のあなたは誰よりも苦しみながら創っているのです。',
+daily:'インスピレーションは予告なく来ます。シャワー中、電車の中、深夜3時。そのときにメモを取らないと消えてしまうため、スマホのメモアプリには断片的なアイデアが数百個溜まっています。創作に没頭すると食事も睡眠も忘れ、12時間ぶっ通しで作業することも。逆にインスピレーションがない日は、何をしても空虚で、ソファに沈んだまま一日が終わります。人の作品に触れるとき、「技術」より「魂が込められているか」を見ています。技術的に完璧でも魂がない作品には興味がありません。',
+relations:'あなたは人間関係においても「創造的」であることを求めます。ルーティン化した関係、予定調和の会話、表面的なやり取り——これらはあなたにとって「死」に等しいものです。常に新しい刺激と深い感情の交換を求めるため、パートナーには「一緒にいて飽きない人」を選びます。しかし、あなたの激しい感情の波に付き合える人は多くありません。あなたを理解する最大のカギは「創作モード中は別人になる」ということを受け入れてくれるかどうかです。',
+careers:[
+{job:'アーティスト・映像クリエイター・作曲家',why:'あなたの内側にあるビジョンを外に出す仕事。他の人には見えない世界を形にする——それはあなたにしかできないことです。商業的な成功より「魂が震える作品を創れたか」が、あなたにとっての唯一の評価基準です。'},
+{job:'UXデザイナー・プロダクトデザイナー',why:'「ユーザーが何を感じるか」を起点にデザインする仕事は、あなたの感性と実行力の両方を活かせます。機能性だけでなく「触った瞬間に心が動くかどうか」にこだわれるのは、あなたの強みです。'},
+{job:'起業家・ブランドクリエイター',why:'既存の枠組みに収まれないあなたは、自分の世界観をそのまま事業にするのが最も自然です。「こういうものが世界に存在すべきだ」という確信が、あなたの最大の起業動機になります。'}
+]},
+'Core-Passion-Open-Order-Flow':{n:11,nm:'静かなる癒し手',en:'The Gentle Healer',fam:'Mystics',
+d:'穏やかで計画的。深い共感力で人の痛みに寄り添う',
+s:'あなたの存在は「安全基地」そのものです。あなたのそばにいると、人は不思議と本音を話し始めます。それは、あなたが「聞くこと」に真剣だからです。ただ聞くだけでなく、相手の感情を正確に受け止め、「それは辛かったね」と心からの共感を返せる。この能力と、約束を守り日常を丁寧に生きる信頼性が組み合わさることで、あなたは周囲にとってかけがえのない存在になっています',
+w:'他者の感情を背負いすぎることが、あなたの最大の弱点です。友人が辛いとき、あなたはその辛さを自分のことのように感じてしまいます。気づけば、自分自身の感情がわからなくなり、「私は今、自分のために泣いているのか、あの人のために泣いているのか」がわからなくなることがあります。また、自分を後回しにする癖が強く、「自分のために時間を使う」ことに罪悪感を感じてしまいます',
+b:'日常を大切にしながら、困っている人のそばにいる',
+c:'「あなたが泣いているなら、隣にいるよ」',q:'「無理しなくていいよ」',
+soul:'あなたの魂が最も深く求めているのは「誰かを癒すこと」であり、それは同時に「自分自身を癒すこと」でもあります。あなたが他者の痛みに敏感なのは、あなた自身が深い痛みを知っているからです。過去に傷ついた経験が、あなたの共感力の土台になっています。しかし、ここにあなたの最大の矛盾があります。あなたは人を癒す側にいることに安心を感じますが、自分が癒される側に回ることには強い抵抗を覚えます。「自分の問題で人に迷惑をかけたくない」「自分は大丈夫だから」——その言葉の裏には、弱さを見せることへの深い恐怖があります。あなたが癒す側にい続けるのは、優しさだけではなく、「癒す側にいる限り、自分の傷に向き合わなくて済む」という無意識の防衛でもあるのです。いつか、あなた自身が「助けて」と言えたとき——その瞬間が、あなたの人生で最も大きな転機になるでしょう。',
+daily:'友人の体調不良を本人より先に気づくことがあります。「顔色がいつもと違う」「声のトーンが低い」——そういった微細な変化を無意識にキャッチしています。冷蔵庫には常備菜が入っており、急な来客にも対応できる準備があります。夜寝る前に、今日関わった人たちの表情を一人ずつ思い返し、「あの人は大丈夫だったかな」と気にかけることがあります。手帳には友人の好きな食べ物やアレルギーがメモされていて、プレゼントを選ぶときに参照します。一人の時間には、お茶を淹れて静かに過ごすのが好きですが、その間も誰かのことを考えています。',
+relations:'「この人の前では泣いてもいい」と思わせる存在感があなたの最大の武器です。しかし、あなた自身はその安心感を誰かからもらえていますか？ 人間関係であなたが最も苦しむのは、「頼られること」自体ではなく、「自分も頼りたいのに頼れない」という非対称性です。あなたに必要なのは、あなたの「大丈夫」の裏側にある疲れを見抜き、何も聞かずにお茶を差し出してくれるような相手です。',
+careers:[
+{job:'看護師・社会福祉士・セラピスト',why:'「人の痛みに寄り添う」ことが仕事になる環境は、あなたの魂が最も充実する場所です。マニュアル通りのケアではなく、一人ひとりに合わせた温かい対応ができるのは、あなたの共感力があってこそです。'},
+{job:'教師・保育士',why:'子どもや生徒の微細な変化に気づき、言葉にならないSOSをキャッチできるあなたは、教育の現場で最も必要とされる存在です。「この先生は分かってくれる」という安心感は、生徒の成長に不可欠な土台です。'},
+{job:'栄養士・アロマセラピスト',why:'「身体を通じて心を癒す」というアプローチは、あなたの繊細な感受性と計画性の両方を活かせます。食事や香りという具体的な手段で人を癒すことに、大きな充足感を感じるはずです。'}
+]},
+'Core-Passion-Open-Order-Drive':{n:12,nm:'情熱の建築家',en:'The Passionate Builder',fam:'Mystics',
+d:'感情を燃料に、秩序ある世界を一つずつ築き上げる',
+s:'情熱と計画性の両立は、極めて稀な才能です。多くの情熱的な人は計画が苦手で、多くの計画的な人は情熱が薄い。あなたはその両方を持っているため、「夢を語るだけでなく、実現できる人」です。ビジョンを描き、ロードマップを引き、一歩ずつ着実に進む。その姿は周囲に「この人についていけば大丈夫」という安心感と高揚感を同時に与えます',
+w:'自分の理想に固執しすぎることがあなたの最大の課題です。「こうあるべき」というビジョンが明確すぎるため、現実がそこから外れると強いストレスを感じます。チームメンバーが自分の期待通りに動かないとき、失望を隠せないことがあります。また、燃え尽き症候群のリスクが常にあります。情熱を燃料にしているため、情熱が尽きた瞬間に全てが止まってしまうのです',
+b:'信じるものに対して計画的に、しかし熱く取り組む',
+c:'「信じたものを、一つずつ積み上げる」',q:'「絶対にやり遂げる」',
+soul:'あなたの魂には「建てたい世界」の設計図が刻まれています。それは組織かもしれないし、コミュニティかもしれないし、作品かもしれない。いずれにせよ、あなたは「今の世界には、まだ存在していない何か」を形にすることに人生を捧げたいと感じています。あなたの中では、冷静な設計者と熱い情熱家が同居しています。設計者は「計画通りに進めろ」と言い、情熱家は「もっと大胆にやれ」と叫ぶ。この二人の声を同時に聞きながらバランスを取り続けることが、あなたの日常です。あなたが恐れているのは「中途半端に終わること」。着手したものを完成させられなかった——その経験は、あなたにとって深い心の傷になります。完璧でなくていいから、最後まで形にしたい。その切実な願いが、あなたの計画性の源泉です。',
+daily:'プロジェクトに取り組むとき、まず全体像をホワイトボードに書き出し、フェーズごとに分割します。しかし、その計画書を作っている最中にワクワクしてきて、つい細部まで凝り始めてしまいます。「計画を立てること自体が楽しい」のは戦略家と同じですが、あなたの場合は「その計画に魂が込められているか」が最も重要な基準です。週末は「創りたいもの」に時間を使いますが、平日の疲れが溜まって動けない日には、自分を責めてしまう傾向があります。SNSでは自分の活動を発信しますが、「見せびらかしたい」のではなく「同じ志を持つ仲間を見つけたい」のです。',
+relations:'あなたは人間関係にも「ビジョン」を持ちます。「この人とこういう関係を築きたい」という理想像があり、それに向かって計画的にコミュニケーションを取ります。それは素晴らしいことですが、相手が予想外の反応をしたとき——あなたのビジョン通りに動かなかったとき——に失望しやすいのが弱点です。人間関係は設計図通りにいかないものだと頭では分かっていても、心がそれを受け入れるのに時間がかかります。',
+careers:[
+{job:'プロデューサー・ブランドマネージャー',why:'ビジョンを描き、チームを率いて形にする。あなたの「情熱×計画性」が最も活きるポジションです。作品やブランドに「魂」を吹き込むことができるのは、あなたのように感性と実行力を併せ持つ人だけです。'},
+{job:'NPO代表・社会起業家',why:'「世界をこう変えたい」という情熱を、具体的な事業計画に落とし込める力。理想主義だけでなく、予算とスケジュールの管理もできるあなたは、社会変革の担い手として最適です。'},
+{job:'パティシエ・建築デザイナー',why:'美しさと機能性を両立させ、一つずつ丁寧に作り上げる。「手で創ること」に喜びを感じるあなたにとって、素材と向き合いながら形を作る仕事は、情熱と計画性の完璧な融合です。'}
+]},
+'Core-Passion-Veiled-Free-Flow':{n:13,nm:'漂流者',en:'The Drifter',fam:'Mystics',
+d:'内面の嵐を隠し、風の向くままに漂う旅人',
+s:'あなたの適応力は驚異的です。新しい環境、新しい人間関係、新しい文化——どこに放り込まれても、水のように馴染むことができます。それはあなたが「自分を持っていない」からではなく、あなたの内面世界があまりにも豊かで深いため、外側の環境に左右される必要がないからです。どこにいても、あなたの本当の居場所は「自分の内面」なのです',
+w:'「根無し草」と呼ばれることに慣れていますが、時々自分でも不安になりませんか？ どこにでも馴染めるということは、どこにも本当には属していないということでもあります。自分が本当に何を望んでいるのかわからなくなることがあり、選択肢が多すぎて動けなくなることも。また、内面の感情を隠す癖が強いため、本当に辛いときに助けを求められず、一人で抱え込みます',
+b:'表面的には穏やかに流れに乗るが、内側では激しい感情が渦巻いている',
+c:'「どこにも属さない。でも、どこにでもいられる」',q:'「まあ、なんとかなるでしょ」',
+soul:'あなたの魂は「自由に漂うこと」を求めていますが、同時に「どこかに錨を下ろしたい」とも願っています。この矛盾が、あなたの人生を貫くテーマです。一箇所にとどまると息苦しくなり、かといって漂い続けると寂しくなる。あなたの「まあ、なんとかなるでしょ」という軽やかな言葉の裏には、「なんとかならなかったらどうしよう」という小さな恐怖が常に隠れています。あなたが最も恐れているのは「固定されること」。一つの場所、一つの関係、一つの仕事——それに縛られた瞬間、あなたの魂が枯れてしまう気がするのです。しかし皮肉なことに、あなたが最も幸せを感じるのは「帰る場所がある」と思える瞬間です。自由でいたいけれど、帰る場所がほしい。漂流し続けたいけれど、待っていてくれる人がいてほしい。その切なさが、あなたの深い魅力の源泉です。',
+daily:'引っ越しが多いか、少なくとも「引っ越したい衝動」を定期的に感じています。同じ道を通って通勤するのが苦手で、たまに違うルートを試します。カフェも毎回違う店に入りたい派。趣味は広く浅く、3ヶ月ごとに新しいことを始めては、静かにフェードアウトします。友人には「また始めたの？」と笑われますが、あなたにとっては全ての経験が内面の旅の一部です。一人旅が好きで、目的地を決めずに電車に乗ることがあります。SNSは気まぐれに更新し、突然1ヶ月沈黙することも。',
+relations:'あなたは多くの人と表面的にはうまくやれますが、深い関係を築くことに無意識の抵抗があります。「深くなりすぎると、離れるときに辛い」——その防衛機制が働いているのです。人間関係で最も辛いのは「束縛されること」。「毎日連絡して」「いつも一緒にいて」と要求されると、心が逃げ出します。しかし、あなたの漂流を止めずに「行っておいで、待ってるから」と言ってくれる人に出会えたとき、あなたは初めて安心して根を下ろせるかもしれません。',
+careers:[
+{job:'旅行ライター・フリーランサー',why:'場所に縛られず、自分のペースで移動しながら働く。あなたの「漂流本能」がそのまま仕事になるスタイルです。新しい場所で新しい体験をすることが、あなたのアウトプットの最大の栄養源です。'},
+{job:'バリスタ・バーテンダー',why:'一時的な人間関係の中で深い会話を交わし、また次の人を迎える。あなたにとって最も心地よい距離感の人間関係が、この仕事には自然に組み込まれています。'},
+{job:'イラストレーター・占い師',why:'あなたの豊かな内面世界を、独自の表現で外に出す仕事。どこにいても一人でできる仕事は、漂流者であるあなたの生き方と矛盾しません。'}
+]},
+'Core-Passion-Veiled-Free-Drive':{n:14,nm:'深淵の旅人',en:'The Abyss Walker',fam:'Mystics',
+d:'仮面の下に深い感情を隠し、未知の領域へ踏み込む',
+s:'強靭な精神力と深い感性、そして行動力。この三つが共存している人は、32タイプの中でもあなただけです。他の人が「怖い」と足を止める場所に、あなたは一人で踏み込みます。それは無謀ではなく、あなたの内面にある深い感性が「ここに行くべきだ」と告げているからです。表面的には飄々としていますが、その奥にある使命感は鋼のように強靭です',
+w:'理解者が極めて少ないことが、あなたの最大の課題です。あなたの行動の動機は、表面からは見えません。なぜ安定した仕事を辞めたのか、なぜ危険な場所に行くのか、なぜ誰もやらないことをやるのか——その理由を説明しても、多くの人は理解できません。「変わった人」「何を考えているかわからない人」というレッテルを貼られることに慣れていますが、本当は「わかってほしい」と思っていませんか',
+b:'表面上は飄々としているが、内側では強い使命感に突き動かされている',
+c:'「深いところに、本当の景色がある」',q:'「行ってみればわかる」',
+soul:'あなたの魂は「深淵を覗くこと」に引き寄せられています。人間の心の闇、社会の裏側、未踏の領域——多くの人が目を逸らすものに、あなたは目を凝らします。それは好奇心というより、使命感に近いものです。「誰かが見なければ、なかったことになる」——その信念が、あなたを深淵へと導きます。しかし、深淵を覗き続けた結果、あなた自身の中にも深淵が生まれていることに気づいていますか？ あなたが見てきたもの、感じてきたものの重さは、時にあなたを押しつぶしそうになります。それでも仮面の下にその重さを隠し、「大丈夫」と平静を装い続ける。あなたが最も恐れているのは「深淵に飲み込まれること」ではなく、「誰にもその重さを打ち明けられないまま、一人で沈むこと」です。',
+daily:'普段は穏やかで飄々としているため、周囲はあなたの内面の激しさに気づいていません。「趣味は何？」と聞かれると、当たり障りのない答えを返しますが、本当の興味は人に話せないほどディープな領域にあります。深夜に一人でドキュメンタリーを観ることが多く、テーマは戦争、死、人間の極限状態など、重いものを選びがちです。旅行先では観光地より地元の人しか行かない場所に惹かれます。「この場所には何があるんだろう」という好奇心が、あなたを未知の路地裏へ誘います。',
+relations:'あなたの人間関係は「広く浅く」と「極端に深い」の二極化しています。ほとんどの人とは表面的な付き合いですが、稀に「この人は深淵を覗ける人だ」と感じた相手には、一気に心を開きます。その関係は非常に深く、ほとんど魂で繋がっているような感覚です。ただし、そういう相手は人生で数人しか現れません。あなたが最も辛いのは「浅い関係を強制されること」。職場の表面的な雑談や、社交辞令の応酬は、あなたにとって拷問に近いものです。',
+careers:[
+{job:'ドキュメンタリー監督・ジャーナリスト',why:'人が目を逸らす真実に光を当てる仕事は、あなたの使命感と直結しています。「誰かが伝えなければ」というあなたの内なる声が、最も純粋に発揮される場所です。'},
+{job:'探偵・文化人類学者',why:'表面には見えない真実を追い求める。他の人が見逃す手がかりから全体像を組み立てる能力は、あなたの「深淵を覗く」本能そのものです。'},
+{job:'冒険家・極地探検家',why:'未知の領域に一人で踏み込む勇気と、そこで冷静に判断する力。あなたの精神力は、文字通り「人が行かない場所」で最も輝きます。'}
+]},
+'Core-Passion-Veiled-Order-Flow':{n:15,nm:'影の詩人',en:'The Shadow Poet',fam:'Mystics',
+d:'表には出さない感性で、世界を静かに記録する',
+s:'あなたの内面には、言葉にすれば長編小説になるほどの感情が蓄積されています。繊細な観察力で日常の細部を拾い上げ、それを内面で深く消化する。外には出しませんが、あなたの内側で紡がれている物語は誰よりも豊かです。そして、その一貫した内面世界が、あなたに不思議な安定感を与えています。表面的な流行や周囲の意見に流されない芯の強さは、あなたの静かな誇りです',
+w:'自分の感情を伝えられないことが、あなたの人生の最大の課題です。頭の中では完璧な言葉が浮かんでいるのに、口を開くと「別に…」「なんでもない」しか出てこない。このギャップに、あなた自身が最も苦しんでいます。誤解されることにも慣れていますが、「慣れた」のと「平気」は違います。本当は傷ついているのに、その傷すら表に出せないのです',
+b:'日々のルーティンの中で、内面では豊かな感情が流れている',
+c:'「言葉にしない感情が、一番深い」',q:'「別に…なんでもない」',
+soul:'あなたの魂は「記録すること」を求めています。カメラのシャッターを切るように、あなたは日常の瞬間を内面のフィルムに焼き付けています。窓から差し込む午後の光、雨の匂い、誰かが何気なく言った一言——他の人が忘れてしまうような瞬間を、あなたは永遠に覚えています。しかし、あなたが記録した世界は、あなたの中にしか存在しません。それを外に出す手段——言葉、絵、音楽、文章——を見つけることが、あなたの人生の最大のテーマです。あなたの中には表現したい感情が洪水のように溢れているのに、出口が見つからない。その苦しさは、外からは想像もできないほど深刻です。あなたが「別に…なんでもない」と言ったとき、その「なんでもない」の裏には宇宙ほど広い感情世界が広がっていることを、誰か一人でも知ってくれたら——それだけで救われるのに。',
+daily:'毎日同じ時間に起き、同じルートを歩き、同じカフェに行きます。しかし、その「同じ日常」の中で、あなたの目は毎日違うものを見ています。いつもの道で咲いた小さな花、カフェの店員の新しいピアス、空の色の微妙な変化。それらを心のノートに書き留めています。日記を書いている、あるいは書きたいと思っています。頭の中では常に文章が組み立てられており、時々「これはいい表現だ」と思うフレーズが浮かびます。音楽は一人で聴くものであり、誰かと共有することに抵抗を感じます。',
+relations:'「何を考えているかわからない」と言われることが最も多いタイプです。しかし、あなたは何も考えていないのではなく、考えすぎて言葉にできないのです。人間関係で最も苦しむのは「自分の気持ちを説明しなければならない場面」。「どうして怒ってるの？」「何が不満なの？」と聞かれると、答えられません。感情が複雑すぎて、単純な言葉では表現できないからです。あなたに合う相手は、沈黙を「理解」として受け取ってくれる人。何も言わなくても、隣にいるだけで気持ちが通じる関係が、あなたの理想です。',
+careers:[
+{job:'司書・校閲者・アーカイビスト',why:'言葉を扱いながらも、表に立つ必要がない仕事。静かな環境で、丁寧にテキストや資料と向き合う作業は、あなたの「記録者」としての本能と完璧に合致します。'},
+{job:'手工芸作家・庭師',why:'言葉ではなく、手で感情を表現する。植物や素材と静かに向き合う時間は、あなたの内面の嵐を穏やかにしてくれます。完成した作品が「言葉にできなかった感情」の代弁者になります。'},
+{job:'翻訳者・テクニカルライター',why:'他者の言葉を正確に汲み取り、別の形で表現する。あなたの「感情を読み取る力」と「正確さへのこだわり」が最も活きる仕事です。自分の感情は出せなくても、他者の感情を翻訳することはできる——その能力は稀有です。'}
+]},
+'Core-Passion-Veiled-Order-Drive':{n:16,nm:'仮面の指揮者',en:'The Masked Conductor',fam:'Mystics',
+d:'穏やかな仮面の奥に、感情の嵐と揺るがない信念を隠し持つリーダー',
+s:'あなたは32タイプの中で最も複雑な内面構造を持つ一人です。表面的には穏やかで社交的、時間を守り、約束を違えず、誰とでもうまくやれる。しかしその仮面の奥には、灼熱の情熱と鋼の信念が眠っています。この「表と裏のギャップ」こそが、あなたの最大の武器です。人の感情を深く読み取る感性と、計画的に物事を遂行する実行力。この二つが合わさることで、あなたは「人の心を動かしながら、確実に結果を出す」ことができます',
+w:'本心を見せられないことの代償は大きいです。いつも「大丈夫」と言い、いつも笑顔で、いつもみんなの味方。しかし、仮面を外す瞬間——一人になった夜、疲れが限界に達したとき——あなたは自分が何を感じているのかわからなくなることがあります。仮面をかぶり続けた結果、素の自分がどこにいるのかを見失うのです。人間関係の終わりは、爆発ではなく静かなフェードアウト。限界を超えても表に出さないため、相手は「突然連絡が途絶えた」と感じます',
+b:'誰とでも話せるが心を開くのは極少数。時間厳守だが部屋はカオス',
+c:'「全員の味方に見えて、本当の姿を知る者はいない」',q:'「大丈夫、任せろ」（内心は嵐）',
+soul:'あなたの魂の中では、指揮者が二人のオーケストラを同時に指揮しています。一つは外向きのオーケストラ——社交的で計画的、信頼性の高い、みんなが知っている「あなた」。もう一つは内向きのオーケストラ——激しい感情、深い情熱、誰にも見せない葛藤。この二つが同時に鳴り響く中で、あなたは毎日を過ごしています。あなたが最も恐れているのは「仮面が剥がれる瞬間」。感情が制御を超えて表に出てしまうこと。泣いてしまうこと、怒りをぶつけてしまうこと、弱さを見られてしまうこと。しかし、あなたの内面で嵐が吹き荒れているとき、外から見えるのは穏やかな微笑みだけです。この演技は見事ですが、その演技を続けるためのエネルギーは膨大で、あなたの心身を確実に消耗させています。あなたが本当に必要としているのは、仮面を外しても崩れない関係。嵐をそのまま見せても、静かにそばにいてくれる人。その人の前でだけ、あなたは本当の指揮者になれます。',
+daily:'仕事では完璧な時間管理をしていますが、自分の部屋は驚くほどカオスです。この矛盾は、「外に見せる秩序」と「内面の自由」のギャップそのものです。LINEの返信は早いですが、内容は相手に合わせて巧みにトーンを変えています。Aさんには論理的に、Bさんには感情的に、Cさんには軽く——それを無意識にやっています。帰宅後、一人になった瞬間に深いため息をつくことがあります。夜中に一人で音楽を聴きながら、日中に見せられなかった感情をゆっくり解凍する時間が必要です。「自分は本当は何を感じているんだろう」と自問する夜が、月に数回あります。',
+relations:'あなたの周囲の人は、全員が「自分はあの人と親しい」と思っています。しかし、本当のあなたを知っている人は一人か二人しかいません。その少数の人に対してだけ、あなたは仮面なしの感情を見せることができます。ただし、その「見せる」タイミングは自分では制御できず、疲れが限界を超えたとき突然溢れ出します。人間関係の終わりは静かで、相手に「嫌いだから」とは言いません。ただ少しずつ連絡を減らし、物理的な距離を作ります。それはあなたなりの優しさですが、相手にとっては「理由のわからない消失」であり、深い傷を残すことがあります。',
+careers:[
+{job:'映画監督・指揮者・演出家',why:'「表に出すもの」と「隠すもの」を緻密に制御し、観客の感情を設計する。あなたが日常的にやっている「感情のオーケストレーション」が、芸術として昇華される場所です。'},
+{job:'ブランド戦略家・プロダクトマネージャー',why:'表面的な見え方と内面的な価値の両方を設計する仕事。あなたの「仮面の裏にあるもの」への深い理解が、ブランドに深みと一貫性を与えます。'},
+{job:'カウンセラー・組織コンサルタント',why:'人の感情を読み取り、信頼関係を築きながら、計画的に変化を導く。あなたの「共感力×計画性×仮面力」が全て活きる仕事です。ただし、他者を癒す前に自分自身のケアを忘れないでください。'}
+]},
+'Social-Logic-Open-Free-Flow':{n:17,nm:'自由な知恵者',en:'The Free Thinker',fam:'Commanders',
+d:'社交的で合理的。縛られずに知識を共有する自由人',
+s:'あなたの最大の才能は「人と知識を繋ぐこと」です。様々なコミュニティに出入りし、異なる分野の人々と交流し、そこで得た知識を惜しみなく共有する。あなたが飲み会でする雑談は、他の人にとっては貴重な情報源です。知的好奇心に壁がなく、専門家でも初心者でも同じ目線で話ができる柔軟性は、あなただけの武器です',
+w:'「面白い人だけど、頼りにはしにくい」と思われていることに気づいていますか？ 広く浅く動き回るスタイルは魅力的ですが、一つのことに深くコミットすることへの無意識の回避があります。責任感が薄いわけではありませんが、「縛られること」への恐怖が強いため、長期的なプロジェクトや深い人間関係から逃げてしまうことがあります。「もう少し腰を据えれば、もっとすごいことができるのに」と周囲に思われています',
+b:'色々な人と会い、情報を交換し、気の向くままに知識を広げる',
+c:'「知識は共有してこそ価値がある」',q:'「面白い話があるんだけど聞いてくれる？」',
+soul:'あなたの魂は「知識の風」のような存在です。一箇所に留まらず、花から花へと飛び移る蝶のように、人から人へ、分野から分野へと渡り歩きます。その過程であなたは花粉を運ぶ——つまり、ある場所の知識を別の場所に届ける媒介者として機能しています。あなた自身はそれを意識していないかもしれませんが、あなたの「ねえ、面白い話があるんだけど」から始まった会話が、誰かの人生を変えたことがあるはずです。しかし、あなたの内面には「広さ」と引き換えに失った「深さ」への渇望があります。たくさんの人と繋がっているのに、本当に深くわかり合える人がいない。多くの分野を知っているのに、どれも中途半端。この「器用貧乏」への焦りが、あなたをさらに広い世界へと駆り立て、皮肉にもますます深さから遠ざけてしまうのです。',
+daily:'スマホには最低5つのコミュニティグループがあり、全てアクティブです。朝の通勤中にPodcastを聴き、昼休みにニュースアプリを巡回し、夜は友人と食事しながら最近仕入れた知識を披露します。「この人にはあの人を紹介したら面白いな」と人脈マッチングを自然にやっています。カフェでは隣の席の人の会話が聞こえてくると、つい参加したくなる衝動を抑えています。本棚には買ったまま読んでいない本が10冊以上あり、それなのに新しい本を買い続けます。「積読も知識のストック」と自分に言い聞かせています。',
+relations:'「話しやすい人」「物知りな人」というポジションは心地よいですが、そこに安住していませんか？ 多くの人に好かれていますが、「自分のことを本当に理解してくれている人」を挙げようとすると、意外と困るはずです。人間関係で最も苦手なのは「重い」やり取り。深刻な相談を持ちかけられると、つい冗談で返してしまい、相手を傷つけることがあります。',
+careers:[
+{job:'ジャーナリスト・ポッドキャスター',why:'様々な分野の人に会い、話を聞き、それを伝える。あなたの「知識の風」としての性質がそのまま仕事になります。好奇心の広さは取材力に直結し、あなたにしか引き出せないエピソードがあります。'},
+{job:'マーケター・IT講師',why:'複雑な情報をわかりやすく伝え、異なる層に届ける力。あなたが友人に「面白い話」をするのと同じスキルが、マーケティングや教育の現場で高く評価されます。'},
+{job:'旅行プランナー・コミュニティマネージャー',why:'人と人を繋ぎ、新しい体験を設計する。あなたの幅広いネットワークと好奇心が、参加者の期待を超える体験を生み出します。'}
+]},
+'Social-Logic-Open-Free-Drive':{n:18,nm:'冒険家',en:'The Adventurer',fam:'Commanders',
+d:'人を巻き込んで未知の世界へ突き進む、行動派の知性',
+s:'「面白そう」と思った0.5秒後に行動を起こせるスピード感は、他の追随を許しません。しかもその行動が論理的に裏付けられているのが、あなたの恐ろしいところです。さらに、あなたには人を巻き込む天性の力があります。「やってみようぜ！」の一言で、10人が立ち上がる。そのリーダーシップは計算ではなく、あなたの持つワクワクの感染力から来ています',
+w:'「落ち着きがない」と言われることに傷ついていないフリをしていますが、実は少し引っかかっていませんか？ あなたの弱点は「維持管理」です。新しいことを始めるエネルギーは爆発的ですが、それを続けるエネルギーが不足しています。立ち上げたプロジェクトが軌道に乗った瞬間に興味を失い、次の冒険を探し始める。残された人たちが困惑する姿を、何度か見てきたはずです',
+b:'「面白そう」と思ったら即行動。周りを巻き込む',
+c:'「地図の端に書いてある "ここから先は未知" が好き」',q:'「やってみようぜ！」',
+soul:'あなたの魂のコンパスは、常に「まだ行ったことのない方角」を指しています。既知の世界はあなたにとって退屈であり、安全な場所に長くいると窒息しそうになります。この衝動は子供の頃からあったはずです——裏山の向こう側を見に行きたかった、知らない道を選んで帰りたかった。あなたの冒険心は、年齢を重ねても一切衰えていません。しかし、あなたの内面には「止まることへの恐怖」が潜んでいます。立ち止まったら、追いつかれる——何に追いつかれるのかは自分でもわかりませんが、退屈、平凡、凡庸な人生への恐怖かもしれません。走り続けることでそれから逃げているのです。しかし、いつか気づくはずです——あなたが探していた「未知の景色」は、立ち止まって初めて見えるものだったのかもしれないと。',
+daily:'週末の予定は金曜の夜に決まります。というか、予定を立てずに出かけて現地で決めるのが好きです。「今日何する？」「知らない街に行こう」がデフォルト。新しい店、新しい料理、新しい人——「初めて」に触れるたびにアドレナリンが出ます。旅行の荷物は驚くほど少なく、「なんとかなる」精神で出発します。仕事では新規事業の立ち上げに声がかかることが多く、「既存事業の改善」には全くやる気が出ません。',
+relations:'あなたの周りには常に人がいます。あなたのエネルギーに引き寄せられて自然と集まるのです。しかし、あなたとの関係を「安定したもの」と期待する相手とは摩擦が生じます。あなたは関係性にも「冒険」を求めるため、ルーティン化した付き合いには耐えられません。あなたに合うのは、一緒に走ってくれる人か、走って帰ってきたときに「おかえり」と言ってくれる人。両方を兼ね備えた人は稀ですが、見つけたら絶対に手放さないでください。',
+careers:[
+{job:'スタートアップ創業者・新規事業開発',why:'ゼロからイチを生み出すフェーズは、あなたの全能力が輝く場所です。「既存のルールでは面白くない」と感じるあなたに、自分でルールを作れる環境を。'},
+{job:'冒険ツアーガイド・イベントプロデューサー',why:'人を巻き込んで未知の体験を創り出す仕事。あなたの「やってみようぜ！」の精神が、参加者に忘れられない体験を提供します。'},
+{job:'営業マネージャー・プロダクトハンター',why:'新しい人、新しい市場、新しい商品との出会いが日常的にある仕事。同じデスクで同じ作業を続ける仕事では死んでしまうあなたに、毎日違うフィールドを。'}
+]},
+'Social-Logic-Open-Order-Flow':{n:19,nm:'調停者',en:'The Mediator',fam:'Commanders',
+d:'公正で社交的。秩序を重んじ、人と人との間を繋ぐ',
+s:'あなたのバランス感覚は天性のものです。対立する二つの意見を聞き、どちらにも偏らず、論理的に落としどころを見つけ出す。この能力は会議室でも、友人同士の揉め事でも、家族の食卓でも発揮されます。あなたがいるだけで場の空気が穏やかになるのは、あなたが「公平な人」であると全員が無意識に感じているからです。信頼される安定感と、人を不快にさせない社交性の組み合わせは貴重です',
+w:'「自分の意見がない人」と見られるリスクがあります。実はあなたには明確な意見がありますが、「場の調和を壊したくない」「どちらかに肩入れしたくない」という思いから、自分の立場を曖昧にしがちです。その結果、どちらの側からも「あの人は本当はどう思っているんだろう」と不信感を持たれることがあります。また、常に中立でいようとするストレスは相当なもので、本当は「こっちが正しいに決まってるだろ！」と叫びたい瞬間があるはずです',
+b:'対立する意見の間に立ち、論理的に落としどころを見つける',
+c:'「正解は一つじゃない。落としどころを見つけよう」',q:'「どちらの言い分もわかるよ」',
+soul:'あなたの魂は「調和」を求めています。世界がうまく回っていること、人と人が穏やかに繋がっていること——それがあなたにとって最も大切な価値です。しかし、その調和への強い願いの裏には、対立への深い恐怖が隠れています。人が怒りをぶつけ合う場面、空気が張り詰める瞬間、決裂の危機——あなたはそれらを全身で感じ取り、回避するために全力を注ぎます。あなたの「どちらの言い分もわかるよ」は、優しさであると同時に、自己防衛でもあるのです。あなたが最も苦しむのは「どうしても中立でいられない場面」に立たされたとき。たとえば、大切な二人が対立したとき。どちらかを選べば、もう一方を失う。その恐怖は、あなたにとって何よりも耐え難いものです。しかし、いつか「選ぶこと」を求められる瞬間が来ます。そのとき、自分の心の声に従えるかどうかが、あなたの人生の転機になるでしょう。',
+daily:'グループLINEでは「まとめ役」になりがちです。「じゃあ○日はどう？」「Aさんの案とBさんの案を合わせて、こうするのは？」と自然に調整しています。レストランでは他の人が注文するのを聞いてからメニューを決めます（被らないように、バランスよく）。映画を選ぶときも「みんなが楽しめるもの」を優先し、自分が本当に見たいものは一人で後日観に行きます。友人が揉めていると、頼まれてもいないのに仲裁に入ってしまう性格です。',
+relations:'「いい人」ポジションに居続けることの疲労を、あなたは過小評価しています。常に両方の味方でいようとすることは、実は「どちらの完全な味方でもない」ということでもあります。あなたが本当に楽になれるのは、あなたに「どっちでもいい、あなたがどう思うかが聞きたい」と言ってくれる相手です。「中立」という役割を下ろして、ただの一人の人間として意見を言える関係——それがあなたに最も必要なものです。',
+careers:[
+{job:'人事担当・カスタマーサクセス',why:'人と人の間に立ち、双方の利益を調整する仕事は、あなたの天職です。採用面接では候補者と企業の両方を公平に評価でき、クレーム対応では顧客と会社の両方が納得する解決策を見つけます。'},
+{job:'調停者・仲裁人・ファシリテーター',why:'対立を解決することに喜びを感じるあなたにとって、それが仕事になることは最高の幸運です。法的な知識と人間理解の両方が必要なこの分野で、あなたのバランス感覚は最大の武器になります。'},
+{job:'行政書士・社労士',why:'法律と人間の間に立ち、複雑な制度を「わかりやすく」伝える仕事。あなたの「公平さ」と「伝える力」が、困っている人を制度へと橋渡しします。'}
+]},
+'Social-Logic-Open-Order-Drive':{n:20,nm:'指揮官',en:'The Commander',fam:'Commanders',
+d:'合理的に人を率い、秩序をもって組織を目標へ導く',
+s:'明確なビジョンを掲げ、それを実行可能な計画に落とし込み、チームの一人ひとりを最適なポジションに配置する采配力。あなたは組織の中にいるとき、最も輝きます。個人の能力を超えた成果をチームから引き出す力は、天性のリーダーシップの証です。危機的状況で最も冷静でいられるのもあなたで、「あの人がいれば大丈夫」と周囲に思わせる存在感があります',
+w:'「支配的」と感じている部下やパートナーが、あなたの周りに必ずいます。あなたにとっては「最善の方法を示しているだけ」ですが、相手にとっては「選択肢を奪われている」と感じることがあります。また、感情面への配慮が不足しがちで、正論を言っているのに人がついてこない場面があります。それは論理が間違っているのではなく、伝え方の問題です。もう一つの弱点——失敗を他人に見せられないこと。リーダーとしての体面を守るために、助けを求められない場面があります',
+b:'目標を掲げ、計画を立て、チームを率いて達成する',
+c:'「全員が最大限の力を出せる布陣を組む」',q:'「次のステップはこれだ」',
+soul:'あなたの魂は「導くこと」のために存在しています。チームを率い、目標を達成し、関わった人全員を成長させる——その一連のプロセスに、あなたは深い意味を見出しています。しかし、指揮官の内面には意外な矛盾があります。人を導く立場にいるあなたは、自分自身が迷うことを許されないと感じています。「リーダーは弱みを見せてはならない」——その信念が、あなたを孤独にしています。チームのメンバーは互いに支え合えますが、あなたには支えがありません。相談できる相手がいないのです。あなたが恐れているのは「無能だと思われること」。判断ミスをしたとき、成果が出なかったとき、チームの信頼を失うとき——その恐怖が、あなたをさらなる完璧主義に駆り立てます。しかし、本当に強いリーダーは弱さを見せられる人だと、どこかであなたも気づいているはずです。',
+daily:'朝は誰よりも早く出社し、チームの一日を頭の中でシミュレーションしてから仕事を始めます。会議では的確に議論を方向づけ、10分で結論を出すことを好みます。「この会議、あと何分で終わる？」が口癖。部下に対しては厳しくも公平で、成果には惜しみない賞賛を送りますが、プロセスへの評価は忘れがちです。退社後もチームのことを考えており、休日にふと「あの件、大丈夫かな」と気になってSlackを開いてしまいます。',
+relations:'「尊敬されるが、親しみにくい」——これがあなたの人間関係の典型的なパターンです。部下からは「頼れる上司」と慕われていますが、「友人として食事に行きたい」と思う人は少ないかもしれません。プライベートでは意外と寂しがり屋な一面があり、信頼できる少数の相手にはリーダーの仮面を外して甘えることがあります。あなたに最も必要なのは「あなたのリーダーシップを必要としない関係」——指揮しなくても、ただそばにいるだけでいい関係です。',
+careers:[
+{job:'CEO・経営者・プログラムディレクター',why:'組織を率い、ビジョンを実現する。あなたが「自然にやっていること」が、最高レベルの経営ポジションで求められるスキルそのものです。'},
+{job:'軍事指揮官・プロジェクトマネージャー',why:'限られたリソースで最大の成果を出すために人を配置する。あなたの采配力は、高圧的な環境でこそ真価を発揮します。'},
+{job:'政治家・行政リーダー',why:'多様な利害関係者を調整し、組織を一つの方向に導く力。あなたの「公平な判断力」と「実行力」の組み合わせは、公共的なリーダーシップに最適です。'}
+]},
+'Social-Logic-Veiled-Free-Flow':{n:21,nm:'社交の狐',en:'The Social Fox',fam:'Commanders',
+d:'人当たりよく、本心を見せない。自由に泳ぐ社交の達人',
+s:'どんな場にも瞬時に溶け込める社交力は、あなたの最大の武器です。初対面の人の心理を数分で読み取り、相手が最も心地よいと感じるコミュニケーションスタイルを自動的に選択します。情報収集力にも優れており、一見何気ない雑談の中から、他の人が見逃す重要な情報を拾い上げます。あなたの「へぇ〜」の裏では、常に高速な分析が走っています',
+w:'「信頼できない」と感じている人が、あなたの周りに必ずいます。本心を見せないあなたは、「何を考えているかわからない」「いい人だけど、どこか信用できない」という印象を与えがちです。あなたは「傷つきたくない」から本心を隠しているのですが、その防衛が逆に人を遠ざけている皮肉に気づいていますか？ また、深い関係を避ける癖があるため、多くの「知り合い」はいても「親友」は少ないはずです',
+b:'様々な場に顔を出し、情報を集め、本心は見せずに立ち回る',
+c:'「敵も味方も、まずは笑顔で迎える」',q:'「へぇ〜そうなんだ〜」（実は分析中）',
+soul:'あなたの魂は「観察者として社交する」という、一見矛盾した行為を完璧にこなしています。場に溶け込んでいるように見えて、実はあなたは常に「外側」にいます。全員と仲良くしているように見えて、誰にも心を許していない。それはあなたが冷たい人間だからではなく、「本当の自分を見せたら、受け入れられないかもしれない」という深い恐怖があるからです。あなたが仮面をかぶり始めたのは、おそらくかなり幼い頃です。空気を読むことを覚え、相手が求める反応を返すことを学び、それが「生存戦略」として定着した。今ではそれが自然になりすぎて、仮面を外す方法を忘れてしまったのかもしれません。あなたが密かに憧れているのは「何も計算せずに話せる人」。本音で笑い、本音で怒り、本音で泣ける人を見ると、羨ましさと不思議さが入り混じった感情を覚えるはずです。',
+daily:'飲み会では全員と均等に会話しますが、特定の誰かとだけ深い話はしません。「あの人とよく話してたよね？」と言われると、「え、そう？」と本気でとぼけます。SNSのプロフィールは当たり障りがなく、投稿内容も「いい感じの日常」だけ。裏アカウントがあるか、あるいはSNS自体を情報収集ツールとしてしか使っていません。買い物は直感的で、「これが欲しい」という明確な理由がないまま買ってしまうことがあります。一人の時間は意外と多く、誰にも見られていないときにだけ、ようやく「素の自分」に戻れます。',
+relations:'あなたの人間関係は「広いけど浅い」と自覚しているはずです。誰とでもうまくやれるがゆえに、「この人は特別」という関係が築きにくい。あなたが心を開ける相手は、あなたの仮面に気づいた上で「それでもいいよ」と言ってくれる人。逆に「もっと本音を出して！」と詰め寄られると、さらに仮面が厚くなります。あなたに必要なのは強制ではなく、安全な環境です。',
+careers:[
+{job:'外交官・ロビイスト',why:'様々な利害関係者と表面的には良好な関係を保ちながら、裏で戦略的に物事を動かす。あなたの「社交の仮面」は、外交の世界で最も評価される能力です。'},
+{job:'情報アナリスト・リサーチャー',why:'人々との会話から重要な情報を抽出する力。あなたが自然にやっている「聞きながら分析する」スキルは、情報分析の現場で最高の武器になります。'},
+{job:'ネットワークエンジニア・セキュリティコンサルタント',why:'人間のネットワークを読み解く力は、技術的なネットワークにも応用できます。「何が繋がっているか」「どこに脆弱性があるか」を見抜く目は、あなたの社交スキルと同じ回路で動いています。'}
+]},
+'Social-Logic-Veiled-Free-Drive':{n:22,nm:'策士',en:'The Tactician',fam:'Commanders',
+d:'仮面を使い分け、自由に戦略を実行する知的ハンター',
+s:'社交力と戦略眼を同時に持ち、しかもそれを「見せない」ことができる。あなたは相手が気づかないうちに、既にゲームの主導権を握っています。状況を読む力は並外れており、「この人は今何を求めているか」「この場のパワーバランスは誰が握っているか」を瞬時に把握します。タイミングを見極めて最善手を打つ——その判断の正確さは、長年の経験に基づいています',
+w:'「マキャベリスト」と呼ばれることに、心のどこかで傷ついていませんか？ あなたにとっては「最も効率的な方法を選んでいるだけ」ですが、それが「人を操作している」と受け取られることがあります。深い信頼関係を築くことが難しいのは、相手があなたの「裏の意図」を常に警戒するからです。また、あなた自身も「誰かを純粋に信じる」ことに対して壁があります',
+b:'目標のために最適な人脈とタイミングを見極め、確実に行動する',
+c:'「最善手は、相手が気づかないうちに打つ」',q:'「タイミングが全てだ」',
+soul:'あなたの魂は「ゲーム」を求めています。人間関係も、仕事も、人生そのものも——あなたにとっては戦略と判断のゲームです。しかし、そのゲームの本当の目的は「勝つこと」ではありません。あなたが本当に求めているのは「自分の知性が通用する実感」です。複雑な状況を読み解き、最適な一手を打ち、想定通りの結果を得る——その知的快感こそが、あなたの生きがいです。しかし、ゲームとして人間関係を捉え続けた結果、あなたは一つの重要なことを見失いかけています。それは「計算を超えた関係」の価値です。あなたの戦略では説明できない出来事——予想外の優しさ、理由のない信頼、合理的でない愛情——それらに触れたとき、あなたは動揺します。なぜなら、それはあなたのゲームのルールの外にあるものだからです。',
+daily:'会話中、相手の言葉だけでなく、視線の動き、姿勢の変化、声のトーンを無意識にモニターしています。交渉の場では「先に相手に話させる」のが鉄則で、自分のカードは最後まで見せません。メールの文面は何度も推敲し、一文ずつ「相手がどう受け取るか」を計算してから送ります。プライベートでもその癖が抜けず、友人に「もっとリラックスしなよ」と言われることがあります。趣味は戦略ゲーム（チェス、将棋、ポーカー等）で、休日にオンライン対戦に没頭することも。',
+relations:'あなたの人間関係には常に「パワーバランス」の意識が伴います。誰が主導権を握っているか、自分は有利な立場にいるか——そういった計算が無意識に走っています。その計算をやめられる相手が、あなたにとっての「本当の味方」です。あなたが最も渇望しているのは「騙せない相手」。あなたの戦略を見抜いた上で、それでも隣にいてくれる人。そういう相手には、あなたは驚くほど正直になれます。',
+careers:[
+{job:'M&Aアドバイザー・交渉人',why:'複雑な利害関係を読み解き、最適なタイミングで最善手を打つ。あなたが「自然にやっていること」が、この仕事では数億円の価値を持ちます。'},
+{job:'政治参謀・選挙コンサルタント',why:'表に出ずに戦略を設計し、人を動かす。あなたの「見えない影響力」への美学が、政治の世界で最も純粋に発揮されます。'},
+{job:'ヘッドハンター・人材紹介',why:'人を「読む」力と、タイミングを見極める戦略眼。「この人にはこのポジションが合う」を直感と論理の両方で判断できるのは、あなたの特権です。'}
+]},
+'Social-Logic-Veiled-Order-Flow':{n:23,nm:'鉄壁の外交官',en:'The Iron Diplomat',fam:'Commanders',
+d:'完璧な社交仮面と規律で、組織の秩序を守る',
+s:'あなたの礼儀作法と社交スキルは完璧です。どんな公式の場でも、適切な振る舞いができる。失言をしない、空気を読み違えない、相手に不快感を与えない——この「完璧な表面」を維持するスキルは、長年の訓練の結果です。組織運営においても、感情に左右されない一貫した判断で、チームに安定感をもたらします',
+w:'あなたの最大の課題は「公」と「私」の断絶です。仕事場では完璧な外交官ですが、家に帰ると全くの別人。その落差に、あなた自身が戸惑うことがあります。プライベートでは孤独を感じやすく、「仕事の自分」以外の自分をどう表現していいかわかりません。「お気持ちはわかります」という言葉を何千回と言ってきましたが、「自分の気持ち」を語った回数は両手で数えられるのではないでしょうか',
+b:'公の場では完璧な振る舞い。私生活は別世界',
+c:'「私情を挟まない。それがプロだ」',q:'「お気持ちはわかります」（本心は別）',
+soul:'あなたの魂は「秩序ある世界を守ること」と「自分の感情を隠すこと」の間で、静かに引き裂かれています。あなたが「プロフェッショナル」であることに誇りを持っているのは事実です。しかし、その誇りの裏には、「感情を出したら壊れてしまう」という恐怖があります。仕事では完璧な仮面をかぶり、私生活では仮面を外す場所がない——この二重生活のストレスは、あなたが自覚している以上に深刻です。あなたが最も恐れているのは「場面にふさわしくない感情を見せてしまうこと」。会議中に泣きそうになる、パーティーで怒りを感じる、冠婚葬祭で何も感じない——そういった「ふさわしくない感情」を抑え込むことに、あなたは膨大なエネルギーを費やしています。いつか、仮面を外しても崩れない場所を見つけてください。それは場所かもしれないし、人かもしれません。',
+daily:'朝は身だしなみに人一倍時間をかけます。服装、髪型、靴——全てが「適切」であることを確認してから出かけます。メールの文面は定型的で隙がなく、「お世話になっております」から始まり「何卒よろしくお願いいたします」で終わります。会食では料理よりも「場の空気」に集中しており、全員が不快にならないよう目を配っています。帰宅後、玄関でネクタイを緩める瞬間に、やっと息ができる感覚があります。休日は一人で過ごすことが多く、仕事の自分とは全く違うリラックスした姿で過ごしています。',
+relations:'「距離感が完璧な人」と思われていますが、それは裏を返せば「近づけない人」でもあります。誰にでも礼儀正しく、誰にでも親切。しかし「この人の素顔を知っている」と言える人がほとんどいない。あなたのパートナーですら、あなたの「仕事モード」と「プライベートモード」の落差に戸惑うことがあるかもしれません。あなたに必要なのは「失礼なことを言っても許される関係」。完璧でなくていい空間が、あなたの魂を癒します。',
+careers:[
+{job:'官僚・外交官・大使',why:'完璧な礼儀と規律、感情に流されない判断力。国家レベルの交渉で求められる資質を、あなたは全て持っています。'},
+{job:'法律家・コンプライアンス担当',why:'ルールを守り、組織を法的リスクから守る。あなたの「私情を挟まない」一貫性は、法の世界で最も信頼される資質です。'},
+{job:'秘書・エグゼクティブアシスタント',why:'要人のスケジュールと対人関係を完璧に管理する。あなたの「場を読む力」と「秩序維持力」が、組織の要として機能します。'}
+]},
+'Social-Logic-Veiled-Order-Drive':{n:24,nm:'帝王',en:'The Emperor',fam:'Commanders',
+d:'社交力と戦略を武器に、人と組織を圧倒的に率いる',
+s:'カリスマ性、戦略的思考、組織を動かす推進力——32タイプの中で最も「権力」に近い位置にいるのがあなたです。あなたがいるだけで場の空気が変わり、あなたが発言すると全員が聞き入ります。その圧倒的な存在感は、意図して作っているものではなく、あなたの内側から自然に滲み出ているものです。長期的なビジョンと短期的な実行力の両方を持ち、不可能に見えるプロジェクトを現実にする力があります',
+w:'あなたの最大の弱点は「孤独」です。頂点に立つ者は、周囲に本音を言える相手がいません。あなたが「結果で示せ」と言うたび、部下は一歩後ろに下がり、同僚は距離を取ります。あなたに正面から意見を言える人が減るほど、あなたの判断の精度は下がっていきます。また、権威的な態度が無意識に出ることがあり、パートナーや家族にも「命令口調」で話していることに気づいていないかもしれません',
+b:'公の場では完璧なリーダー。裏では冷徹に戦略を練る',
+c:'「頂点に立つ者は、孤独を恐れてはならない」',q:'「結果で示せ」',
+soul:'あなたの魂は「帝国を築くこと」を求めています。それは文字通りの帝国ではなく、あなたのビジョンが実現された世界です。会社、組織、コミュニティ——あなたは自分の理想を形にし、それを維持・拡大するために生きています。しかし、帝王の内面には深い矛盾があります。人を率いることに生きがいを感じながら、人を信頼することが極めて困難なのです。「結局、最後に信じられるのは自分だけだ」——この信念がある限り、あなたは本当の意味での「仲間」を持つことができません。あなたが最も恐れているのは「失脚」。築いたものが崩れること、信頼が裏切られること、自分が無力であることを思い知らされること。その恐怖が、あなたをさらなる支配と制御に駆り立てます。しかし本当は、あなたは王座を降りても愛される人間でありたいと思っているはずです。',
+daily:'スケジュールは分刻みで管理されていますが、それを管理しているのは秘書や部下ではなく、あなた自身です。「全てを把握していないと不安」なのです。食事は接待やビジネスランチが多く、純粋な「楽しみのための食事」をした記憶が薄いかもしれません。会話では自然と「教える側」「導く側」に立ち、対等な雑談が苦手です。寝る前に明日の戦略を頭の中で組み立て、考えが止まらず眠れない夜があります。休日は意外と読書家で、歴史や伝記を好みます。',
+relations:'あなたの人間関係は「上下関係」が暗黙の前提になりがちです。友人関係でも無意識にリードする側に立ち、相手もそれを受け入れてしまう。しかし、あなたが本当に必要としているのは「対等に向き合える相手」です。あなたに臆せず「それは違う」と言える人、あなたの弱さを見ても態度を変えない人——その稀有な存在が、あなたの人生で最も価値あるパートナーになります。',
+careers:[
+{job:'企業経営者・投資銀行家',why:'組織を率い、戦略的に資源を配分し、結果を出す。あなたの全ての能力が、企業経営の頂点で要求されるスキルセットと一致しています。'},
+{job:'政治リーダー・大学学長',why:'多様な利害関係者を束ね、長期的なビジョンを実行する。あなたのカリスマ性と戦略眼は、大規模な組織を導くために存在しています。'},
+{job:'最高戦略責任者・大手企業役員',why:'企業全体を俯瞰し、5年後の世界を見据えた意思決定を行う。あなたの「帝王の目」は、組織の最高レベルでこそ最大の価値を発揮します。'}
+]},
+'Social-Passion-Open-Free-Flow':{n:25,nm:'太陽',en:'The Sun',fam:'Catalysts',
+d:'感情豊かで開放的。自由に輝き、周囲を照らす存在',
+s:'あなたがいるだけで場の空気が変わります。緊張していた人が笑い始め、黙っていた人が話し始め、重かった空気が軽くなる。それは計算ではなく、あなたの存在そのものが持つ力です。圧倒的な親しみやすさと、感情をストレートに表現する素直さは、現代社会では非常に稀で貴重な資質です。あなたの笑顔は、周囲の人にとっての精神安定剤です',
+w:'「軽い人」と見られるリスクがあります。いつも笑っている、いつも楽しそう、いつもポジティブ——その姿が、深刻な場面では「空気が読めない」「責任感がない」と誤解されることがあります。しかし本当の問題は別のところにあります。あなたは「暗い自分」を見せることが怖いのです。いつも明るくいなければならない——その無意識のプレッシャーが、あなたを追い詰めることがあります。泣きたい夜、落ち込む朝、何もかもが嫌になる瞬間——それらを誰にも見せられないのは辛いことです',
+b:'どこにいても自然と人が集まる。笑顔と感情で場を作る',
+c:'「楽しければいい。笑ってればいい」',q:'「楽しければそれでいいじゃん！」',
+soul:'あなたの魂は「光を放つこと」のために存在しています。あなたが笑えば周囲も笑い、あなたが泣けば周囲も泣く。この感情の感染力は、あなたが意識しているよりもはるかに強力です。しかし、太陽にも影があります。あなたが明るくいなければならないと感じるのは、「暗い自分を見せたら、人が離れていく」という無意識の恐怖があるからです。あなたの周りに人が集まるのは、あなたが明るいから。では、暗くなったら？ その恐怖が、あなたを「いつも笑顔」に縛り付けています。一人になった夜、あなたは時々とてつもない寂しさに襲われるはずです。たくさんの「友達」がいるのに、本当の自分を見せている人がいない。明るい太陽の裏側にある、この暗い孤独こそが、あなたの最も深い秘密です。あなたに必要なのは「泣いているあなた」を受け入れてくれる人。笑っていなくても隣にいてくれる人です。',
+daily:'グループの中では自然とムードメーカーになります。沈黙が続くと耐えられず、すぐに話題を振ります。LINEでは絵文字とスタンプを多用し、グループチャットの最後の発言者になっていることが多いです。カフェでは店員さんと仲良くなり、名前を覚えてもらえるタイプ。初対面の人とも5分で打ち解け、帰り際には連絡先を交換しています。逆に一人の時間は苦手で、予定のない休日は不安になります。でも、たまに一人になったとき、「あれ、自分って今何がしたいんだろう」とわからなくなることがあります。',
+relations:'「一緒にいて楽しい人」ランキングでは常に上位です。しかし、「悩みを相談したい人」ランキングではそれほど高くないかもしれません。あなたが常に明るいため、周囲は「この人に深刻な話をしたら申し訳ない」と感じてしまうのです。そして同じ理由で、あなた自身も深刻な話を切り出しにくい。あなたが最も楽になれるのは、「笑い」以外の感情も安全に出せる関係です。',
+careers:[
+{job:'エンターテイナー・YouTuber・ラジオDJ',why:'あなたの存在そのものがエンターテイメントです。カメラの前でも、マイクの前でも、あなたの自然な明るさは人を引きつけます。「演じる」のではなく「そのままでいる」だけで仕事になるのは、あなたの特権です。'},
+{job:'保育士・児童教育',why:'子どもたちはあなたの明るさに本能的に引き寄せられます。あなたの「楽しいことが好き」という性質は、子どもの成長にとって最も大切な環境を自然に作り出します。'},
+{job:'パーティープランナー・イベント企画',why:'場を明るくし、人と人を繋ぎ、全員が楽しめる空間を作る。あなたが普段の生活でやっていることが、そのまま仕事になります。'}
+]},
+'Social-Passion-Open-Free-Drive':{n:26,nm:'炎の伝道者',en:'The Firestarter',fam:'Catalysts',
+d:'情熱で人を動かし、新しいムーブメントを起こす',
+s:'あなたの情熱は伝染します。あなたが「これは素晴らしい」と語るとき、聞いている人の目も輝き始めます。ビジョンを語る力は32タイプの中でもトップクラスで、10人の前でも1000人の前でも、同じ熱量で語ることができます。その情熱と人を巻き込む力の組み合わせは、歴史を変えるリーダーに共通する資質です',
+w:'燃え尽き症候群のリスクが常にあります。あなたの情熱は「ガソリン」のようなもので、一気に燃え上がりますが、燃料が切れると突然止まります。計画性の不足がそのリスクをさらに高めています。「勢いで始めたけど続かない」プロジェクトが、過去にいくつかありませんか？ また、情熱が強すぎるあまり、反対意見を受け入れにくい傾向があります。「この人には何を言っても無駄だ」と周囲が黙ってしまうことが、あなたの見えない弱点です',
+b:'信じることを熱く語り、共感者を集め、行動に移す',
+c:'「この熱を、世界に伝えたい」',q:'「これ、絶対変えられるって！」',
+soul:'あなたの魂は「火をつけること」に存在意義を見出しています。あなた自身が燃えているだけでなく、周囲の人の心にも火をつけたい。世界を変えたい、人を動かしたい、「今のままでいいのか」と問いかけたい。その衝動は使命感に近く、自分でもコントロールできないほど強いものです。しかし、炎には危険もあります。あなたの情熱は周囲を温めますが、近づきすぎた人を焼いてしまうこともあります。「ついていけない」と離れていった人がいることを、あなたは知っているはずです。そして、あなたが最も恐れているのは「無関心」です。反対されることは耐えられます。批判されることも受け入れられます。しかし、誰も反応してくれないこと——あなたの炎が誰の心にも届かないこと——それだけは耐えられないのです。',
+daily:'朝起きた瞬間から「今日は何を変えるか」を考えています。SNSでは日常的に自分の信じることを発信し、共感のコメントが来ると嬉しくなります。プレゼンやスピーチの機会があると、前日の夜は興奮して眠れません。会話では自然と「語り手」になり、聞き手が目を輝かせるのを見ると、さらに熱が入ります。食事中でもアイデアが浮かぶと、ナプキンにメモを取り始めます。',
+relations:'あなたの人間関係は「共感者」と「距離を置く人」に二分されます。あなたの情熱に共鳴する人はあなたの熱心なフォロワーになりますが、「暑苦しい」と感じる人は静かに離れていきます。あなたに必要なのは「火を消さずに冷静さをくれる人」。あなたの情熱を肯定しながらも、「でも、ちょっと休もうか」と言ってくれる相手です。',
+careers:[
+{job:'社会起業家・活動家',why:'「世界を変えたい」というあなたの情熱を、そのまま事業にできる場所です。あなたのビジョンを語る力と人を巻き込む力は、社会変革の最も強力なエンジンになります。'},
+{job:'クリエイティブディレクター・ブランドアンバサダー',why:'ブランドに「魂」を吹き込む仕事。あなたの情熱は、商品やサービスに「この世界に存在する理由」を与えます。'},
+{job:'コミュニティマネージャー・伝道師',why:'同じ志を持つ人々を集め、コミュニティを育てる。あなたの炎は、一人ひとりの心に小さな火をつけ、それが大きなムーブメントに育ちます。'}
+]},
+'Social-Passion-Open-Order-Flow':{n:27,nm:'共感者',en:'The Empath',fam:'Catalysts',
+d:'人の感情を受け止め、秩序ある形で支える優しき柱',
+s:'あなたの共感力は超自然的と言えるレベルです。相手が何も言わなくても、表情、声の調子、姿勢の変化から感情を読み取ります。しかもあなたはそれを「受け止める」だけでなく、「具体的なサポート」に変換できます。「大丈夫？」と聞くだけでなく、「じゃあ、こうしよう」と具体策を提案できる。共感力と行動力の組み合わせは、チームにとって最も頼りになる潤滑油です',
+w:'他者の感情に引きずられることが、あなたの最大のリスクです。友人が落ち込んでいると自分も落ち込み、チームのストレスを全身で受け止めてしまう。気づけば自分の感情がわからなくなり、「これは自分の感情なのか、誰かの感情を受け取っているのか」がわからなくなることがあります。自分の限界を超えて尽くし、ある日突然倒れる——そんなパターンに心当たりはありませんか？',
+b:'困っている人を見つけ、寄り添い、具体的なサポートをする',
+c:'「あなたの気持ち、ちゃんとわかるよ」',q:'「大丈夫？何かできることある？」',
+soul:'あなたの魂は「人の痛みを自分の痛みとして感じる」ように設計されています。これは才能であると同時に、呪いでもあります。あなたは世界の痛みを人一倍感じ取ってしまうため、ニュースを見るだけで心が重くなり、満員電車では周囲のイライラが自分の中に流れ込んできます。あなたが「人のために何かしたい」と思うのは、純粋な優しさだけではありません。「この痛みを感じ続けることに耐えられないから、行動して状況を変えたい」という切実な動機もあるのです。あなたが最も恐れているのは「助けられなかったとき」です。目の前で苦しんでいる人に何もできないこと、自分の手が届かないこと——その無力感は、あなたにとって最も深い絶望です。しかし、あなたに伝えたいことがあります。全ての人を救うことはできません。でも、あなたが救えた人は、あなたに出会えたことを生涯忘れません。',
+daily:'朝、家族や同居人の表情を見て「今日の調子」を無意識にスキャンしています。職場では「最近元気ないな」と感じた同僚にさりげなくコーヒーを差し入れます。グループの中で一人だけ会話に入れていない人がいると、自然とその人に話を振ります。帰り道に「あの人は大丈夫だっただろうか」と気にかけ、翌日に「昨日の続きだけど、大丈夫？」と声をかけることも。自分のための時間を取ることに罪悪感を感じ、休日でも誰かの相談に乗っていることが多いです。',
+relations:'あなたは「頼られる人」ですが、あなた自身は誰に頼っていますか？ 人間関係で最も深い課題は「与え続けて、受け取れない」パターンです。誰かに「ありがとう」と言われることが嬉しくて、それが自分の存在価値だと感じている部分はありませんか？ あなたに必要なのは「何もしなくても、いていいよ」と言ってくれる人。役に立たなくても、存在するだけで価値があると感じさせてくれる関係です。',
+careers:[
+{job:'カウンセラー・ソーシャルワーカー',why:'人の痛みに寄り添い、具体的なサポートを提供する。あなたが「自然にやっていること」が、そのまま専門スキルとして活かされます。共感と行動の両方ができるあなたは、この分野で最も効果的な支援者になれます。'},
+{job:'看護師長・チームコーチ',why:'個人のケアだけでなく、チーム全体の感情状態を管理する。あなたの「場の空気を読む力」と「秩序ある対応力」が、チーム全体のパフォーマンスを底上げします。'},
+{job:'学校教員・教育コーディネーター',why:'生徒一人ひとりの感情を読み取り、それぞれに合ったサポートを提供する。あなたの教室は「安心して失敗できる場所」になり、子どもたちの成長を最大化します。'}
+]},
+'Social-Passion-Open-Order-Drive':{n:28,nm:'情熱のリーダー',en:'The Passionate Leader',fam:'Catalysts',
+d:'感情と計画性を武器に、人の心を掴んでチームを導く',
+s:'あなたの最大の武器は「人望」です。論理だけのリーダーは尊敬されますが愛されない。感情だけのリーダーは愛されますが信頼されない。あなたは両方を持っています。ビジョンを情熱的に語りながら、それを実現可能な計画に落とし込み、チーム全員のやる気を引き出す。この「熱い頭と冷静な手」の組み合わせは、最も効果的なリーダーシップの形です',
+w:'感情的になると判断を誤ることがあなたのアキレス腱です。普段は冷静に計画を立てられるのに、感情が関わると合理的な判断ができなくなる瞬間があります。特に「人の期待を裏切ること」への恐怖が強く、本来なら切るべき判断を先延ばしにしてしまうことも。理想が高すぎることも課題で、チームメンバーに「この人の期待に応えられない」というプレッシャーを与えてしまうことがあります',
+b:'ビジョンを熱く語り、計画を立て、チーム全員のやる気を引き出す',
+c:'「心が動けば、人は動く」',q:'「みんなでやれば絶対できる！」',
+soul:'あなたの魂は「人と共に何かを成し遂げること」に最大の喜びを感じます。一人で達成する成果より、チーム全員で掴んだ勝利の方が、あなたにとっては何倍も価値があります。あなたは「結果」だけでなく「プロセス」も大切にする人です。目標を達成できたかどうかと同じくらい、そこに至る過程でメンバーが成長できたかを気にしています。しかし、あなたの内面には深い矛盾があります。「全員を幸せにしたい」と心から願いながら、「全員を幸せにすることは不可能だ」と頭では理解している。この理想と現実のギャップが、あなたを最も苦しめます。メンバーの一人が辛そうにしているのを見過ごせず、でも組織全体のためにはその人に厳しいことを言わなければならない——そういった場面で、あなたの心は引き裂かれます。',
+daily:'朝一番にチームのチャットを確認し、メンバーの様子をチェックしています。会議では全員が発言できるよう気を配り、発言できていない人に「○○さんはどう思う？」と必ず振ります。仕事に没頭すると熱くなりすぎて、気づけば22時。帰り道に「もっとこうすればよかった」と反省するのが日課です。休日はチームのことを考えつつも、家族やパートナーとの時間を大切にしようとしています。料理を作ることが好きで、誰かに食べてもらうと嬉しくなります。',
+relations:'あなたは「この人についていきたい」と思わせる力がありますが、それは時に重荷にもなります。周囲の期待に応え続けることの疲労を、あなたは過小評価しています。あなたが最も楽になれるのは「リーダーでなくていい場所」。導く側ではなく、ただの一人の人間として、弱音を吐いたり、ダラダラしたり、何も考えない時間を過ごせる関係が必要です。',
+careers:[
+{job:'チームリーダー・プロジェクトマネージャー',why:'人の心を掴みながら計画的に目標を達成する。あなたのリーダーシップスタイルは、チームの潜在能力を最大限に引き出します。'},
+{job:'NPOディレクター・スポーツ監督',why:'「勝つこと」と「メンバーの成長」を同時に追求できるあなたは、人材育成の要素が強い組織で最も力を発揮します。'},
+{job:'人材育成マネージャー・教育リーダー',why:'一人ひとりの可能性を見出し、それを計画的に伸ばす。あなたの「情熱×計画性×共感力」の三位一体が、人材育成の最高のエンジンになります。'}
+]},
+'Social-Passion-Veiled-Free-Flow':{n:29,nm:'道化師',en:'The Trickster',fam:'Catalysts',
+d:'笑いの仮面の下に、繊細な感情を隠す自由人',
+s:'あなたには「場を一瞬で和ませる」天性の力があります。緊迫した会議、気まずい沈黙、重たい空気——あなたが一言発するだけで、全員の肩の力が抜けます。この力は計算ではなく、あなたの感性が瞬時に「今、何が必要か」を読み取った結果です。誰とでも打ち解けられる柔軟性と、どんな環境にも適応できる順応性も、あなたの大きな武器です',
+w:'「いつも明るい人」というレッテルは、あなたにとって名誉であると同時に牢獄です。周囲が期待する「面白いあなた」を演じ続けるプレッシャーに、あなたは疲弊しています。落ち込んでいるとき、辛いとき、泣きたいとき——そんな日にも「元気出してよ！」と求められる苦しさを知っていますか？ あなたは知っています。笑いの仮面が分厚くなるほど、その下にある繊細な感情は押し潰されていきます。ある日突然「もう笑えない」と感じる瞬間が来ることを、あなたは密かに恐れているはずです',
+b:'ユーモアと軽さで場を和ませるが、一人になると別の顔を見せる',
+c:'「笑ってるうちは、大丈夫」',q:'「まあまあ、そんな深く考えなくても！」',
+soul:'あなたの魂は「笑い」を通じて世界と繋がっています。しかし、その笑いの根源にあるものは、陽気さではなく「痛みへの感受性」です。あなたが面白いことを言えるのは、世界の「おかしさ」や「矛盾」を誰よりも鋭く感じ取れるからです。喜劇と悲劇は表裏一体——その真理を、あなたは本能的に理解しています。あなたの中には「道化師の涙」という深い矛盾があります。人を笑わせることが生きがいなのに、自分自身が笑えない夜がある。みんなの前では軽妙にジョークを飛ばしているのに、一人の部屋に帰ると何もかもが重くのしかかってくる。あなたの「まあまあ、深く考えなくても」という言葉は、実は自分自身に向けて言っているのかもしれません。深く考えてしまうから、軽くする必要があるのです。あなたが最も恐れているのは「笑いが通じない場面」。ユーモアという武器が使えない状況——たとえば、本当に深刻な対話、逃げ場のない感情の直面——そこであなたは丸裸になります。しかし、その丸裸のあなたこそが、最も愛されるべき姿です。',
+daily:'会話では常にオチを探しています。友人の話を聞きながら、頭の半分では「ここでどうツッコむか」を考えています。LINEでは面白い画像やネタを常にストックしており、グループが沈黙すると投下します。初対面の人とは3分で笑い合える自信がありますが、その3分間であなたの頭脳は相手の性格と「何が刺さるか」を高速分析しています。帰宅後、ドアを閉めた瞬間に表情が変わります。一人の時間は驚くほど静かで、音楽すらかけずにぼーっとしていることがあります。深夜に一人でコメディ映画を観て笑うこともありますが、エンドロールで急に寂しくなることも。',
+relations:'「一緒にいて楽しい人」として多くの人に好かれていますが、あなたが本当に辛いときに連絡できる相手は何人いますか？ おそらく、あなたが「辛い」と言った瞬間に「え、冗談でしょ？」と受け取られてしまう経験があるはずです。あなたのユーモアが完璧すぎるために、SOSが届かないのです。あなたに合うのは「あなたが笑っていないときのあなた」を知っている人。面白くなくても、元気じゃなくても、そのまま受け入れてくれる相手です。',
+careers:[
+{job:'コメディアン・MC・司会者',why:'あなたの「場を読んで瞬時に最適な言葉を選ぶ」能力は、エンターテイメントの世界で最高のスキルです。台本ではなく、生きた反応で笑いを生み出せるのは、あなたの感受性あってこそ。'},
+{job:'バーテンダー・セラピスト',why:'カウンター越しに人の心を軽くする。あなたのユーモアは、実は高度なセラピーです。笑いを通じて相手の緊張を解き、本音を引き出す力は、この仕事で最も必要とされるスキルです。'},
+{job:'SNSインフルエンサー・コンテンツクリエイター',why:'日常の中に「面白さ」を見つけ、それを発信する。あなたの目には、他の人が見逃す「おかしさ」が映っています。その視点をコンテンツにする力は、唯一無二の才能です。'}
+]},
+'Social-Passion-Veiled-Free-Drive':{n:30,nm:'カリスマ',en:'The Charisma',fam:'Catalysts',
+d:'感性と仮面を武器に、自由に人々を魅了し導く',
+s:'あなたの存在感は、部屋に入った瞬間に全員が感じます。言葉を発する前から、あなたの纏うオーラが場を支配しています。この「言葉にできない影響力」は、32タイプの中でもあなただけが持つ武器です。場に応じて最適なペルソナを纏い、相手の心を正確に射抜く言葉を選べる。人心掌握力はカリスマの名にふさわしいレベルです',
+w:'あなたの最大の弱点は「本当の自分を知る人がいない」ことです。あまりにも多くの仮面を使い分けてきた結果、仮面の下にある「素の自分」が何なのか、あなた自身にもわからなくなっています。「あの人はカリスマだ」と言われるたびに、心のどこかで「でも本当の自分はそうじゃない」という声が聞こえませんか？ また、人を魅了する力が強すぎるため、あなたの周りには「あなたに魅了された人」ばかりが集まり、対等な関係が築きにくくなっています',
+b:'場に応じて最適なペルソナを纏い、感情を使って人を動かす',
+c:'「俺について来い。理由は後でわかる」',q:'「ついてこい」（でも内心は迷っている）',
+soul:'あなたの魂は「人を魅了すること」と「誰にも理解されないこと」の間で、永遠に揺れ動いています。ステージに立てば無敵——何百人の目を一身に浴びても、あなたは輝き続けます。しかしステージを降りた瞬間、あなたは世界で最も孤独な人間になります。あなたが纏うカリスマ性は、実は「見捨てられたくない」という深い恐怖の裏返しです。幼い頃、誰かの注目を集めることで安心を得た経験があるはずです。人が自分に注目していれば、離れていかない。自分が魅力的であり続ければ、一人にならない。その無意識の戦略が、あなたのカリスマ性の源泉です。しかし皮肉なことに、あなたが最も求めている「素の自分を受け入れてくれる関係」は、カリスマ性によって遠ざけられています。人々はあなたの「すごい部分」に魅了されますが、あなたの「弱い部分」を知ることはありません。あなたが「ついてこい」と言うとき、内心では「一緒にいてくれ」と叫んでいるのです。',
+daily:'人前では常にエネルギー全開で、周囲を魅了し続けていますが、そのエネルギーは無限ではありません。帰宅後は電池が切れたように動けなくなり、ソファで数時間ぼーっとすることがあります。SNSではフォロワーが多く、投稿するたびに反応がありますが、「この人たちは本当の自分を知らない」という虚しさを感じることも。服装や見た目には人一倍気を遣い、「どう見られるか」を常に意識しています。一人の時間には意外と内省的で、ノートに考えを書き出すこともあります。',
+relations:'あなたの周りには常に人がいますが、そのほとんどはあなたの「カリスマ」に魅了された人々です。あなたが弱みを見せた瞬間に離れていく人と、その弱みこそを愛してくれる人——その見極めが、あなたの人生で最も重要な判断です。あなたが本当に必要としているのは「あなたのカリスマ性を必要としない人」。あなたが何者でなくても、ただの一人の人間として隣にいてくれる存在です。',
+careers:[
+{job:'俳優・パフォーマー・アートディレクター',why:'あなたの「ペルソナを纏う力」は、演技の世界で最高の才能になります。役を生きること、別の人間になること——それはあなたが日常的にやっていることの延長線上にあります。'},
+{job:'カリスマ経営者・ブランドプロデューサー',why:'人を魅了し、ビジョンに巻き込む力。あなたが語れば、投資家は財布を開き、社員は徹夜で働きます。その影響力は、ビジネスの世界で最も高く評価される資質です。'},
+{job:'宗教指導者・思想家',why:'言葉で人の魂を動かす力。あなたの言葉には「聞いた人の人生が変わる」ほどの重みがあります。その力を何のために使うかが、あなたの人生の最大の選択です。'}
+]},
+'Social-Passion-Veiled-Order-Flow':{n:31,nm:'舞台の演者',en:'The Performer',fam:'Catalysts',
+d:'計画的に感情を演出し、完璧な「場」を作り上げる',
+s:'あなたの「場を作る力」は芸術的です。空気を読み、参加者の感情を把握し、最も効果的なタイミングで最適なリアクションを提供する。あなたがいる飲み会は盛り上がり、あなたが仕切る会議はスムーズに進み、あなたが企画するイベントは全員が満足します。この「見えない演出力」は、秩序だった計算と豊かな感受性の組み合わせから生まれています',
+w:'あなたの最大の課題は「本当の自分と演じている自分の境界が曖昧になること」です。常に「場」に最適化された反応を返し続けた結果、「素の自分はどう反応するのか」がわからなくなることがあります。一人になったとき、「今の自分は本当の自分？ それとも誰かのために演じている自分？」という問いが浮かぶことはありませんか？ また、完璧な場を作ることにこだわりすぎて、予想外の展開にパニックになることも',
+b:'場の空気を読み、最適なリアクションを計算して提供する',
+c:'「この場を最高にする。それが俺の仕事だ」',q:'「今日の会、いい感じだったでしょ？」',
+soul:'あなたの魂は「完璧な場を創り出すこと」に生きがいを見出しています。しかし「完璧な場」のために犠牲になっているのは、実はあなた自身の感情です。パーティーで全員が楽しんでいるとき、あなたは楽しんでいますか？ それとも「全員を楽しませること」に集中していて、自分が楽しむ余裕がありませんか？ あなたの内面には「演出家」と「出演者」が同居しています。演出家は客観的に場を見渡し、最適な演出を計算する。出演者は場の中で感情を演じる。しかし、観客として純粋に楽しむ「もう一人の自分」は、いつの間にかいなくなってしまいました。あなたが恐れているのは「場が崩れること」。せっかくの空気が壊される、計画が狂う、誰かが不快になる——それらはあなたにとって個人的な失敗のように感じます。しかし、完璧でない場にも美しさがあること、予定外のハプニングにこそ本当の感動があることを、あなたはいつか知るでしょう。',
+daily:'飲み会の前に「誰が来るか」「席順はどうするか」「話題のストックは十分か」を無意識にシミュレーションしています。会話中は常に「場のテンション」を数値化しており、下がりそうになると即座にネタを投入します。写真を撮るときは全員がいい表情になるよう声をかけ、SNSに上げるときもタグ付けとキャプションまで完璧にこなします。帰宅後、「今日の場は何点だったか」と自己採点する癖があります。90点以下だと翌日まで引きずることも。一人の時間は意外と多く、次の「場」の準備をしていることもあります。',
+relations:'あなたは人間関係においても「演出家」になりがちです。友人同士の関係がギクシャクしていると、仲裁に動く前に「どう場を設定すれば自然に仲直りできるか」を考えます。恋愛でもデートプランを完璧に設計し、「相手が最も喜ぶシナリオ」を用意します。しかし、あなたに最も必要なのは「何も演出しなくていい関係」です。計算なしで過ごせる、素の自分で笑える、沈黙が気にならない——そんな「台本のない時間」が、あなたの魂を癒します。',
+careers:[
+{job:'イベントマネージャー・ウェディングプランナー',why:'「完璧な場を創る」ことがそのまま仕事になります。参加者全員の感情を設計し、最高の体験を提供するあなたの能力は、この業界で最も高く評価される才能です。'},
+{job:'広報担当・PRコンサルタント',why:'組織の「見え方」を設計する仕事。あなたが日常的にやっている「場の演出」を、企業規模で行えます。メディア対応からイベント企画まで、あなたの演出力が組織のブランド価値を高めます。'},
+{job:'演出家・舞台監督',why:'物語の世界を実際の空間に構築し、観客の感情を設計する。あなたの「計算された感動」を創り出す力が、最も芸術的に昇華される場所です。'}
+]},
+'Social-Passion-Veiled-Order-Drive':{n:32,nm:'仮面の太陽',en:'The Masked Sun',fam:'Catalysts',
+d:'華やかな仮面の裏に、情熱と戦略と孤独を抱えるリーダー',
+s:'32タイプの中で最も多くの要素を同時に持っているのがあなたです。カリスマ性、計画性、感受性、行動力、社交性——全てを高いレベルで備えています。公の場では魅力的なリーダーとして振る舞い、感情を武器にしながら計画的に物事を推進する。あなたがいるプロジェクトは、メンバー全員が「自分はこのチームにいて良かった」と感じるほどの一体感を生み出します',
+w:'「常にONでいなければならない」疲労は、あなたが自覚している以上に深刻です。公の場での完璧なリーダー像を維持するために、あなたは膨大なエネルギーを消費しています。仮面を外した瞬間に見える疲労と孤独の深さは、周囲の誰も想像できないほどです。素の自分を見失う危険が常にあり、「仮面の下にはもう何もないのでは」という恐怖に襲われることがあります。また、全方位に気を配りすぎて、自分自身の欲求を完全に後回しにしてしまう傾向があります',
+b:'公の場では魅力的なリーダー。仮面を外した瞬間、深い疲れと孤独が見える',
+c:'「みんなの太陽でいるために、自分の闇は隠す」',q:'「みんなのために頑張らないとね」',
+soul:'あなたの魂は「光」と「闇」の両方を同時に抱えています。公の場で放つ圧倒的な光は、プライベートで抱える深い闇と正確に比例しています。光が強いほど、影もまた深い。あなたは「みんなの太陽」であろうとしますが、太陽もまた燃料がなければ輝けません。そしてあなたの燃料は、自分自身の感情です。喜び、悲しみ、怒り、愛情——それらを燃やして光に変換している。しかし、燃やし続ければいつか燃え尽きます。あなたが最も恐れているのは「輝けなくなること」。リーダーとしての魅力を失い、人が離れていき、一人残されること。その恐怖が、あなたを「もっと頑張らなければ」と追い立てています。しかし本当は、輝いていなくても愛される自分を、あなたは想像したことがないのではないでしょうか。暗くなっても、疲れても、失敗しても——それでもそばにいてくれる人がいることを、信じられるようになったとき、あなたは本当の意味で「太陽」になれるのです。仮面ではない、本物の光。それはあなたの弱さを受け入れた先にあります。',
+daily:'朝はSNSの通知チェックから始まり、チームへの朝の一言メッセージを送ります。「おはよう！今日も一日頑張ろう」——その一言にどれだけのエネルギーを注いでいるか、誰も知りません。会議では全員の表情を見ながら議論をリードし、落ちこぼれそうな人がいれば即座にフォローします。ランチは誰かと食べることが多く、一人で食べると不安になります。帰宅後、全てのエネルギーを使い果たした状態で玄関に立ち、ドアを開ける前に深呼吸が必要です。ベッドに倒れ込んでからようやく「今日の自分」を振り返りますが、「もっとこうすれば良かった」と後悔することが多いです。休日でも人と会う予定を入れがちですが、月に一度は完全に一人で過ごす日が必要です。',
+relations:'あなたの周囲は全員が「この人は特別な存在だ」と感じていますが、あなたは全員に対して「この人を失望させたくない」と感じています。この非対称性が、あなたを消耗させている最大の原因です。人間関係であなたが最も必要としているのは「期待しない人」。あなたが太陽でなくても、リーダーでなくても、何の肩書きもなくても——ただあなたという人間を丸ごと受け入れてくれる存在。その人の前でだけ、あなたは仮面を外し、暗い顔をし、弱音を吐き、何もしない自分でいることが許されます。その関係を見つけることが、あなたの人生における最大のミッションです。',
+careers:[
+{job:'政治家・企業トップ・組織代表',why:'カリスマ性、戦略性、共感力、実行力——全てを求められるポジションは、あなたのために存在します。多くの人を率い、ビジョンを実現し、その過程で全員の心を掴む。それはあなたにしかできないことです。'},
+{job:'カリスマコーチ・メンター',why:'人の潜在能力を引き出し、成長させる。あなたの「人の心を動かす力」と「計画的に導く力」が合わさることで、関わった全ての人の人生が変わります。'},
+{job:'テレビプロデューサー・総合演出',why:'視聴者の感情を設計し、出演者の魅力を最大化し、番組全体を一つの「体験」として構築する。あなたの全ての能力が求められる、最も複合的な仕事です。'}
+]}
+};
+
+// ============================================================
+// JOBS DATA (per type code)
+// ============================================================
+const JOBS={
+'Core-Logic-Open-Free-Flow':['研究者','データサイエンティスト','図書館司書','哲学者','テクニカルライター'],
+'Core-Logic-Open-Free-Drive':['起業家','発明家','フリーランスエンジニア','探検家','コンサルタント'],
+'Core-Logic-Open-Order-Flow':['品質管理','システム管理者','経理・会計士','アーキビスト','公務員'],
+'Core-Logic-Open-Order-Drive':['プロジェクトマネージャー','経営コンサルタント','建築家','投資アナリスト','都市計画者'],
+'Core-Logic-Veiled-Free-Flow':['セキュリティアナリスト','翻訳者','学芸員','校正者','天文学者'],
+'Core-Logic-Veiled-Free-Drive':['システムアーキテクト','ゲームデザイナー','暗号技術者','バックエンドエンジニア','戦略プランナー'],
+'Core-Logic-Veiled-Order-Flow':['法務担当','監査役','品質保証エンジニア','薬剤師','公認会計士'],
+'Core-Logic-Veiled-Order-Drive':['CTO','投資ファンドマネージャー','情報参謀','戦略コンサルタント','チェスプレイヤー'],
+'Core-Passion-Open-Free-Flow':['詩人・作家','カウンセラー','フォトグラファー','ヨガインストラクター','花屋'],
+'Core-Passion-Open-Free-Drive':['アーティスト','映像クリエイター','起業家','UXデザイナー','作曲家'],
+'Core-Passion-Open-Order-Flow':['看護師','社会福祉士','教師','セラピスト','栄養士'],
+'Core-Passion-Open-Order-Drive':['プロデューサー','NPO代表','ブランドマネージャー','編集者','パティシエ'],
+'Core-Passion-Veiled-Free-Flow':['旅行ライター','フリーランサー','バリスタ','イラストレーター','占い師'],
+'Core-Passion-Veiled-Free-Drive':['ドキュメンタリー監督','冒険家','ジャーナリスト','探偵','文化人類学者'],
+'Core-Passion-Veiled-Order-Flow':['司書','手工芸作家','アロマセラピスト','校閲者','庭師'],
+'Core-Passion-Veiled-Order-Drive':['映画監督','指揮者','ブランド戦略家','プロダクトマネージャー','建築デザイナー'],
+'Social-Logic-Open-Free-Flow':['ジャーナリスト','マーケター','IT講師','ポッドキャスター','旅行プランナー'],
+'Social-Logic-Open-Free-Drive':['スタートアップ創業者','冒険ツアーガイド','イベントプロデューサー','営業マネージャー','プロダクトハンター'],
+'Social-Logic-Open-Order-Flow':['人事担当','調停者・仲裁人','カスタマーサクセス','行政書士','ファシリテーター'],
+'Social-Logic-Open-Order-Drive':['CEO','軍事指揮官','政治家','経営者','プログラムディレクター'],
+'Social-Logic-Veiled-Free-Flow':['外交官','情報アナリスト','リサーチャー','ロビイスト','ネットワークエンジニア'],
+'Social-Logic-Veiled-Free-Drive':['M&Aアドバイザー','政治参謀','プロデューサー','交渉人','ヘッドハンター'],
+'Social-Logic-Veiled-Order-Flow':['官僚','法律家','コンプライアンス担当','秘書','大使'],
+'Social-Logic-Veiled-Order-Drive':['企業経営者','政治リーダー','投資銀行家','最高戦略責任者','大学学長'],
+'Social-Passion-Open-Free-Flow':['エンターテイナー','YouTuber','パーティープランナー','保育士','ラジオDJ'],
+'Social-Passion-Open-Free-Drive':['社会起業家','伝道師・活動家','クリエイティブディレクター','コミュニティマネージャー','ブランドアンバサダー'],
+'Social-Passion-Open-Order-Flow':['カウンセラー','ソーシャルワーカー','看護師長','チームコーチ','学校教員'],
+'Social-Passion-Open-Order-Drive':['チームリーダー','NPOディレクター','スポーツ監督','校長','人材育成マネージャー'],
+'Social-Passion-Veiled-Free-Flow':['コメディアン','MC・司会者','バーテンダー','SNSインフルエンサー','セラピスト'],
+'Social-Passion-Veiled-Free-Drive':['俳優','カリスマ経営者','宗教指導者','ブランドプロデューサー','アートディレクター'],
+'Social-Passion-Veiled-Order-Flow':['イベントマネージャー','ウェディングプランナー','広報担当','演出家','舞台監督'],
+'Social-Passion-Veiled-Order-Drive':['政治家','企業トップ','カリスマコーチ','テレビプロデューサー','宗教指導者']
+};
+
+// ============================================================
+// COMPATIBILITY DATA (per type code)
+// ============================================================
+const COMPAT={
+'Core-Logic-Open-Free-Flow':{best:'Core-Passion-Open-Free-Drive',bestR:'あなたの論理と知識を、彼らの情熱が形にしてくれる。「考える人」と「創る人」の最高のコンビ。',grow:'Social-Passion-Open-Free-Drive',growR:'正反対の外向性と情熱があなたの殻を破る。彼らの熱さに触れることで、あなたの知性が覚醒する。'},
+'Core-Logic-Open-Free-Drive':{best:'Core-Passion-Open-Free-Flow',bestR:'あなたの行動力を、彼らの感受性が方向づけてくれる。お互いの「足りない部分」を補い合える稀有な関係。',grow:'Social-Logic-Open-Order-Drive',growR:'あなたの自由さと彼らの統率力がぶつかり、磨かれる。組織の中で輝く方法を教えてくれる存在。'},
+'Core-Logic-Open-Order-Flow':{best:'Core-Passion-Open-Order-Drive',bestR:'あなたの安定感と彼らの情熱が合わさると、揺るがないチームが生まれる。信頼で結ばれた理想のパートナー。',grow:'Social-Passion-Open-Free-Drive',growR:'彼らの奔放さがあなたの「守り」の殻を破る。変化への適応力を学べる。'},
+'Core-Logic-Open-Order-Drive':{best:'Core-Logic-Veiled-Order-Flow',bestR:'あなたの戦略を忠実に実行してくれる最高の右腕。言葉を超えた信頼関係を築ける。',grow:'Core-Passion-Open-Free-Flow',growR:'彼らの自由さと感性が、あなたの完璧主義に「遊び」を教えてくれる。'},
+'Core-Logic-Veiled-Free-Flow':{best:'Core-Passion-Veiled-Free-Flow',bestR:'お互いの「見せない」部分を理解し合える稀有な存在。沈黙が心地よい唯一の関係。',grow:'Social-Logic-Open-Free-Drive',growR:'彼らの行動力と外向性が、あなたの観察眼を世界に発信する力をくれる。'},
+'Core-Logic-Veiled-Free-Drive':{best:'Core-Logic-Veiled-Order-Flow',bestR:'あなたの設計図を黙々と実現してくれる存在。仮面の奥で通じ合える同志。',grow:'Social-Passion-Open-Order-Drive',growR:'表に立つリーダーの情熱が、あなたの「影の力」を正しく活かす方法を教えてくれる。'},
+'Core-Logic-Veiled-Order-Flow':{best:'Core-Logic-Open-Order-Drive',bestR:'あなたの一貫性と彼らのビジョンが組み合わさると、鉄壁のチームになる。',grow:'Social-Passion-Open-Free-Flow',growR:'彼らの明るさと自由さが、あなたの仮面の下の「温かさ」を引き出してくれる。'},
+'Core-Logic-Veiled-Order-Drive':{best:'Core-Logic-Veiled-Free-Drive',bestR:'二人の知略が合わされば、静かに世界を動かせる。言葉なしでわかり合える関係。',grow:'Social-Passion-Open-Free-Flow',growR:'彼らの無邪気さが、あなたの計算の外にある「人間らしさ」を思い出させてくれる。'},
+'Core-Passion-Open-Free-Flow':{best:'Core-Logic-Open-Free-Drive',bestR:'あなたの感性を、彼らの論理と行動力が現実にしてくれる。夢を語り合える最高の仲間。',grow:'Core-Logic-Open-Order-Drive',growR:'彼らの計画性が、あなたの豊かな感受性に「形」を与えてくれる。'},
+'Core-Passion-Open-Free-Drive':{best:'Core-Logic-Open-Free-Flow',bestR:'あなたの創造力を、彼らの知識が深めてくれる。互いの世界観が混ざり合い、新しい何かが生まれる。',grow:'Core-Logic-Open-Order-Drive',growR:'彼らの戦略眼が、あなたの情熱を「結果」に変える方法を教えてくれる。'},
+'Core-Passion-Open-Order-Flow':{best:'Core-Logic-Open-Order-Flow',bestR:'あなたの共感力と彼らの安定感が合わさり、周囲に安心を与える存在になる。',grow:'Social-Passion-Open-Free-Drive',growR:'彼らの情熱と行動力が、あなたの「自分を後回しにする」癖を打ち破る。'},
+'Core-Passion-Open-Order-Drive':{best:'Core-Logic-Open-Order-Flow',bestR:'あなたの情熱を、彼らの堅実さが支えてくれる。理想を現実にする最高のパートナー。',grow:'Core-Passion-Open-Free-Flow',growR:'彼らの自由さが、あなたの「こうあるべき」を柔らかくほぐしてくれる。'},
+'Core-Passion-Veiled-Free-Flow':{best:'Core-Logic-Veiled-Free-Flow',bestR:'お互いの静かな内面世界を共有できる。一緒にいるだけで癒される関係。',grow:'Social-Passion-Open-Free-Drive',growR:'彼らの表現力と情熱が、あなたの内に秘めた感情を解放する鍵になる。'},
+'Core-Passion-Veiled-Free-Drive':{best:'Core-Passion-Veiled-Order-Drive',bestR:'共に仮面の奥に深い感情を持つ者同士。本質的なレベルで理解し合える。',grow:'Social-Logic-Open-Free-Drive',growR:'彼らの合理的な社交性が、あなたの孤独な旅に「仲間」を連れてくる。'},
+'Core-Passion-Veiled-Order-Flow':{best:'Core-Passion-Open-Order-Flow',bestR:'あなたの言葉にできない感情を、彼らが優しく受け止めてくれる。安心して仮面を外せる存在。',grow:'Social-Passion-Open-Free-Flow',growR:'彼らの明るさが、あなたの内なる豊かさを「言葉」にする勇気をくれる。'},
+'Core-Passion-Veiled-Order-Drive':{best:'Core-Passion-Veiled-Free-Drive',bestR:'お互いの仮面を外せる唯一の存在。あなたの感性を論理で支えてくれる。',grow:'Social-Passion-Open-Free-Flow',growR:'彼らの自由な表現が、あなたの隠している「本当の太陽」を引き出す。'},
+'Social-Logic-Open-Free-Flow':{best:'Social-Passion-Open-Free-Flow',bestR:'知識と感情の交換が止まらない。一緒にいると世界が広がる楽しい関係。',grow:'Core-Logic-Veiled-Order-Drive',growR:'彼らの深い戦略眼が、あなたの広い知識に「深さ」を加える。'},
+'Social-Logic-Open-Free-Drive':{best:'Social-Passion-Open-Free-Drive',bestR:'論理と情熱のコンビで、一緒にいると冒険が止まらない。最高の共犯者。',grow:'Core-Logic-Open-Order-Drive',growR:'彼らの計画性が、あなたの冒険に「持続力」をもたらす。'},
+'Social-Logic-Open-Order-Flow':{best:'Social-Passion-Open-Order-Flow',bestR:'あなたの公正さと彼らの共感力で、最強の調和を生み出せる。',grow:'Core-Passion-Open-Free-Drive',growR:'彼らの独創性が、あなたの「バランス」の外にある可能性を見せてくれる。'},
+'Social-Logic-Open-Order-Drive':{best:'Core-Logic-Open-Order-Drive',bestR:'二人の論理と統率力が合わされば、どんなプロジェクトも成功に導ける。',grow:'Core-Passion-Open-Free-Flow',growR:'彼らの自由な感性が、あなたのリーダーシップに「人間味」を加える。'},
+'Social-Logic-Veiled-Free-Flow':{best:'Social-Logic-Veiled-Free-Drive',bestR:'情報と戦略を共有できる知的なパートナー。お互いの分析を補完し合える。',grow:'Social-Passion-Open-Free-Flow',growR:'彼らの飾らない明るさが、あなたの仮面の窮屈さを和らげてくれる。'},
+'Social-Logic-Veiled-Free-Drive':{best:'Social-Logic-Veiled-Free-Flow',bestR:'あなたの戦略を理解し、最適な情報を提供してくれる知的同志。',grow:'Core-Passion-Open-Free-Flow',growR:'彼らの純粋な感受性が、あなたの戦略的思考に「温かさ」を思い出させる。'},
+'Social-Logic-Veiled-Order-Flow':{best:'Social-Logic-Open-Order-Drive',bestR:'あなたの完璧な実務能力と彼らのビジョンが合わさり、組織を安定させる。',grow:'Social-Passion-Open-Free-Flow',growR:'彼らの自由さが、あなたの「公」と「私」の壁を少しだけ低くしてくれる。'},
+'Social-Logic-Veiled-Order-Drive':{best:'Core-Logic-Veiled-Order-Drive',bestR:'頂点に立つ者同士の信頼関係。戦略と実行で帝国を築ける。',grow:'Social-Passion-Open-Free-Flow',growR:'彼らの無邪気さが、孤独な王に「人としての温もり」を思い出させる。'},
+'Social-Passion-Open-Free-Flow':{best:'Social-Logic-Open-Free-Flow',bestR:'あなたの明るさと彼らの知性が合わさり、どんな場も最高の空間に変える。',grow:'Core-Logic-Veiled-Order-Drive',growR:'彼らの深い思慮が、あなたの「楽しさ」の先にある意味を教えてくれる。'},
+'Social-Passion-Open-Free-Drive':{best:'Social-Logic-Open-Free-Drive',bestR:'情熱と冒険心が共鳴する最強コンビ。一緒にいると不可能が可能になる気がする。',grow:'Core-Logic-Open-Order-Drive',growR:'彼らの冷静な計画性が、あなたの燃え尽きを防ぎ、情熱を持続させてくれる。'},
+'Social-Passion-Open-Order-Flow':{best:'Social-Logic-Open-Order-Flow',bestR:'あなたの共感力と彼らの公正さが合わさり、誰もが安心できる空間を作れる。',grow:'Core-Passion-Open-Free-Drive',growR:'彼らの独創性が、あなたの支援スタイルに新しい可能性を見せてくれる。'},
+'Social-Passion-Open-Order-Drive':{best:'Core-Logic-Open-Order-Flow',bestR:'あなたの情熱的リーダーシップを、彼らの安定した実行力が支える理想のチーム。',grow:'Core-Passion-Veiled-Free-Drive',growR:'彼らの深い内面が、あなたのリーダーシップに「静かな強さ」を教えてくれる。'},
+'Social-Passion-Veiled-Free-Flow':{best:'Core-Passion-Open-Free-Flow',bestR:'あなたの仮面を外せる数少ない存在。彼らの前では本当の感情を見せられる。',grow:'Core-Logic-Open-Order-Drive',growR:'彼らの論理と計画性が、あなたの「いつも明るい」仮面の重さを軽くしてくれる。'},
+'Social-Passion-Veiled-Free-Drive':{best:'Core-Passion-Veiled-Order-Drive',bestR:'仮面の奥の本当の姿を見せ合える。カリスマ同士の深い絆。',grow:'Core-Logic-Open-Free-Flow',growR:'彼らの静かな知性が、あなたの孤独な内面に安らぎを与えてくれる。'},
+'Social-Passion-Veiled-Order-Flow':{best:'Social-Passion-Open-Order-Drive',bestR:'あなたの演出力と彼らのリーダーシップが合わさり、完璧な「場」を作り上げる。',grow:'Core-Passion-Open-Free-Flow',growR:'彼らの素直な感受性が、あなたの「演じなくていい瞬間」を教えてくれる。'},
+'Social-Passion-Veiled-Order-Drive':{best:'Core-Passion-Veiled-Free-Drive',bestR:'お互いの仮面の裏にある深い感情を理解し合える。孤独を分かち合える唯一の存在。',grow:'Core-Passion-Open-Free-Flow',growR:'彼らの飾らない純粋さが、あなたの「仮面の太陽」の下にいる本当の自分を解放してくれる。'}
+};
+
+// ============================================================
+// STATE
+// ============================================================
+let cur=0;
+const ans=new Array(Q.length).fill(null);
+
+// ============================================================
+// PARTICLES BACKGROUND
+// ============================================================
+(function(){
+const cv=document.getElementById('particles'),cx=cv.getContext('2d');
+let W,H;const pts=[];
+function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight}
+window.addEventListener('resize',resize);resize();
+for(let i=0;i<40;i++)pts.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.5+.5,dx:(Math.random()-.5)*.3,dy:(Math.random()-.5)*.3,o:Math.random()*.3+.1});
+function draw(){cx.clearRect(0,0,W,H);pts.forEach(p=>{p.x+=p.dx;p.y+=p.dy;if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;cx.beginPath();cx.arc(p.x,p.y,p.r,0,Math.PI*2);cx.fillStyle=`rgba(108,92,231,${p.o})`;cx.fill()});requestAnimationFrame(draw)}
+draw();
+})();
+
+// ============================================================
+// SCREENS
+// ============================================================
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')}
+function startDiagnosis(){show('questionScreen');renderQ()}
+
+// ============================================================
+// QUESTION RENDERING
+// ============================================================
+function renderQ(){
+const q=Q[cur];
+document.getElementById('qCat').textContent=q.cat;
+document.getElementById('qText').textContent=q.text;
+document.getElementById('labelA').textContent=q.a;
+document.getElementById('labelB').textContent=q.b;
+const pct=Math.round(cur/Q.length*100);
+document.getElementById('progressText').textContent=`${cur+1} / ${Q.length}`;
+document.getElementById('progressPct').textContent=pct+'%';
+document.getElementById('progressFill').style.width=pct+'%';
+document.getElementById('layerBadge').textContent=q.layer;
+document.getElementById('prevBtn').disabled=cur===0;
+document.querySelectorAll('.answer-btn').forEach((b,i)=>{b.classList.toggle('selected',ans[cur]===i+1)});
+// animate
+const c=document.getElementById('questionContainer');
+c.style.animation='none';c.offsetHeight;c.style.animation='fadeIn .3s ease';
+}
+// ============================================================
+// BREAK QUOTES DATA
+// ============================================================
+const BREAK_QUOTES=[
+// P1 社会乖離値
+{emoji:'🎭',q:'すべての人間は役者であり、世界は舞台である。',a:'シェイクスピア'},
+{emoji:'☀️',q:'自分自身であることが、最大の勇気だ。',a:'カミュ'},
+{emoji:'🪞',q:'仮面をかぶり続けると、いつか仮面が顔になる。',a:'ジョージ・オーウェル'},
+{emoji:'🌿',q:'あるがままの自分を受け入れよ。',a:'ミシェル・ド・モンテーニュ'},
+// P2 合理性
+{emoji:'❤️',q:'心で見なくちゃ、ものごとはよく見えないってことさ。',a:'サン＝テグジュペリ'},
+{emoji:'🔬',q:'知は力なり。',a:'フランシス・ベーコン'},
+{emoji:'🧪',q:'想像力は知識よりも重要だ。',a:'アインシュタイン'},
+{emoji:'📐',q:'万物の根源は数である。',a:'ピタゴラス'},
+// P3 対人距離
+{emoji:'🌙',q:'孤独は優れた精神の学校である。',a:'コルトー'},
+{emoji:'🤝',q:'人生で最も美しいものは、人と人との関係である。',a:'サン＝テグジュペリ'},
+{emoji:'🏔️',q:'偉大なことを成し遂げた人は皆、偉大な夢を見ていた。',a:'ウィルソン'},
+{emoji:'💬',q:'友情は、静かに深まるものである。',a:'ソロー'},
+// P4 主従
+{emoji:'👑',q:'指導者とは、希望を配る人のことだ。',a:'ナポレオン'},
+{emoji:'🌱',q:'最も偉大な栄光は、倒れるたびに起き上がることだ。',a:'孔子'},
+{emoji:'🗡️',q:'勇気とは、恐怖に抵抗することだ。',a:'マーク・トウェイン'},
+{emoji:'🕊️',q:'仕えることを学ばなければ、導くことはできない。',a:'マーティン・ルーサー・キング Jr.'},
+// P5 聖域
+{emoji:'⚔️',q:'信念のためなら、世界を敵に回しても構わない。',a:'ガンジー'},
+{emoji:'💧',q:'上善は水のごとし。',a:'老子'},
+{emoji:'🔥',q:'信念を持つ者は、百人の利害しか持たない者に勝る。',a:'ジョン・スチュアート・ミル'},
+{emoji:'🍃',q:'柔よく剛を制す。',a:'『三略』'},
+// P6 孤高度
+{emoji:'🦅',q:'群衆の中にいても、孤独を保てる者は賢者である。',a:'エマーソン'},
+{emoji:'🏠',q:'幸福は自分の家で見つけるものだ。',a:'ゲーテ'},
+// P7 覚醒動機
+{emoji:'🔥',q:'情熱なしに偉業が達成されたことはない。',a:'ヘーゲル'},
+{emoji:'🌊',q:'静けさの中にこそ、本当の強さがある。',a:'老子'},
+{emoji:'⚡',q:'狂気と呼ばれるものの中にこそ、真実がある。',a:'エドガー・アラン・ポー'},
+{emoji:'🌅',q:'明日死ぬかのように生きよ。永遠に生きるかのように学べ。',a:'ガンジー'},
+// P8 情緒変動性
+{emoji:'🌪️',q:'感情は人間の最も美しい資質である。',a:'ヴィクトル・ユゴー'},
+{emoji:'🧊',q:'冷静さは最大の武器である。',a:'タレーラン'},
+{emoji:'🎵',q:'音楽は感情の速記術である。',a:'トルストイ'},
+{emoji:'⚓',q:'嵐の海で錨を降ろす者が、最も遠くへ行く。',a:'セネカ'},
+// P9 秩序性
+{emoji:'⏰',q:'規律は自由の母である。',a:'キケロ'},
+{emoji:'🦋',q:'自由とは、自分自身の法則に従うことだ。',a:'ルソー'},
+{emoji:'📖',q:'習慣は第二の天性である。',a:'アリストテレス'},
+{emoji:'🎲',q:'人生は近くで見れば悲劇だが、遠くから見れば喜劇だ。',a:'チャップリン'},
+// P10 探索欲
+{emoji:'🧭',q:'冒険とは、知らない自分に出会う旅だ。',a:'アンドレ・ジッド'},
+{emoji:'🏡',q:'旅の目的は、到着ではなく旅そのものにある。',a:'T.S.エリオット'},
+{emoji:'🚀',q:'Stay hungry, stay foolish.',a:'スティーブ・ジョブズ'},
+{emoji:'🗺️',q:'世界は一冊の本であり、旅をしない者は一ページしか読まない。',a:'アウグスティヌス'},
+// P11 感情露出度
+{emoji:'💎',q:'涙は、言葉にできない感情の言葉である。',a:'ヴォルテール'},
+{emoji:'🛡️',q:'沈黙は最も雄弁な表現である。',a:'マーティン・ルーサー・キング Jr.'},
+// P12 依存構造
+{emoji:'🔗',q:'一人では何もできない。全てを一緒にやれば何でもできる。',a:'ヘレン・ケラー'},
+{emoji:'🦅',q:'孤独を知る者だけが、本当の自由を知る。',a:'ショーペンハウアー'},
+{emoji:'🌳',q:'深く根を張る木は、一人でも倒れない。',a:'レオナルド・ダ・ヴィンチ'},
+{emoji:'🤲',q:'人は人によって磨かれる。',a:'セネカ'}
+];
+let usedQuoteIdx=[];
+const BREAK_POINTS=[22,45,68,91,114];
+
+function calcInterimScores(){
+  const raw={};for(let i=1;i<=15;i++)raw['P'+i]=[];
+  Q.forEach((q,idx)=>{
+    const a=ans[idx];if(a===null)return;
+    q.pv.forEach(pv=>{raw[pv.p].push(pv.d===1?a:6-a)});
+  });
+  const scores={};
+  for(let i=1;i<=15;i++){
+    const k='P'+i,arr=raw[k];
+    scores[k]=arr.length?((arr.reduce((a,b)=>a+b,0)/arr.length-1)/4)*100:50;
+  }
+  return scores;
+}
+
+function pickBreakQuote(){
+  if(usedQuoteIdx.length>=BREAK_QUOTES.length)usedQuoteIdx=[];
+  const available=BREAK_QUOTES.map((q,i)=>i).filter(i=>!usedQuoteIdx.includes(i));
+  const pick=available[Math.floor(Math.random()*available.length)];
+  usedQuoteIdx.push(pick);
+  return BREAK_QUOTES[pick];
+}
+
+function showBreak(){
+  const bq=pickBreakQuote();
+  const milestone=Math.round((cur+1)/Q.length*100);
+  document.getElementById('breakLabel').textContent=`${milestone}% 完了`;
+  document.getElementById('breakEmoji').textContent=bq.emoji;
+  document.getElementById('breakQuote').textContent=`「${bq.q}」`;
+  document.getElementById('breakAuthor').textContent=`― ${bq.a}`;
+  document.getElementById('breakOverlay').style.display='flex';
+}
+function closeBreak(){
+  document.getElementById('breakOverlay').style.display='none';
+  if(cur<Q.length-1){cur++;renderQ()}else{showAnalyzing()}
+}
+
+function answer(v){
+ans[cur]=v;
+document.querySelectorAll('.answer-btn').forEach((b,i)=>b.classList.toggle('selected',i+1===v));
+setTimeout(()=>{
+  if(BREAK_POINTS.includes(cur)){showBreak();return}
+  if(cur<Q.length-1){cur++;renderQ()}else{showAnalyzing()}
+},200);
+}
+function skipQ(){if(cur<Q.length-1){cur++;renderQ()}else{showAnalyzing()}}
+function prevQ(){if(cur>0){cur--;renderQ()}}
+
+// ============================================================
+// ANALYZING ANIMATION
+// ============================================================
+function showAnalyzing(){
+show('analyzeScreen');
+const steps=['15次元のP変数を計算中...','5つの軸を判定中...','矛盾の指紋を検出中...','関係性スタイルを分析中...','32タイプを照合中...','あなたの精神構造を描画中...'];
+let i=0;
+const el=document.getElementById('analyzeStep');
+const iv=setInterval(()=>{if(i<steps.length){el.textContent=steps[i];i++}else{clearInterval(iv);showResult()}},700);
+}
+
+// ============================================================
+// SCORING ENGINE
+// ============================================================
+function calcScores(){
+const raw={};for(let i=1;i<=15;i++)raw['P'+i]=[];
+Q.forEach((q,idx)=>{
+  const a=ans[idx];if(a===null)return;
+  q.pv.forEach(pv=>{raw[pv.p].push(pv.d===1?a:6-a)});
+});
+const scores={};
+for(let i=1;i<=15;i++){
+  const k='P'+i,arr=raw[k];
+  scores[k]=arr.length?((arr.reduce((a,b)=>a+b,0)/arr.length-1)/4)*100:50;
+}
+return {scores,raw};
+}
+
+function determineAxes(sc){
+const cV=(sc.P3+sc.P6+(100-sc.P12))/3;
+const eV=((100-sc.P2)+sc.P8)/2;
+const mV=(sc.P1+(100-sc.P11))/2;
+const sV=(sc.P9+(100-sc.P10))/2;
+const dV=(sc.P4+sc.P7+sc.P5)/3;
+return{
+  C:{v:cV,l:cV<=50?'Core':'Social'},
+  E:{v:eV,l:eV<=50?'Logic':'Passion'},
+  M:{v:mV,l:mV<=50?'Open':'Veiled'},
+  S:{v:sV,l:sV<=50?'Free':'Order'},
+  D:{v:dV,l:dV<=50?'Flow':'Drive'}
+};
+}
+
+// ============================================================
+// CONTRADICTION FINGERPRINT
+// ============================================================
+function detectContradictions(raw,scores){
+const labels={
+  P1:{name:'社会乖離値',hi:'仮面が厚い',lo:'素の自分を見せる',
+    lg:'あなたは表向き完璧な社会人を演じていますが、内面ではまったく別の自分がいますね？周囲はそのギャップに気づいていないかもしれません。',
+    md:'社交の場で「素の自分」と「演じる自分」の間で揺れる瞬間がありませんか？',
+    sm:'時々、人前での自分と本来の自分のズレに戸惑うことがあるかもしれません。'},
+  P2:{name:'合理性',hi:'論理重視',lo:'感性重視',
+    lg:'あなたはデータと論理で判断するタイプですが、最後の最後で直感に従ってしまいますね？その矛盾に自覚があるはずです。',
+    md:'頭では合理的な選択がわかっているのに、心が別の答えを囁く瞬間がありませんか？',
+    sm:'時々、論理と感覚の板挟みで迷うことがあるかもしれません。'},
+  P3:{name:'対人距離',hi:'少数深交',lo:'広く浅く',
+    lg:'あなたは誰とでもそつなく話せますが、本当に心を開いているのはごく少数ですね？その「社交的な孤独者」の仮面、自覚はあるはずです。',
+    md:'大人数でも楽しめるのに、ふと「本当にわかり合える人は少ない」と感じませんか？',
+    sm:'時々、人付き合いの距離感に迷うことがあるかもしれません。'},
+  P4:{name:'主従',hi:'リーダー型',lo:'フォロワー型',
+    lg:'あなたは場を仕切りたい欲求と、誰かに任せて楽になりたい欲求が交互に来ますね？周囲はあなたのどちらが本物かわからないかもしれません。',
+    md:'主導権を握りたい瞬間と、委ねたい瞬間が交互に来ませんか？',
+    sm:'時々、リードすべきか任せるべきか迷うことがあるかもしれません。'},
+  P5:{name:'聖域',hi:'不可侵領域あり',lo:'柔軟',
+    lg:'あなたは普段柔軟に見えますが、絶対に譲れない「聖域」がありますね？それに触れられたときの反応の激しさは、自分でも驚くほどでは？',
+    md:'普段は柔軟なのに、ある一線を越えられると急にスイッチが入りませんか？',
+    sm:'時々、自分の中の譲れないラインの強さに驚くことがあるかもしれません。'},
+  P6:{name:'孤高度',hi:'孤独を好む',lo:'人の中にいたい',
+    lg:'あなたは人といるのが好きなのに、突然一人になりたくなりますね？「群れの中の一匹狼」——その寂しさと自由の間で、いつも揺れている。',
+    md:'楽しい場にいるのに、ふと一人になりたくなる瞬間がありませんか？',
+    sm:'時々、社交と孤独のバランスに迷うことがあるかもしれません。'},
+  P7:{name:'覚醒動機',hi:'情熱的',lo:'穏やか',
+    lg:'あなたは普段は穏やかですが、スイッチが入ると手がつけられないほど燃えますね？その「静かなる炎」は周囲を驚かせるほどの威力がある。',
+    md:'普段は落ち着いているのに、あるテーマになると止まらなくなりませんか？',
+    sm:'時々、自分の中の情熱のスイッチに戸惑うことがあるかもしれません。'},
+  P8:{name:'情緒変動性',hi:'感情の波が大きい',lo:'安定',
+    lg:'あなたの外側は凪ですが、内側は嵐ですね？表面上は穏やかでも、内面では激しい感情が渦巻いている。その演技力に、自分でも疲れていませんか？',
+    md:'表面は冷静なのに、内面では感情が激しく動いている瞬間がありませんか？',
+    sm:'時々、見せている自分と感じている自分のズレを意識することがあるかもしれません。'},
+  P9:{name:'秩序性',hi:'計画的',lo:'自由',
+    lg:'あなたはある領域では完璧主義なのに、別の領域では驚くほど無頓着ですね？時間には厳格だけど部屋はカオス、あるいはその逆。',
+    md:'ある分野ではきっちりしているのに、別の分野では全くこだわらない自分に気づきませんか？',
+    sm:'時々、几帳面な自分とズボラな自分の落差に苦笑することがあるかもしれません。'},
+  P10:{name:'探索欲',hi:'冒険志向',lo:'安定志向',
+    lg:'あなたは新しいものに強烈に惹かれながら、安全圏を手放すことを恐れていますね？「冒険したいけど帰る場所がほしい」——その矛盾がクリエイティビティの源泉です。',
+    md:'新しいものに惹かれつつ、安定した日常も手放せないと感じませんか？',
+    sm:'時々、好奇心と慎重さの間で揺れることがあるかもしれません。'},
+  P11:{name:'感情露出度',hi:'感情を見せる',lo:'隠す',
+    lg:'あなたは本当は気持ちを打ち明けたいのに、自分を守る壁が邪魔をしていますね？「弱さを見せたい、でも見せられない」——その葛藤は、信頼できる人の前で最も強くなる。',
+    md:'信頼している人の前でさえ、本音を飲み込んでしまう瞬間がありませんか？',
+    sm:'時々、感情を出したいのに出せない自分にもどかしさを感じることがあるかもしれません。'},
+  P12:{name:'依存構造',hi:'繋がりを求める',lo:'独立志向',
+    lg:'あなたは一人でいることを好みつつ、誰かの存在を切実に必要としていますね？「距離を置きたいのに寂しい」——その矛盾こそが、あなたの人間関係の核心です。',
+    md:'独立していたいのに、ふと寂しさや不安を感じる瞬間がありませんか？',
+    sm:'時々、一人でいたい気持ちと誰かといたい気持ちが同時に来ることがあるかもしれません。'},
+  P13:{name:'対話構造',hi:'共感重視',lo:'解決重視',
+    lg:'あなたは相手の話を聞きながら、「解決してあげたい」と「ただ寄り添いたい」の間で常に引き裂かれていますね？助言したい自分と、黙って抱きしめたい自分——どちらが本物？答えは「どちらも」です。',
+    md:'誰かの悩みを聞いているとき、解決策を言いたい自分と共感だけしたい自分が衝突しませんか？',
+    sm:'時々、相手が求めているのが答えなのか共感なのか、判断に迷うことがあるかもしれません。'},
+  P14:{name:'愛着表現',hi:'言語型',lo:'行動型',
+    lg:'あなたの愛情表現には明確なクセがあります。「言葉にしなくてもわかるだろう」と思う自分と、「ちゃんと伝えなきゃ」と焦る自分——このズレが、大切な人との間にすれ違いを生んでいませんか？',
+    md:'気持ちを行動で示したいのに「言葉で伝えてほしい」と言われて戸惑ったこと、ありませんか？',
+    sm:'時々、自分の愛情表現が相手に正しく届いているか不安になることがあるかもしれません。'},
+  P15:{name:'葛藤対処',hi:'直面型',lo:'回避型',
+    lg:'あなたは対立を避けたい気持ちと、逃げてはいけないという義務感が同時に存在していますね？問題を棚上げにする一方で、心の中ではずっとその問題に囚われている——「回避しているようで、実は向き合い続けている」のがあなたの矛盾です。',
+    md:'嫌なことがあったとき、一旦距離を置きつつも頭の中ではずっと考え続けていませんか？',
+    sm:'時々、問題に直面すべきか距離を置くべきか迷うことがあるかもしれません。'}
+};
+const result=[];
+for(const key in raw){
+  const arr=raw[key];
+  if(arr.length<3)continue;
+  const avg=arr.reduce((a,b)=>a+b,0)/arr.length;
+  const variance=arr.reduce((a,b)=>a+(b-avg)**2,0)/arr.length;
+  const sd=Math.sqrt(variance);
+  if(sd>=1.1){
+    const info=labels[key];
+    if(!info)continue;
+    let level,text;
+    if(sd>=1.6){level='大';text=info.lg}
+    else if(sd>=1.35){level='中';text=info.md}
+    else{level='小';text=info.sm}
+    const sc=scores?scores[key]:50;
+    result.push({p:key,sd:Math.round(sd*100)/100,level,text,name:info.name,score:Math.round(sc)});
+  }
+}
+result.sort((a,b)=>b.sd-a.sd);
+return result;
+}
+
+// ============================================================
+// EXTREME SCORE EXTRACTION (尖った個性を抽出)
+// ============================================================
+function extractExtremes(scores){
+const pNames={P1:'社会乖離値',P2:'合理性',P3:'対人距離',P4:'主従',P5:'聖域',P6:'孤高度',P7:'覚醒動機',P8:'情緒変動性',P9:'秩序性',P10:'探索欲',P11:'感情露出度',P12:'依存構造',P13:'対話構造',P14:'愛着表現',P15:'葛藤対処'};
+const hiDesc={
+  P1:'場面ごとに異なる自分を演じ分ける多面性',P2:'直感と美的感覚で世界を捉える感性',
+  P3:'少数の人とだけ深く繋がりたいという強い志向',P4:'自ら道を切り拓くリーダー気質',
+  P5:'絶対に譲れない信念や価値観の強さ',P6:'孤独を愛し一人の時間を必要とする気質',
+  P7:'内に秘めた情熱やこだわりの激しさ',P8:'喜怒哀楽の振れ幅が大きい豊かな感受性',
+  P9:'計画性と規律を重んじる几帳面さ',P10:'未知の領域に飛び込む冒険心',
+  P11:'感情をストレートに表現する素直さ',P12:'人との繋がりや絆を深く求める性質',
+  P13:'相手の気持ちにまず寄り添う共感重視の対話スタイル',P14:'気持ちを言葉にして伝えることへの積極性',P15:'問題を避けずに正面から向き合う直面型の姿勢'
+};
+const loDesc={
+  P1:'飾らず素の自分で生きようとする一貫性',P2:'データと論理で冷静に判断する合理性',
+  P3:'多くの人と広く繋がりたいオープンさ',P4:'他者に委ね協調することを好む柔軟さ',
+  P5:'状況に応じて柔軟に変化できる適応力',P6:'人と一緒にいることでエネルギーを得る社交性',
+  P7:'穏やかで安定した日常を愛する落ち着き',P8:'感情の波に左右されない安定感',
+  P9:'ルールに縛られず自由に動ける即興力',P10:'慣れた環境で着実に成果を出す堅実さ',
+  P11:'感情を内に秘め冷静さを保つ自制心',P12:'一人で完結できる自立した強さ',
+  P13:'問題の原因を特定し解決策を提示する実務的な対話スタイル',P14:'言葉より行動で愛情を示す実践型の表現',P15:'衝突を避け関係の安定を守ろうとする慎重さ'
+};
+const ranked=[];
+for(let i=1;i<=15;i++){
+  const k='P'+i,v=scores[k];
+  ranked.push({k,v,diff:Math.abs(v-50),nm:pNames[k],desc:v>50?hiDesc[k]:loDesc[k],hi:v>50});
+}
+ranked.sort((a,b)=>b.diff-a.diff);
+return ranked.slice(0,3);
+}
+
+// 3層目(Deep層)から口調トーンを決定
+function determineTone(scores){
+const vol=scores.P8||50; // 情緒変動性
+const disc=scores.P9||50; // 秩序性
+const exp=scores.P11||50; // 感情露出度
+if(vol>65&&exp>60) return 'passionate'; // 情熱的・熱い口調
+if(vol<35&&disc>60) return 'analytical'; // 冷静・分析的口調
+if(exp<35) return 'mysterious'; // 含みのある・ミステリアス口調
+return 'balanced'; // バランス型
+}
+
+function buildExtremeInsightHTML(extremes,tone){
+const tonePrefix={
+  passionate:'あなたは、自分では気づいていないかもしれませんが——',
+  analytical:'データが示す事実をお伝えします——',
+  mysterious:'あなたの深層に、ある秘密が眠っています——',
+  balanced:'あなたの内面には、こんな特徴が際立っています——'
+};
+let html=`<div class="result-section"><h3>あなたの「尖り」</h3>
+<p style="color:var(--accent2);font-size:.82rem;margin-bottom:12px">${tonePrefix[tone]||tonePrefix.balanced}</p>`;
+extremes.forEach((ex,i)=>{
+  const intensity=ex.diff>30?'極めて強い':ex.diff>20?'かなり強い':'やや強い';
+  const dir=ex.hi?'高い':'低い';
+  html+=`<div style="margin-bottom:12px;padding:10px 14px;background:var(--surface);border-radius:10px;border:1px solid var(--surface3)">
+    <div style="font-size:.75rem;color:var(--accent);font-weight:600;margin-bottom:4px">${ex.k} ${ex.nm}：${Math.round(ex.v)}（${intensity}）</div>
+    <div style="font-size:.85rem;line-height:1.7;color:var(--text)">${ex.desc}が、あなたの個性の中で${intensity}特徴です。</div>
+  </div>`;
+});
+html+='</div>';
+return html;
+}
+
+// ============================================================
+// RADAR CHART (Canvas)
+// ============================================================
+function drawRadar(canvasId,scores){
+const cv=document.getElementById(canvasId);if(!cv)return;
+const cx=cv.getContext('2d');
+const dpr=window.devicePixelRatio||1;
+const size=320;cv.width=size*dpr;cv.height=size*dpr;cv.style.width=size+'px';cv.style.height=size+'px';
+cx.scale(dpr,dpr);
+const ctr=size/2,R=size/2-40;
+const keys=['P1','P2','P3','P4','P5','P6','P7','P8','P9','P10','P11','P12'];
+const labels=['社会乖離','合理性','対人距離','主従','聖域','孤高度','覚醒動機','情緒変動','秩序性','探索欲','感情露出','依存構造'];
+const n=keys.length;const step=Math.PI*2/n;
+// Grid
+for(let ring=1;ring<=4;ring++){
+  const r=R*ring/4;
+  cx.beginPath();
+  for(let i=0;i<=n;i++){const a=-Math.PI/2+step*i;cx.lineTo(ctr+r*Math.cos(a),ctr+r*Math.sin(a))}
+  cx.strokeStyle='rgba(255,255,255,.08)';cx.lineWidth=1;cx.stroke();
+}
+// Axes
+for(let i=0;i<n;i++){
+  const a=-Math.PI/2+step*i;
+  cx.beginPath();cx.moveTo(ctr,ctr);cx.lineTo(ctr+R*Math.cos(a),ctr+R*Math.sin(a));
+  cx.strokeStyle='rgba(255,255,255,.06)';cx.stroke();
+}
+// Data polygon
+cx.beginPath();
+keys.forEach((k,i)=>{
+  const a=-Math.PI/2+step*i;const r=R*(scores[k]||50)/100;
+  const x=ctr+r*Math.cos(a),y=ctr+r*Math.sin(a);
+  i===0?cx.moveTo(x,y):cx.lineTo(x,y);
+});
+cx.closePath();
+cx.fillStyle='rgba(108,92,231,.2)';cx.fill();
+cx.strokeStyle='rgba(162,155,254,.7)';cx.lineWidth=2;cx.stroke();
+// Dots + labels
+keys.forEach((k,i)=>{
+  const a=-Math.PI/2+step*i;
+  const r=R*(scores[k]||50)/100;
+  const x=ctr+r*Math.cos(a),y=ctr+r*Math.sin(a);
+  cx.beginPath();cx.arc(x,y,3,0,Math.PI*2);cx.fillStyle='#a29bfe';cx.fill();
+  const lx=ctr+(R+22)*Math.cos(a),ly=ctr+(R+22)*Math.sin(a);
+  cx.fillStyle='rgba(255,255,255,.45)';cx.font='9px system-ui';cx.textAlign='center';cx.textBaseline='middle';
+  cx.fillText(labels[i],lx,ly);
+});
+}
+
+// ============================================================
+// SPECTRUM DISPLAY (Bidirectional Bars)
+// ============================================================
+function buildSpectrumHTML(scores){
+const specs=[
+  {k:'P1',nm:'社会乖離値',lo:'自然体・素直',hi:'仮面・役割切替',
+   loD:'人前でも素の自分を出せる。飾らず正直',hiD:'場面ごとに振る舞いを切り替える。内面と外面のギャップがある'},
+  {k:'P2',nm:'合理性',lo:'論理・効率重視',hi:'感性・直感重視',
+   loD:'データと根拠を重視し、効率的に判断する',hiD:'感覚や直感を信じ、体験や美的価値を大切にする'},
+  {k:'P3',nm:'対人距離',lo:'広く浅く',hi:'少数深交',
+   loD:'多くの人と軽やかに繋がることを好む',hiD:'少数の人と深い関係を築くことを好む'},
+  {k:'P4',nm:'主従',lo:'フォロワー型',hi:'リーダー型',
+   loD:'他者に委ねて協調することを好む',hiD:'自ら主導権を握り、方向性を示す'},
+  {k:'P5',nm:'聖域',lo:'柔軟・適応的',hi:'不可侵領域あり',
+   loD:'状況に応じて考えを変えられる柔軟さ',hiD:'絶対に譲れない価値観や領域がある'},
+  {k:'P6',nm:'孤高度',lo:'人の中にいたい',hi:'一人を好む',
+   loD:'人と一緒にいることでエネルギーを得る',hiD:'一人の時間と空間を必要とする'},
+  {k:'P7',nm:'覚醒動機',lo:'穏やか・安定',hi:'情熱・追求',
+   loD:'平穏で安定した日常を大切にする',hiD:'強い情熱で目標や興味を追求する'},
+  {k:'P8',nm:'情緒変動性',lo:'安定・一定',hi:'感情の波が大きい',
+   loD:'感情の起伏が少なく安定している',hiD:'喜怒哀楽の振れ幅が大きく感受性が豊か'},
+  {k:'P9',nm:'秩序性',lo:'自由・即興的',hi:'計画・規律的',
+   loD:'ルールに縛られず、その場の流れで動く',hiD:'計画を立て、規律正しく物事を進める'},
+  {k:'P10',nm:'探索欲',lo:'安定志向',hi:'冒険志向',
+   loD:'慣れた環境や方法を大切にする',hiD:'未知の領域に踏み込むことに喜びを感じる'},
+  {k:'P11',nm:'感情露出度',lo:'感情を隠す',hi:'感情を見せる',
+   loD:'内面を表に出さず、自分の中で処理する',hiD:'感情を素直に表現し、人と共有する'},
+  {k:'P12',nm:'依存構造',lo:'独立志向',hi:'繋がりを求める',
+   loD:'一人で完結でき、他者への依存が少ない',hiD:'人との絆や承認を強く求める'},
+  {k:'P13',nm:'対話構造',lo:'解決志向',hi:'共感志向',
+   loD:'問題の原因を特定し、解決策を提示する対話スタイル',hiD:'相手の感情にまず寄り添い、共感を優先する対話スタイル'},
+  {k:'P14',nm:'愛着表現',lo:'行動で示す',hi:'言葉で伝える',
+   loD:'言葉より行動で愛情を示す。さりげない気配りが得意',hiD:'気持ちを言葉にして明確に伝えることを重視する'},
+  {k:'P15',nm:'葛藤対処',lo:'回避・距離型',hi:'直面・対話型',
+   loD:'衝突を避け、距離を置いて冷却期間を取る',hiD:'問題に正面から向き合い、話し合いで解決しようとする'}
+];
+let html='<div class="spectrum-wrap"><h3>15次元 パーソナリティ・スペクトラム</h3><div class="spectrum-note">※ どちらが良い・悪いではありません。あなたの傾向を示しています</div>';
+specs.forEach(sp=>{
+  const v=Math.round(scores[sp.k]||50);
+  const isHigh=v>50;
+  const desc=isHigh?sp.hiD:sp.loD;
+  const fillLeft=v<=50?v:50;
+  const fillWidth=Math.abs(v-50);
+  const fillColor=isHigh?'var(--pink)':'var(--accent)';
+  html+=`<div class="spectrum-row">
+    <div class="spectrum-header"><span class="spectrum-name">${sp.k} ${sp.nm}</span><span class="spectrum-val">${v}</span></div>
+    <div class="spectrum-labels"><span class="spectrum-lo">${sp.lo}</span><span class="spectrum-hi">${sp.hi}</span></div>
+    <div class="spectrum-bar"><div class="spectrum-center"></div><div class="spectrum-fill" style="left:${fillLeft}%;width:${fillWidth}%;background:${fillColor}"></div></div>
+    <div class="spectrum-desc">${desc}</div>
+  </div>`;
+});
+html+='</div>';
+return html;
+}
+
+// ============================================================
+// JOBS & COMPATIBILITY HTML
+// ============================================================
+function buildJobsHTML(code){
+  const jobs=JOBS[code];
+  if(!jobs)return '';
+  return `<div class="result-section jobs-section"><h3>向いている職業</h3><div class="jobs-list">${jobs.map(j=>`<span class="job-tag">${j}</span>`).join('')}</div></div>`;
+}
+
+function buildCompatHTML(code){
+  const c=COMPAT[code];
+  if(!c)return '';
+  const bestType=TYPES[c.best];
+  const growType=TYPES[c.grow];
+  if(!bestType||!growType)return '';
+  return `<div class="compat-section">
+    <div class="compat-title">&#9829; 相性</div>
+    <div class="compat-item">
+      <div class="compat-label">&#x1F496; 最高の相性</div>
+      <div class="compat-type">Type ${String(bestType.n).padStart(2,'0')}: ${bestType.nm}（${bestType.en}）</div>
+      <div class="compat-reason">${c.bestR}</div>
+    </div>
+    <div class="compat-item">
+      <div class="compat-label">&#x1F331; 成長の相性</div>
+      <div class="compat-type">Type ${String(growType.n).padStart(2,'0')}: ${growType.nm}（${growType.en}）</div>
+      <div class="compat-reason">${c.growR}</div>
+    </div>
+  </div>`;
+}
+
+// ============================================================
+// RELATIONAL STYLE (P13-P15 Score-based Personalized Text)
+// ============================================================
+function buildRelationalHTML(scores){
+const p13=Math.round(scores.P13||50),p14=Math.round(scores.P14||50),p15=Math.round(scores.P15||50);
+
+// P13: 対話構造 (低=解決志向, 高=共感志向)
+let dTxt;
+if(p13>=70) dTxt='あなたは会話において「共感」を最優先にします。相手が悩みを打ち明けたとき、真っ先に心に寄り添い、感情を受け止めようとする。解決策を出すのは後回し——まず「わかるよ」と言える人です。その温かさは相手にとって大きな安心感ですが、相手が具体的なアドバイスを求めているときにも共感モードが続くと、「結局どうすればいいの？」と焦らせることもあるかもしれません。';
+else if(p13>=55) dTxt='あなたの対話スタイルは共感寄りですが、状況に応じて解決モードにも切り替えられる柔軟さがあります。相手の感情を一度受け止めてから、「で、どうする？」と自然にギアチェンジできるタイプ。この器用さは多くの人に安心感を与えていますが、時々「自分は本当に共感しているのか、それともテクニックで対応しているだけなのか」と自問する瞬間がありませんか？';
+else if(p13>=45) dTxt='あなたは共感と解決のバランスが取れた対話スタイルの持ち主です。場面によって自然と使い分けており、相手が求めているものを感覚的に読み取る力があります。ただし、その器用さゆえに「自分はどちらが本当の対話モードなんだろう」と迷う瞬間があるかもしれません。どちらも本物のあなたです。';
+else if(p13>=30) dTxt='あなたは対話において「問題解決」に重きを置きます。相手の話を聞くと自然に原因分析が始まり、頭の中で解決策が組み立てられていく。その能力は仕事では絶大な信頼を生みますが、プライベートでは「ちょっと冷たい」と感じさせることも。あなたなりに寄り添おうとしている瞬間は確かにある——それをもう少しだけ、表に出しても良いのかもしれません。';
+else dTxt='あなたにとって会話は「問題を解決する場」です。相手が感情的になっているときでも、冷静に状況を分析し、最短距離で答えを出そうとする。その合理性は頼もしい一方で、「気持ちをわかってほしかっただけなのに…」と相手が感じることがある。あなたの愛情表現は「解決してあげること」——それを理解してくれる人との関係で、あなたは最も輝きます。';
+
+// P14: 愛着表現 (低=行動型, 高=言語型)
+let aTxt;
+if(p14>=70) aTxt='あなたは気持ちを「言葉にして伝える」ことに長けています。LINEでも対面でも、「好き」「ありがとう」「大切に思ってる」という言葉を惜しまない。その言語化能力は関係性を深める強力な武器です。ただ、行動型の相手には「口だけ」と誤解されるリスクも潜んでいます。言葉と行動の両方を揃えたとき、あなたの愛情表現は誰にも真似できない深さになります。';
+else if(p14>=55) aTxt='あなたは言葉で気持ちを伝えることに比較的積極的ですが、行動でも示したいタイプ。大事な場面では言葉を選んで伝え、日常ではさりげない行動で支える——このバランス感覚があなたの対人関係の安定感を生んでいます。ただ「もっと言葉にすべきか、行動で見せるべきか」と迷う瞬間が、大切な人ほど増えるかもしれません。';
+else if(p14>=45) aTxt='あなたの愛着表現は言葉と行動のミックスです。その時々で自然な方を選びますが、「自分の気持ちがちゃんと伝わっているだろうか」と不安になることはありませんか？その不安こそ、あなたが相手を大切に思っている証拠です。相手がどちらのスタイルを求めているか意識するだけで、関係は大きく変わります。';
+else if(p14>=30) aTxt='あなたは気持ちを行動で示すタイプです。「言わなくてもわかるだろう」と思いがち。サプライズの計画、さりげない気配り、困ったときに黙って助ける——それがあなたの「好き」の翻訳。ただし言語型の相手には「何を考えているかわからない」と思われがち。たまに言葉にするだけで、あなたの行動の意味が相手に100倍伝わります。';
+else aTxt='あなたにとって愛情とは「行動」そのものです。気持ちを言葉にすることが苦手で、代わりに全力で相手のために動く。重い荷物を持つ、黙って料理を作る、必要なものを先回りで用意する——それがあなたの「好き」の言い方です。でも、「たまには言葉で聞きたい」と相手が内心思っていることに気づけないこともある。あなたの行動の裏にある深い愛情を、ほんの一言だけ言葉にしてみてください。関係は驚くほど深まります。';
+
+// P15: 葛藤対処 (低=回避型, 高=直面型)
+let cTxt;
+if(p15>=70) cTxt='あなたは問題から逃げない人です。むしろ「ここで話し合わなければ」と、対立の渦中に自ら飛び込んでいく。その勇気は関係を根本から修復する力がありますが、相手が回避型の場合「追い詰められている」と感じさせてしまうことも。「今すぐ話すべきか、少し待つべきか」——その判断力を磨くことで、あなたの直面力はさらに活きてきます。';
+else if(p15>=55) cTxt='あなたは基本的に問題に向き合おうとしますが、タイミングは慎重に選ぶ方です。感情が沸騰する前に少し距離を取り、冷静になってから話し合いの場を作る——そのバランス感覚は多くの関係を救っています。ただし「冷却期間」が長すぎると、相手は「もう気にしてないのかな」と誤解することも。';
+else if(p15>=45) cTxt='あなたの葛藤対処は状況次第です。向き合うべき問題はわかっているけれど、タイミングを見計らっているうちに機を逸することもある。「あのとき言っておけば」という後悔が、あなたを少しずつ「次は言おう」と変えてきたのではないでしょうか。その成長の過程にいるあなたを、まず肯定してください。';
+else if(p15>=30) cTxt='あなたは衝突を避けたいタイプです。場の空気が悪くなると、つい話題を変えたり、笑ってごまかしたりする。でも心の中では問題を棚上げにしている自覚があり、それが静かなストレスとして蓄積していることにも気づいているはず。「言わない優しさ」と「言えない弱さ」の区別を、自分の中でつけることが鍵です。';
+else cTxt='あなたは対立を極力回避します。「波風を立てたくない」「時間が解決してくれる」——そう信じたい気持ちが強い。確かに多くの小さな問題は自然に消えますが、本当に大切な問題まで先送りにしていませんか？あなたが避けているのは「問題」ではなく「傷つくこと」かもしれません。信頼できる人との間で、少しずつ本音を出す練習を始めると、関係が驚くほど深まります。';
+
+// P13×P14×P15の組み合わせから「関係性の核心」を一言生成
+let coreInsight='';
+if(p13<45&&p14<45&&p15<45) coreInsight='あなたの愛し方は「黙って支え、問題を解決し、衝突は避ける」——不器用だけど、一度気づけば誰よりも深い愛情だとわかるタイプ。あなたの隣にいる人は、最初は物足りなく感じるかもしれませんが、時間が経つほどあなたの誠実さに気づいていきます。';
+else if(p13>=55&&p14>=55&&p15>=55) coreInsight='あなたの愛し方は「言葉で寄り添い、気持ちを伝え、問題にも逃げずに向き合う」——ストレートで情熱的。あなたとの関係は濃密で、退屈とは無縁です。ただし、相手が静かなタイプだと「重い」と感じられることも。相手のペースを尊重する余白を持つことが、関係を長続きさせる秘訣です。';
+else if(p13<45&&p14>=55) coreInsight='あなたは「言葉で愛を伝えるのに、相手の悩みには解決策で返す」という独特の組み合わせです。「好きだよ」は言えるのに、「辛いね」が先に出ない——このギャップに相手が戸惑うことがあるかもしれません。気持ちを認める一言を、解決策の前に添えてみてください。';
+else if(p13>=55&&p14<45) coreInsight='あなたは「相手の気持ちには深く共感するのに、自分の気持ちは行動でしか示せない」タイプ。相手の涙には寄り添えるのに、自分の「好き」は言葉にできない——その不器用さが、あなたの魅力でもあり、すれ違いの原因にもなっています。';
+else if(p15<40&&p14>=55) coreInsight='あなたは普段は気持ちを率直に伝えられるのに、衝突の場面になると途端に口を閉ざす傾向があります。「好き」は言えるのに「嫌だ」が言えない——その非対称さに、あなた自身がもどかしさを感じていませんか？';
+else if(p15>=60&&p13<45) coreInsight='あなたは問題に正面から向き合う勇気がありますが、その対処法が「解決策の提示」に偏りがちです。相手が求めているのは「答え」ではなく「一緒に悩んでくれること」かもしれない——その視点を持つだけで、あなたの直面力はさらに力を増します。';
+
+return `<div class="result-section relational-section">
+<h3>あなたの関係性スタイル</h3>
+<div class="relational-intro">P13〜P15は、あなたが人と深く関わるときに現れる「無意識の癖」を映し出しています。</div>
+<div class="relational-item"><div class="relational-label">対話スタイル<span class="relational-score">${p13}</span></div><div class="relational-scale"><span>解決志向</span><div class="relational-bar-bg"><div class="relational-bar-fill" style="width:${p13}%"></div></div><span>共感志向</span></div><p>${dTxt}</p></div>
+<div class="relational-item"><div class="relational-label">愛着表現<span class="relational-score">${p14}</span></div><div class="relational-scale"><span>行動型</span><div class="relational-bar-bg"><div class="relational-bar-fill" style="width:${p14}%"></div></div><span>言語型</span></div><p>${aTxt}</p></div>
+<div class="relational-item"><div class="relational-label">葛藤対処<span class="relational-score">${p15}</span></div><div class="relational-scale"><span>回避型</span><div class="relational-bar-bg"><div class="relational-bar-fill" style="width:${p15}%"></div></div><span>直面型</span></div><p>${cTxt}</p></div>
+${coreInsight?`<div class="relational-core"><div class="relational-core-title">関係性の核心</div><p>${coreInsight}</p></div>`:''}
+</div>`;
+}
+
+// ============================================================
+// RESULT DISPLAY
+// ============================================================
+function showResult(){
+const{scores,raw}=calcScores();
+const axes=determineAxes(scores);
+const code=[axes.C.l,axes.E.l,axes.M.l,axes.S.l,axes.D.l].join('-');
+const t=TYPES[code];
+const contras=detectContradictions(raw,scores);
+
+const fColors={Architects:'#6c5ce7',Mystics:'#e84393',Commanders:'#00b894',Catalysts:'#fdcb6e'};
+const fEmoji={Architects:'🏛️',Mystics:'🌙',Commanders:'⚔️',Catalysts:'🔥'};
+const fCol=t?fColors[t.fam]:'#6c5ce7';
+const fEm=t?fEmoji[t.fam]:'✨';
+
+const axInfo=[
+{k:'C',label:'接続',ax:axes.C},{k:'E',label:'処理',ax:axes.E},
+{k:'M',label:'仮面',ax:axes.M},{k:'S',label:'構造',ax:axes.S},{k:'D',label:'動因',ax:axes.D}
+];
+
+const pNames={P1:'社会乖離値',P2:'合理性',P3:'対人距離',P4:'主従',P5:'聖域',P6:'孤高度',P7:'覚醒動機',P8:'情緒変動性',P9:'秩序性',P10:'探索欲',P11:'感情露出度',P12:'依存構造',P13:'対話構造',P14:'愛着表現',P15:'葛藤対処'};
+const bCol=['#6c5ce7','#a29bfe','#fd79a8','#e84393','#00b894','#55efc4','#fdcb6e','#e17055','#74b9ff','#0984e3','#b2bec3','#636e72','#00cec9','#fab1a0','#ff7675'];
+
+let bars='';
+for(let i=1;i<=15;i++){
+  const k='P'+i,v=Math.round(scores[k]);
+  bars+=`<div class="pscore-row"><span class="pscore-label">${k}: ${pNames[k]}</span><div class="pscore-bar-bg"><div class="pscore-bar-fill" style="width:${v}%;background:${bCol[i-1]}"></div></div><span class="pscore-val">${v}</span></div>`;
+}
+
+let contraHTML='';
+if(contras.length>0){
+  const levelCls={大:'large',中:'medium',小:'small'};
+  contraHTML=`<div class="contradiction-section"><div class="contradiction-title">&#9670; 矛盾の指紋 ― あなたの中の「二律背反」</div>`;
+  contras.slice(0,4).forEach(c=>{
+    contraHTML+=`<div class="contradiction-item">
+      <div class="contradiction-header">
+        <span class="contradiction-icon">&#8734;</span>
+        <span class="contradiction-name">${c.name}（${c.p}）</span>
+        <span class="contradiction-level ${levelCls[c.level]||'small'}">${c.level}</span>
+      </div>
+      <div class="contradiction-text">${c.text}</div>
+    </div>`;
+  });
+  contraHTML+='</div>';
+}else{
+  contraHTML='<div class="contradiction-section"><div class="contradiction-title">&#9670; 矛盾の指紋</div><div class="no-contradiction">目立つ矛盾パターンは検出されませんでした。あなたは一貫性の高いタイプです。</div></div>';
+}
+
+if(!t){
+  document.getElementById('resultScreen').innerHTML=`<div class="result-card"><p style="text-align:center;color:var(--danger)">タイプ判定エラー: コード "${code}" が見つかりません</p><button class="retry-btn" onclick="retry()">もう一度</button></div>`;
+  show('resultScreen');return;
+}
+
+const extremes=extractExtremes(scores);
+const tone=determineTone(scores);
+const extremeHTML=buildExtremeInsightHTML(extremes,tone);
+const relationalHTML=buildRelationalHTML(scores);
+
+// 拡充フィールドがあれば表示
+const soulHTML=t.soul?`<div class="result-section"><h3>魂の設計図</h3><p>${t.soul}</p></div>`:'';
+const dailyHTML=t.daily?`<div class="result-section"><h3>日常のあるある</h3><p>${t.daily}</p></div>`:'';
+const relHTML=t.relations?`<div class="result-section"><h3>人間関係の傾向</h3><p>${t.relations}</p></div>`:'';
+let careersHTML='';
+if(t.careers&&t.careers.length){
+  careersHTML=`<div class="result-section jobs-section"><h3>適職パターン</h3>`;
+  t.careers.forEach(c=>{
+    careersHTML+=`<div style="margin-bottom:10px;padding:10px 14px;background:var(--surface);border-radius:10px;border:1px solid var(--surface3)">
+      <div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">${c.job}</div>
+      <div style="font-size:.78rem;line-height:1.6;color:var(--text2)">${c.why}</div>
+    </div>`;
+  });
+  careersHTML+='</div>';
+}
+const jobsFallback=(!t.careers||!t.careers.length)?buildJobsHTML(code):'';
+
+document.getElementById('resultScreen').innerHTML=`
+<div class="result-card">
+  <div class="type-illust fam-${t.fam}"><div class="type-illust-ring" style="border-color:${fCol}"></div>${fEm}</div>
+  <div class="result-family" style="color:${fCol}">${t.fam}</div>
+  <div class="result-type-num">Type ${String(t.n).padStart(2,'0')}</div>
+  <div class="result-type-name">${t.nm}</div>
+  <div class="result-type-en">${t.en}</div>
+  <div class="result-catch">${t.c}</div>
+  <div class="axis-pills">${axInfo.map(a=>`<span class="axis-pill" style="border-color:${fCol}40;color:${fCol}">${a.label}: ${a.ax.l} (${Math.round(a.ax.v)})</span>`).join('')}</div>
+  ${soulHTML}
+  ${extremeHTML}
+  <div class="result-section"><h3>一言で言うと</h3><p>${t.d}</p></div>
+  ${dailyHTML}
+  <div class="result-section"><h3>強み</h3><p>${t.s}</p></div>
+  <div class="result-section"><h3>弱み</h3><p>${t.w}</p></div>
+  <div class="result-section"><h3>行動パターン</h3><p>${t.b}</p></div>
+  <div class="result-quote">${t.q}</div>
+  ${relationalHTML}
+  ${relHTML}
+  ${careersHTML}
+  ${jobsFallback}
+  ${contraHTML}
+  ${buildCompatHTML(code)}
+</div>
+<div class="radar-wrap"><h3>コア12次元 レーダーチャート</h3><canvas id="radarChart"></canvas></div>
+${buildSpectrumHTML(scores)}
+<button class="pscores-toggle" onclick="document.getElementById('psd').classList.toggle('show')">P変数 数値詳細</button>
+<div id="psd" class="pscores-detail">${bars}</div>
+<button class="retry-btn" onclick="retry()">もう一度診断する</button>
+`;
+show('resultScreen');
+setTimeout(()=>drawRadar('radarChart',scores),100);
+}
+
+function retry(){cur=0;ans.fill(null);usedQuoteIdx=[];show('startScreen')}
+</script>
+</body>
+</html>
