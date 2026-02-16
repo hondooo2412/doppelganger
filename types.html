@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Doppelganger - 32タイプ一覧</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a0f;--surface:#12121e;--surface2:#1a1a2e;--surface3:#242440;--accent:#6c5ce7;--accent2:#a29bfe;--pink:#e84393;--text:#e8e8ef;--text2:#7a7a9e;--success:#00b894;--warning:#fdcb6e;--danger:#e17055;--radius:14px;--shadow:0 8px 32px rgba(0,0,0,.5)}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;-webkit-text-size-adjust:100%}
+@keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+.page{padding:20px;padding-top:env(safe-area-inset-top,20px);padding-bottom:40px;min-height:100vh;animation:fadeIn .5s ease}
+.container{max-width:680px;margin:0 auto}
+
+/* Header */
+.types-header{text-align:center;margin-bottom:28px}
+.types-logo{font-size:1.4rem;font-weight:900;background:linear-gradient(135deg,#6c5ce7,#a29bfe,#fd79a8,#e84393);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
+.types-sub{font-size:.72rem;color:var(--text2);letter-spacing:.2em;text-transform:uppercase;margin-bottom:12px}
+.types-intro{font-size:.85rem;color:var(--text2);line-height:1.7}
+.back-link{display:inline-flex;align-items:center;gap:4px;font-size:.82rem;color:var(--accent2);text-decoration:none;margin-bottom:16px;transition:color .2s}
+.back-link:hover{color:var(--accent)}
+
+/* Family Section */
+.family-section{margin-bottom:32px}
+.family-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--surface3)}
+.family-icon{font-size:1.4rem}
+.family-name{font-size:1rem;font-weight:700}
+.family-desc{font-size:.75rem;color:var(--text2);margin-top:2px}
+
+/* Type Card */
+.type-card{display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--surface);border:1px solid var(--surface3);border-radius:var(--radius);margin-bottom:8px;transition:all .3s;cursor:default}
+.type-card:hover{border-color:rgba(108,92,231,.3);transform:translateX(4px)}
+.type-icon{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+.type-info{flex:1;min-width:0}
+.type-num{font-size:.65rem;color:var(--text2);letter-spacing:.1em;text-transform:uppercase}
+.type-name{font-size:.92rem;font-weight:700;margin:2px 0}
+.type-en{font-size:.72rem;color:var(--text2);font-style:italic}
+.type-desc{font-size:.78rem;color:var(--text2);line-height:1.5;margin-top:4px}
+
+/* Family colors */
+.fam-Architects .type-icon{background:rgba(108,92,231,.12);border:1px solid rgba(108,92,231,.3)}
+.fam-Architects .family-name{color:#a29bfe}
+.fam-Mystics .type-icon{background:rgba(232,67,147,.12);border:1px solid rgba(232,67,147,.3)}
+.fam-Mystics .family-name{color:#fd79a8}
+.fam-Commanders .type-icon{background:rgba(0,184,148,.12);border:1px solid rgba(0,184,148,.3)}
+.fam-Commanders .family-name{color:#55efc4}
+.fam-Catalysts .type-icon{background:rgba(253,203,110,.12);border:1px solid rgba(253,203,110,.3)}
+.fam-Catalysts .family-name{color:#fdcb6e}
+
+/* Filter tabs */
+.filter-tabs{display:flex;gap:4px;background:var(--surface);border-radius:10px;padding:4px;margin-bottom:20px;border:1px solid var(--surface3);overflow-x:auto;-webkit-overflow-scrolling:touch}
+.filter-tab{flex:1;min-width:0;padding:8px 6px;text-align:center;font-size:.72rem;font-weight:600;color:var(--text2);border:none;background:none;border-radius:8px;cursor:pointer;transition:all .2s;white-space:nowrap}
+.filter-tab.active{background:var(--accent);color:#fff}
+.filter-tab:hover:not(.active){color:var(--text)}
+
+/* Expandable detail */
+.type-detail{display:none;padding:12px 16px;background:var(--surface2);border:1px solid var(--surface3);border-top:none;border-radius:0 0 var(--radius) var(--radius);margin-top:-8px;margin-bottom:8px;font-size:.82rem;line-height:1.7;color:var(--text);animation:fadeIn .3s ease}
+.type-detail.show{display:block}
+.type-detail-section{margin-bottom:10px}
+.type-detail-label{font-size:.7rem;color:var(--accent2);font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+.type-detail-quote{font-style:italic;color:var(--text2);padding:8px 12px;background:var(--surface);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;margin-top:6px}
+
+@media(max-width:420px){
+  .type-card{padding:10px 12px;gap:10px}
+  .type-icon{width:38px;height:38px;font-size:1rem}
+  .filter-tab{font-size:.65rem;padding:6px 4px}
+}
+</style>
+</head>
+<body>
+<div class="page">
+<div class="container">
+
+  <a href="doppelganger-diagnosis.index.html" class="back-link">← 診断に戻る</a>
+
+  <div class="types-header">
+    <div class="types-logo">Doppelganger</div>
+    <div class="types-sub">32 Personality Types</div>
+    <p class="types-intro">15次元の精神構造から導かれる32のタイプ。<br>あなたはどのタイプに当てはまりましたか？</p>
+  </div>
+
+  <!-- フィルタータブ -->
+  <div class="filter-tabs">
+    <button class="filter-tab active" data-filter="all">全32タイプ</button>
+    <button class="filter-tab" data-filter="Architects">🏛️ Architects</button>
+    <button class="filter-tab" data-filter="Mystics">🌙 Mystics</button>
+    <button class="filter-tab" data-filter="Commanders">⚔️ Commanders</button>
+    <button class="filter-tab" data-filter="Catalysts">🔥 Catalysts</button>
+  </div>
+
+  <!-- タイプ一覧 -->
+  <div id="types-container"></div>
+
+</div>
+</div>
+
+<script>
+// 32タイプデータ
+const TYPES_LIST = [
+  // Architects (1-8)
+  {n:1,nm:'静かなる賢者',en:'The Quiet Sage',fam:'Architects',emoji:'🦉',
+   d:'知識を愛し、自由に思索する穏やかな知性',
+   q:'「答えは急がない。考え続けることが答えだ」'},
+  {n:2,nm:'孤高の開拓者',en:'The Lone Pioneer',fam:'Architects',emoji:'🧭',
+   d:'一人で新しい道を切り拓く、論理的な冒険者',
+   q:'「道がないなら、自分で作る」'},
+  {n:3,nm:'静かなる守護者',en:'The Silent Guardian',fam:'Architects',emoji:'🛡️',
+   d:'計画的で誠実。少数の大切な人を静かに守る',
+   q:'「約束は守る。それが俺の全てだ」'},
+  {n:4,nm:'戦略家',en:'The Strategist',fam:'Architects',emoji:'♟️',
+   d:'合理的に世界を構造化し、計画的に目標を達成する',
+   q:'「感情を排して、最善手を打つ」'},
+  {n:5,nm:'影の観察者',en:'The Shadow Observer',fam:'Architects',emoji:'🔍',
+   d:'静かに世界を観察し、本質を見抜く隠れた知性',
+   q:'「見ているだけで、わかることがある」'},
+  {n:6,nm:'闇の設計者',en:'The Phantom Architect',fam:'Architects',emoji:'⚙️',
+   d:'仮面の裏で自由に設計図を描く、見えない推進者',
+   q:'「見えないところで、全てを動かす」'},
+  {n:7,nm:'鉄仮面の番人',en:'The Iron Sentinel',fam:'Architects',emoji:'🏰',
+   d:'感情を見せず、規律正しく体系を守る',
+   q:'「規律が崩れれば、全てが崩れる」'},
+  {n:8,nm:'黒幕',en:'The Mastermind',fam:'Architects',emoji:'👑',
+   d:'冷静沈着。裏で戦略を練り、確実に目標を遂行する',
+   q:'「結果が全てだ。過程は問わない」'},
+
+  // Mystics (9-16)
+  {n:9,nm:'詩人',en:'The Poet',fam:'Mystics',emoji:'🌌',
+   d:'感受性豊かで自由。魂のままに漂い、世界に美を見出す',
+   q:'「美しいものは、理由なく美しい」'},
+  {n:10,nm:'魂の創造者',en:'The Soul Creator',fam:'Mystics',emoji:'🌬️',
+   d:'内なる情熱を形にする。自由で独創的な表現者',
+   q:'「創りたいものを創る。それだけだ」'},
+  {n:11,nm:'静かなる癒し手',en:'The Gentle Healer',fam:'Mystics',emoji:'🌙',
+   d:'穏やかで計画的。深い共感力で人の痛みに寄り添う',
+   q:'「あなたの痛みは、私の痛みでもある」'},
+  {n:12,nm:'情熱の建築家',en:'The Passionate Builder',fam:'Mystics',emoji:'🎼',
+   d:'感情を燃料に、秩序ある世界を一つずつ築き上げる',
+   q:'「想いがあるなら、形にしなければ意味がない」'},
+  {n:13,nm:'漂流者',en:'The Drifter',fam:'Mystics',emoji:'🌊',
+   d:'内面の嵐を隠し、風の向くままに漂う旅人',
+   q:'「どこにも属さない。それが自由だ」'},
+  {n:14,nm:'深淵の旅人',en:'The Abyss Walker',fam:'Mystics',emoji:'⚡',
+   d:'仮面の下に深い感情を隠し、未知の領域へ踏み込む',
+   q:'「深淵を覗くとき、深淵もまたこちらを覗いている」'},
+  {n:15,nm:'影の詩人',en:'The Shadow Poet',fam:'Mystics',emoji:'🎭',
+   d:'表には出さない感性で、世界を静かに記録する',
+   q:'「言葉にならない感情こそ、最も深い」'},
+  {n:16,nm:'仮面の指揮者',en:'The Masked Conductor',fam:'Mystics',emoji:'🃏',
+   d:'穏やかな仮面の奥に、感情の嵐と揺るがない信念を隠し持つリーダー',
+   q:'「穏やかに見えるのは、嵐を制御しているからだ」'},
+
+  // Commanders (17-24)
+  {n:17,nm:'自由な知恵者',en:'The Free Thinker',fam:'Commanders',emoji:'🕊️',
+   d:'社交的で合理的。縛られずに知識を共有する自由人',
+   q:'「知識は共有してこそ価値がある」'},
+  {n:18,nm:'冒険家',en:'The Adventurer',fam:'Commanders',emoji:'🦅',
+   d:'人を巻き込んで未知の世界へ突き進む、行動派の知性',
+   q:'「やってから考える。それが一番早い」'},
+  {n:19,nm:'調停者',en:'The Mediator',fam:'Commanders',emoji:'⚜️',
+   d:'公正で社交的。秩序を重んじ、人と人との間を繋ぐ',
+   q:'「全員が納得する答えは必ずある」'},
+  {n:20,nm:'指揮官',en:'The Commander',fam:'Commanders',emoji:'🦁',
+   d:'合理的に人を率い、秩序をもって組織を目標へ導く',
+   q:'「目標を示し、先頭に立つ。それがリーダーだ」'},
+  {n:21,nm:'社交の狐',en:'The Social Fox',fam:'Commanders',emoji:'⚖️',
+   d:'人当たりよく、本心を見せない。自由に泳ぐ社交の達人',
+   q:'「笑顔は最強の武器だよ」'},
+  {n:22,nm:'策士',en:'The Tactician',fam:'Commanders',emoji:'🔥',
+   d:'仮面を使い分け、自由に戦略を実行する知的ハンター',
+   q:'「人を動かすのに、力はいらない」'},
+  {n:23,nm:'鉄壁の外交官',en:'The Iron Diplomat',fam:'Commanders',emoji:'⚒️',
+   d:'完璧な社交仮面と規律で、組織の秩序を守る',
+   q:'「完璧な振る舞いの裏に、計算がある」'},
+  {n:24,nm:'帝王',en:'The Emperor',fam:'Commanders',emoji:'🏛️',
+   d:'社交力と戦略を武器に、人と組織を圧倒的に率いる',
+   q:'「頂点に立つのは、そこが一番見渡せるからだ」'},
+
+  // Catalysts (25-32)
+  {n:25,nm:'太陽',en:'The Sun',fam:'Catalysts',emoji:'☀️',
+   d:'感情豊かで開放的。自由に輝き、周囲を照らす存在',
+   q:'「楽しくなければ、生きている意味がない」'},
+  {n:26,nm:'炎の伝道者',en:'The Firestarter',fam:'Catalysts',emoji:'🔥',
+   d:'情熱で人を動かし、新しいムーブメントを起こす',
+   q:'「この熱を、世界に伝えたい」'},
+  {n:27,nm:'共感者',en:'The Empath',fam:'Catalysts',emoji:'🌿',
+   d:'人の感情を受け止め、秩序ある形で支える優しき柱',
+   q:'「あなたが笑顔でいてくれれば、それでいい」'},
+  {n:28,nm:'情熱のリーダー',en:'The Passionate Leader',fam:'Catalysts',emoji:'🌟',
+   d:'感情と計画性を武器に、人の心を掴んでチームを導く',
+   q:'「想いを込めて、一緒に走ろう」'},
+  {n:29,nm:'道化師',en:'The Trickster',fam:'Catalysts',emoji:'🎪',
+   d:'笑いの仮面の下に、繊細な感情を隠す自由人',
+   q:'「笑ってるうちは、大丈夫」'},
+  {n:30,nm:'カリスマ',en:'The Charisma',fam:'Catalysts',emoji:'🌪️',
+   d:'感性と仮面を武器に、自由に人々を魅了し導く',
+   q:'「魅力は演出するものだ」'},
+  {n:31,nm:'舞台の演者',en:'The Performer',fam:'Catalysts',emoji:'✨',
+   d:'計画的に感情を演出し、完璧な「場」を作り上げる',
+   q:'「人生は舞台。最高の演技を見せよう」'},
+  {n:32,nm:'仮面の太陽',en:'The Masked Sun',fam:'Catalysts',emoji:'🎭',
+   d:'華やかな仮面の裏に、情熱と戦略と孤独を抱えるリーダー',
+   q:'「誰よりも明るく笑う者が、誰よりも深い闇を知っている」'},
+];
+
+const FAMILIES = [
+  {key:'Architects',name:'Architects',icon:'🏛️',desc:'分析・考察・効率化で楽しむ人たち',color:'108,92,231'},
+  {key:'Mystics',name:'Mystics',icon:'🌙',desc:'没入・感動・世界観に浸る人たち',color:'232,67,147'},
+  {key:'Commanders',name:'Commanders',icon:'⚔️',desc:'企画・攻略・情報整理で楽しむ人たち',color:'0,184,148'},
+  {key:'Catalysts',name:'Catalysts',icon:'🔥',desc:'体験・共有・盛り上がりで楽しむ人たち',color:'253,203,110'},
+];
+
+// --- 描画 ---
+function renderTypes(filter) {
+  const container = document.getElementById('types-container');
+  const families = filter === 'all' ? FAMILIES : FAMILIES.filter(f => f.key === filter);
+  let html = '';
+
+  families.forEach(fam => {
+    const types = TYPES_LIST.filter(t => t.fam === fam.key);
+    html += `
+      <div class="family-section fam-${fam.key}">
+        <div class="family-header">
+          <span class="family-icon">${fam.icon}</span>
+          <div>
+            <div class="family-name">${fam.name}</div>
+            <div class="family-desc">${fam.desc}</div>
+          </div>
+        </div>
+        ${types.map(t => `
+          <div class="type-card" data-type="${t.n}" onclick="toggleDetail(${t.n})">
+            <div class="type-icon">${t.emoji}</div>
+            <div class="type-info">
+              <div class="type-num">Type ${String(t.n).padStart(2,'0')}</div>
+              <div class="type-name">${t.nm}</div>
+              <div class="type-en">${t.en}</div>
+              <div class="type-desc">${t.d}</div>
+            </div>
+          </div>
+          <div class="type-detail" id="detail-${t.n}">
+            <div class="type-detail-section">
+              <div class="type-detail-label">座右の銘</div>
+              <div class="type-detail-quote">${t.q}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+function toggleDetail(n) {
+  const el = document.getElementById('detail-' + n);
+  if (el) el.classList.toggle('show');
+}
+
+// --- フィルタータブ ---
+document.querySelectorAll('.filter-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    renderTypes(tab.dataset.filter);
+  });
+});
+
+// 初期表示
+renderTypes('all');
+
+// URLパラメータでハイライト（結果ページからリンクした場合）
+const params = new URLSearchParams(window.location.search);
+const highlight = params.get('type');
+if (highlight) {
+  setTimeout(() => {
+    const card = document.querySelector(`[data-type="${highlight}"]`);
+    if (card) {
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      card.style.borderColor = 'rgba(108,92,231,.6)';
+      card.style.boxShadow = '0 0 20px rgba(108,92,231,.2)';
+      toggleDetail(parseInt(highlight));
+    }
+  }, 300);
+}
+</script>
+</body>
+</html>

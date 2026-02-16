@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Doppelganger - マイページ</title>
+<link rel="stylesheet" href="css/common.css">
+<style>
+  .profile-card{
+    background:linear-gradient(145deg,var(--surface),var(--surface2));
+    border:1px solid var(--surface3);
+    border-radius:20px;padding:28px 24px;
+    box-shadow:var(--shadow);text-align:center;
+    margin-bottom:16px;animation:fadeIn .5s ease;
+  }
+  .profile-icon{
+    width:80px;height:80px;border-radius:50%;
+    margin:0 auto 14px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:2.2rem;animation:float 4s ease-in-out infinite;
+  }
+  .profile-type-name{
+    font-size:1.3rem;font-weight:900;
+    background:linear-gradient(135deg,var(--accent),var(--accent2),var(--pink));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    margin-bottom:4px;
+  }
+  .profile-type-sub{font-size:.82rem;color:var(--text2);margin-bottom:12px}
+  .profile-display-id{
+    display:inline-block;
+    padding:4px 14px;border-radius:20px;
+    background:var(--surface);border:1px solid var(--surface3);
+    font-size:.82rem;color:var(--text);font-weight:600;
+    letter-spacing:.05em;
+  }
+
+  .profile-stats{
+    display:grid;grid-template-columns:1fr 1fr;gap:8px;
+    margin:16px 0;
+  }
+  .stat-item{
+    background:var(--surface);border:1px solid var(--surface3);
+    border-radius:var(--radius);padding:14px;text-align:center;
+  }
+  .stat-value{font-size:1.2rem;font-weight:700;color:var(--accent2)}
+  .stat-label{font-size:.7rem;color:var(--text2);margin-top:4px}
+
+  .profile-section{margin-bottom:16px}
+  .profile-section .section-title{margin-bottom:8px}
+
+  .menu-item{
+    display:flex;align-items:center;gap:12px;
+    padding:14px 16px;
+    background:var(--surface);border:1px solid var(--surface3);
+    border-radius:var(--radius);margin-bottom:8px;
+    cursor:pointer;transition:all .2s;
+    text-decoration:none;color:var(--text);
+  }
+  .menu-item:hover{border-color:rgba(108,92,231,.3);transform:translateX(4px)}
+  .menu-icon{font-size:1.2rem;flex-shrink:0;width:32px;text-align:center}
+  .menu-label{flex:1;font-size:.88rem;font-weight:500}
+  .menu-arrow{color:var(--text2);font-size:.9rem}
+
+  .logout-btn{
+    width:100%;padding:14px;margin-top:24px;
+    background:transparent;border:1px solid rgba(225,112,85,.3);
+    border-radius:var(--radius);color:var(--danger);
+    font-size:.88rem;font-weight:600;cursor:pointer;
+    transition:all .2s;
+  }
+  .logout-btn:hover{background:rgba(225,112,85,.06);border-color:var(--danger)}
+
+  .diagnosis-scores{
+    display:grid;grid-template-columns:1fr 1fr;gap:6px;
+    margin-top:8px;
+  }
+  .score-item{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:6px 10px;background:var(--surface2);border-radius:8px;
+    font-size:.75rem;
+  }
+  .score-name{color:var(--text2)}
+  .score-value{color:var(--accent2);font-weight:600}
+
+  .scores-toggle{
+    display:block;margin:8px auto 0;
+    padding:6px 16px;border:1px solid var(--surface3);
+    border-radius:50px;background:transparent;color:var(--text2);
+    font-size:.75rem;cursor:pointer;transition:all .2s;
+  }
+  .scores-toggle:hover{border-color:var(--accent);color:var(--text)}
+</style>
+</head>
+<body>
+
+<div class="page" id="page">
+  <div class="container">
+
+    <!-- プロフィールカード -->
+    <div class="profile-card" id="profile-card">
+      <div class="loading"><div class="spinner"></div></div>
+    </div>
+
+    <!-- 統計 -->
+    <div class="profile-stats" id="profile-stats"></div>
+
+    <!-- P変数スコア -->
+    <div class="profile-section" id="scores-section" style="display:none">
+      <div class="section-title">診断スコア（非公開）</div>
+      <div class="card">
+        <div class="diagnosis-scores" id="diagnosis-scores"></div>
+        <button class="scores-toggle" id="scores-toggle">もっと見る ▼</button>
+      </div>
+    </div>
+
+    <!-- メニュー -->
+    <div class="profile-section">
+      <div class="section-title">メニュー</div>
+
+      <a href="doppelganger-diagnosis.index.html" class="menu-item">
+        <span class="menu-icon">🔮</span>
+        <span class="menu-label">診断をやり直す</span>
+        <span class="menu-arrow">›</span>
+      </a>
+
+      <a href="board.html" class="menu-item">
+        <span class="menu-icon">💬</span>
+        <span class="menu-label">掲示板へ</span>
+        <span class="menu-arrow">›</span>
+      </a>
+
+      <div class="menu-item" id="share-btn">
+        <span class="menu-icon">📤</span>
+        <span class="menu-label">診断結果をシェア</span>
+        <span class="menu-arrow">›</span>
+      </div>
+    </div>
+
+    <!-- ログアウト -->
+    <button class="logout-btn" id="logout-btn">ログアウト</button>
+
+    <div class="text-center mt-16 text-xs text-muted">
+      Doppelganger v1.0
+    </div>
+  </div>
+</div>
+
+<!-- ナビゲーションバー -->
+<nav class="nav-bar">
+  <a href="board.html" class="nav-item">
+    <span class="nav-icon">💬</span>
+    <span>掲示板</span>
+  </a>
+  <a href="doppelganger-diagnosis.index.html" class="nav-item">
+    <span class="nav-icon">🔮</span>
+    <span>診断</span>
+  </a>
+  <a href="profile.html" class="nav-item active">
+    <span class="nav-icon">👤</span>
+    <span>マイページ</span>
+  </a>
+</nav>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/auth.js"></script>
+<script>
+(function() {
+  const P_NAMES = {
+    P1:'社会乖離値',P2:'合理性',P3:'対人距離',P4:'主従',
+    P5:'聖域',P6:'孤高度',P7:'覚醒動機',P8:'情緒変動性',
+    P9:'秩序性',P10:'探索欲',P11:'感情露出度',P12:'依存構造',
+    P13:'対話構造',P14:'愛着表現',P15:'葛藤対処',
+  };
+
+  async function init() {
+    try {
+      const user = await requireAuth();
+      if (!user) return;
+
+      const profile = await getMyProfile(true);
+      if (!profile) {
+        window.location.href = 'index.html';
+        return;
+      }
+
+      renderProfile(profile);
+      await loadStats(user.id);
+    } catch (err) {
+      showToast('プロフィールの読み込みに失敗しました', 'error');
+    }
+  }
+
+  function renderProfile(profile) {
+    const fam = profile.family || '';
+    const colorVar = familyColor(fam);
+    const badgeClass = fam ? `badge-${fam.toLowerCase()}` : '';
+
+    document.getElementById('profile-card').innerHTML = `
+      <div class="profile-icon" style="background:rgba(${colorVar},.12);border:2px solid rgba(${colorVar},.3)">
+        ${getTypeEmoji(profile.type_number)}
+      </div>
+      <div class="profile-type-name">Type ${profile.type_number || '?'}: ${escapeHtml(profile.type_name || '未診断')}</div>
+      <div class="profile-type-sub">
+        <span class="badge ${badgeClass}">${fam || '未分類'}</span>
+      </div>
+      <div class="profile-display-id">${escapeHtml(profile.display_id || '')}</div>
+      ${!profile.diagnosis_completed_at ? '<div class="mt-16"><a href="doppelganger-diagnosis.index.html" class="btn btn-primary btn-sm">診断を受ける</a></div>' : ''}
+    `;
+
+    // 診断スコア
+    if (profile.diagnosis_scores) {
+      renderScores(profile.diagnosis_scores);
+    }
+  }
+
+  function renderScores(scores) {
+    const section = document.getElementById('scores-section');
+    section.style.display = 'block';
+
+    const container = document.getElementById('diagnosis-scores');
+    const entries = Object.entries(scores);
+    // 最初は6個表示
+    const initial = entries.slice(0, 6);
+    const rest = entries.slice(6);
+
+    container.innerHTML = initial.map(([key, val]) => `
+      <div class="score-item">
+        <span class="score-name">${P_NAMES[key] || key}</span>
+        <span class="score-value">${val}</span>
+      </div>
+    `).join('');
+
+    if (rest.length > 0) {
+      const toggle = document.getElementById('scores-toggle');
+      let expanded = false;
+
+      toggle.addEventListener('click', () => {
+        expanded = !expanded;
+        if (expanded) {
+          container.innerHTML = entries.map(([key, val]) => `
+            <div class="score-item">
+              <span class="score-name">${P_NAMES[key] || key}</span>
+              <span class="score-value">${val}</span>
+            </div>
+          `).join('');
+          toggle.textContent = '閉じる ▲';
+        } else {
+          container.innerHTML = initial.map(([key, val]) => `
+            <div class="score-item">
+              <span class="score-name">${P_NAMES[key] || key}</span>
+              <span class="score-value">${val}</span>
+            </div>
+          `).join('');
+          toggle.textContent = 'もっと見る ▼';
+        }
+      });
+    } else {
+      document.getElementById('scores-toggle').style.display = 'none';
+    }
+  }
+
+  async function loadStats(userId) {
+    // 投稿数といいね数を取得
+    const [postsResult, likesResult] = await Promise.all([
+      supabase.from('posts').select('id', { count: 'exact', head: true }).eq('user_id', userId),
+      supabase.from('likes').select('post_id', { count: 'exact', head: true })
+        .in('post_id',
+          (await supabase.from('posts').select('id').eq('user_id', userId)).data?.map(p => p.id) || []
+        ),
+    ]);
+
+    const postCount = postsResult.count || 0;
+    const likeCount = likesResult.count || 0;
+
+    document.getElementById('profile-stats').innerHTML = `
+      <div class="stat-item">
+        <div class="stat-value">${postCount}</div>
+        <div class="stat-label">投稿数</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">${likeCount}</div>
+        <div class="stat-label">もらった ❤️</div>
+      </div>
+    `;
+  }
+
+  // --- シェア機能 ---
+  document.getElementById('share-btn').addEventListener('click', async () => {
+    const profile = await getMyProfile();
+    if (!profile || !profile.type_name) {
+      showToast('診断結果がありません', 'error');
+      return;
+    }
+
+    const shareText = `Doppelganger 性格診断の結果\n\n` +
+      `🎭 Type ${profile.type_number}: ${profile.type_name}\n` +
+      `📦 ${profile.family} Family\n\n` +
+      `あなたも自分の「精神の設計図」を見てみませんか？`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'Doppelganger 診断結果', text: shareText });
+      } catch (e) { /* キャンセル */ }
+    } else {
+      // クリップボードにコピー
+      try {
+        await navigator.clipboard.writeText(shareText);
+        showToast('クリップボードにコピーしました', 'success');
+      } catch (e) {
+        showToast('シェアに失敗しました', 'error');
+      }
+    }
+  });
+
+  // --- ログアウト ---
+  document.getElementById('logout-btn').addEventListener('click', async () => {
+    if (confirm('ログアウトしますか？')) {
+      await Auth.signOut();
+    }
+  });
+
+  // タイプ絵文字（board.jsが読み込まれていない場合のフォールバック）
+  if (typeof getTypeEmoji === 'undefined') {
+    window.getTypeEmoji = function(n) {
+      const e = {1:'🦉',2:'🧭',3:'🛡️',4:'♟️',5:'🔍',6:'⚙️',7:'🏰',8:'👑',
+        9:'🌌',10:'🌬️',11:'🌙',12:'🎼',13:'🌊',14:'⚡',15:'🎭',16:'🃏',
+        17:'🕊️',18:'🦅',19:'⚜️',20:'🦁',21:'⚖️',22:'🔥',23:'⚒️',24:'🏛️',
+        25:'☀️',26:'🔥',27:'🌿',28:'🌟',29:'🎪',30:'🌪️',31:'✨',32:'🎭'};
+      return e[n] || '👤';
+    };
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>

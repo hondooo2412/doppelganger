@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Doppelganger - スレッド</title>
+<link rel="stylesheet" href="css/common.css">
+<style>
+  .thread-header-card{
+    background:var(--surface);border:1px solid var(--surface3);
+    border-radius:var(--radius);padding:18px;margin-bottom:16px;
+  }
+  .thread-header-title{
+    font-size:1.05rem;font-weight:700;line-height:1.5;margin-bottom:10px;
+  }
+  .thread-header-meta{
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    font-size:.75rem;color:var(--text2);
+  }
+  .thread-status{
+    display:flex;align-items:center;gap:4px;
+    font-size:.72rem;color:var(--warning);
+  }
+
+  /* 返信入力エリア */
+  .reply-area{
+    position:fixed;bottom:60px;left:0;right:0;
+    padding:10px 16px;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));
+    background:var(--surface);border-top:1px solid var(--surface3);
+    z-index:50;
+    display:flex;gap:8px;align-items:flex-end;
+  }
+  .reply-area textarea{
+    flex:1;
+    padding:10px 14px;
+    background:var(--surface2);border:1px solid var(--surface3);
+    border-radius:20px;color:var(--text);
+    font-size:.85rem;line-height:1.5;
+    resize:none;outline:none;
+    min-height:40px;max-height:120px;
+    font-family:inherit;
+    -webkit-appearance:none;
+  }
+  .reply-area textarea:focus{border-color:var(--accent)}
+  .reply-area textarea::placeholder{color:var(--text2);opacity:.6}
+  .reply-send-btn{
+    width:40px;height:40px;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    border:none;border-radius:50%;
+    color:#fff;font-size:1rem;
+    cursor:pointer;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    transition:all .2s;
+  }
+  .reply-send-btn:hover{transform:scale(1.1)}
+  .reply-send-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+
+  .reply-warning{
+    font-size:.7rem;color:var(--danger);
+    padding:0 16px;margin-bottom:4px;
+    display:none;
+  }
+  .reply-warning.show{display:block}
+
+  /* 投稿一覧の下余白（返信エリアと重ならないよう） */
+  .posts-container{padding-bottom:80px}
+
+  /* スレッドがロックされている場合 */
+  .locked-notice{
+    text-align:center;padding:16px;
+    color:var(--text2);font-size:.85rem;
+    background:var(--surface);border:1px solid var(--surface3);
+    border-radius:var(--radius);
+  }
+
+  /* 削除確認 */
+  .delete-confirm{
+    display:flex;align-items:center;gap:8px;
+    padding:8px 12px;margin-top:-6px;margin-bottom:10px;
+    background:rgba(225,112,85,.06);border:1px solid rgba(225,112,85,.2);
+    border-radius:10px;font-size:.78rem;color:var(--danger);
+    animation:fadeIn .2s ease;
+  }
+  .delete-confirm button{
+    padding:4px 12px;border-radius:6px;font-size:.75rem;
+    cursor:pointer;border:none;font-weight:600;
+  }
+  .delete-yes{background:var(--danger);color:#fff}
+  .delete-no{background:var(--surface3);color:var(--text2)}
+</style>
+</head>
+<body>
+
+<div class="page" id="page">
+  <div class="container">
+    <!-- ヘッダー -->
+    <div class="page-header">
+      <button class="back-btn" id="back-btn">←</button>
+      <div>
+        <div class="page-title" id="board-name"></div>
+      </div>
+    </div>
+
+    <!-- スレッドヘッダー -->
+    <div class="thread-header-card" id="thread-header"></div>
+
+    <!-- 投稿一覧 -->
+    <div class="posts-container" id="posts-container"></div>
+
+    <!-- ローディング -->
+    <div class="loading hidden" id="loading">
+      <div class="spinner"></div>
+      <span>読み込み中...</span>
+    </div>
+  </div>
+</div>
+
+<!-- 返信エリア -->
+<div id="reply-area-wrapper">
+  <div class="reply-warning" id="reply-warning"></div>
+  <div class="reply-area" id="reply-area">
+    <textarea id="reply-input" placeholder="返信を書く..." rows="1"></textarea>
+    <button class="reply-send-btn" id="reply-send" disabled>▶</button>
+  </div>
+</div>
+
+<!-- ナビゲーションバー -->
+<nav class="nav-bar" style="display:none" id="nav-bar">
+  <a href="board.html" class="nav-item">
+    <span class="nav-icon">💬</span>
+    <span>掲示板</span>
+  </a>
+  <a href="doppelganger-diagnosis.index.html" class="nav-item">
+    <span class="nav-icon">🔮</span>
+    <span>診断</span>
+  </a>
+  <a href="profile.html" class="nav-item">
+    <span class="nav-icon">👤</span>
+    <span>マイページ</span>
+  </a>
+</nav>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/moderation.js"></script>
+<script src="js/board.js"></script>
+<script>
+(function() {
+  let currentThread = null;
+  let currentUserId = null;
+  let realtimeChannel = null;
+
+  // --- 初期化 ---
+  async function init() {
+    showLoading(true);
+    try {
+      const user = await requireAuth();
+      if (!user) return;
+      currentUserId = user.id;
+
+      const profile = await requireDiagnosis();
+      if (!profile) return;
+
+      const params = new URLSearchParams(window.location.search);
+      const threadId = params.get('id');
+      if (!threadId) {
+        window.location.href = 'board.html';
+        return;
+      }
+
+      await loadThread(threadId);
+    } catch (err) {
+      showToast('読み込みに失敗しました: ' + err.message, 'error');
+    } finally {
+      showLoading(false);
+    }
+  }
+
+  // --- スレッド読み込み ---
+  async function loadThread(threadId) {
+    currentThread = await Board.getThread(threadId);
+    const board = currentThread.board;
+
+    // ヘッダー
+    document.getElementById('board-name').textContent = board.name;
+    document.getElementById('back-btn').addEventListener('click', () => {
+      window.location.href = `board.html?id=${board.id}`;
+    });
+
+    const user = currentThread.user || {};
+    const fam = user.family || 'Architects';
+    const badgeClass = `badge-${fam.toLowerCase()}`;
+
+    let statusHtml = '';
+    if (currentThread.is_pinned) statusHtml += '<span class="thread-status">📌 固定スレッド</span>';
+    if (currentThread.is_locked) statusHtml += '<span class="thread-status">🔒 ロック中</span>';
+
+    document.getElementById('thread-header').innerHTML = `
+      <div class="thread-header-title">${escapeHtml(currentThread.title)}</div>
+      <div class="thread-header-meta">
+        <span class="badge ${badgeClass}">${escapeHtml(user.type_name || '不明')}</span>
+        <span>${escapeHtml(user.display_id || '')}</span>
+        <span>💬 ${currentThread.reply_count}件</span>
+        <span>${timeAgo(currentThread.created_at)}</span>
+        ${statusHtml}
+      </div>
+    `;
+
+    // ロック中は返信不可
+    if (currentThread.is_locked) {
+      document.getElementById('reply-area-wrapper').innerHTML = `
+        <div class="locked-notice" style="position:fixed;bottom:0;left:0;right:0;z-index:50;border-radius:0">
+          🔒 このスレッドはロックされています
+        </div>
+      `;
+    }
+
+    // 投稿一覧
+    await loadPosts(threadId);
+
+    // リアルタイム購読
+    realtimeChannel = Board.subscribeToThread(threadId, (newPost) => {
+      if (newPost.user_id !== currentUserId) {
+        appendPost(newPost, false, false);
+        scrollToBottom();
+      }
+    });
+  }
+
+  // --- 投稿一覧読み込み ---
+  async function loadPosts(threadId) {
+    const container = document.getElementById('posts-container');
+    container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
+    const { posts } = await Board.getPosts(threadId, { limit: 200 });
+    const postIds = posts.map(p => p.id);
+    const myLikes = await Board.getMyLikes(postIds);
+
+    container.innerHTML = '';
+    posts.forEach(post => {
+      const isLiked = myLikes.has(post.id);
+      const isOwn = post.user_id === currentUserId;
+      appendPost(post, isLiked, isOwn);
+    });
+
+    if (posts.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">💭</div>
+          <div class="empty-text">まだ投稿がありません</div>
+        </div>
+      `;
+    }
+  }
+
+  // --- 投稿を追加 ---
+  function appendPost(post, isLiked, isOwn) {
+    const container = document.getElementById('posts-container');
+    const div = document.createElement('div');
+    div.innerHTML = Board.renderPostCard(post, isLiked, isOwn);
+    const card = div.firstElementChild;
+    container.appendChild(card);
+
+    // イベント設定
+    setupPostActions(card);
+  }
+
+  // --- 投稿アクションのイベント設定 ---
+  function setupPostActions(card) {
+    card.querySelectorAll('.post-action').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const action = btn.dataset.action;
+        const postId = btn.dataset.postId;
+
+        if (action === 'like') {
+          await handleLike(btn, postId);
+        } else if (action === 'report') {
+          Moderation.showReportModal(postId);
+        } else if (action === 'delete') {
+          handleDelete(btn, postId, card);
+        }
+      });
+    });
+  }
+
+  // --- いいね処理 ---
+  async function handleLike(btn, postId) {
+    try {
+      const liked = await Board.toggleLike(postId);
+      const countEl = btn.querySelector('.like-count');
+      let count = parseInt(countEl.textContent) || 0;
+
+      if (liked) {
+        btn.classList.add('liked');
+        btn.innerHTML = `❤️ <span class="like-count">${count + 1}</span>`;
+      } else {
+        btn.classList.remove('liked');
+        btn.innerHTML = `🤍 <span class="like-count">${Math.max(0, count - 1)}</span>`;
+      }
+    } catch (err) {
+      showToast('いいねに失敗しました', 'error');
+    }
+  }
+
+  // --- 削除処理 ---
+  function handleDelete(btn, postId, card) {
+    // 既に確認表示中なら無視
+    if (card.querySelector('.delete-confirm')) return;
+
+    const confirm = document.createElement('div');
+    confirm.className = 'delete-confirm';
+    confirm.innerHTML = `
+      <span>この投稿を削除しますか？</span>
+      <button class="delete-yes">削除</button>
+      <button class="delete-no">やめる</button>
+    `;
+
+    card.appendChild(confirm);
+
+    confirm.querySelector('.delete-no').addEventListener('click', () => {
+      confirm.remove();
+    });
+
+    confirm.querySelector('.delete-yes').addEventListener('click', async () => {
+      try {
+        await Board.deletePost(postId);
+        card.style.animation = 'fadeOut .3s ease forwards';
+        setTimeout(() => card.remove(), 300);
+        showToast('投稿を削除しました', 'success');
+      } catch (err) {
+        showToast('削除に失敗しました', 'error');
+        confirm.remove();
+      }
+    });
+  }
+
+  // --- 返信入力 ---
+  const replyInput = document.getElementById('reply-input');
+  const sendBtn = document.getElementById('reply-send');
+  const warningEl = document.getElementById('reply-warning');
+
+  replyInput.addEventListener('input', () => {
+    // テキストエリア高さ自動調整
+    replyInput.style.height = 'auto';
+    replyInput.style.height = Math.min(replyInput.scrollHeight, 120) + 'px';
+
+    // 送信ボタンの有効/無効
+    const text = replyInput.value.trim();
+    sendBtn.disabled = text.length === 0;
+
+    // リアルタイム禁止ワードチェック
+    if (text.length > 0) {
+      const check = Moderation.checkContent(text);
+      if (!check.ok) {
+        warningEl.textContent = check.reason;
+        warningEl.classList.add('show');
+        sendBtn.disabled = true;
+      } else {
+        warningEl.classList.remove('show');
+      }
+    } else {
+      warningEl.classList.remove('show');
+    }
+  });
+
+  // 送信
+  sendBtn.addEventListener('click', submitReply);
+  replyInput.addEventListener('keydown', (e) => {
+    // Ctrl+Enter or Cmd+Enter で送信
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      submitReply();
+    }
+  });
+
+  async function submitReply() {
+    const content = replyInput.value.trim();
+    if (!content) return;
+
+    sendBtn.disabled = true;
+
+    try {
+      const post = await Board.createPost(currentThread.id, content);
+      appendPost(post, false, true);
+      replyInput.value = '';
+      replyInput.style.height = 'auto';
+      warningEl.classList.remove('show');
+      scrollToBottom();
+    } catch (err) {
+      showToast(err.message || '投稿に失敗しました', 'error');
+    } finally {
+      sendBtn.disabled = replyInput.value.trim().length === 0;
+    }
+  }
+
+  // --- スクロール ---
+  function scrollToBottom() {
+    setTimeout(() => {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }, 100);
+  }
+
+  // --- ローディング ---
+  function showLoading(show) {
+    document.getElementById('loading').classList.toggle('hidden', !show);
+  }
+
+  // --- クリーンアップ ---
+  window.addEventListener('beforeunload', () => {
+    if (realtimeChannel) {
+      supabase.removeChannel(realtimeChannel);
+    }
+  });
+
+  // --- 起動 ---
+  init();
+})();
+</script>
+</body>
+</html>
