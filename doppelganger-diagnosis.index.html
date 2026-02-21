@@ -1666,9 +1666,13 @@ setTimeout(()=>drawRadar('radarChart',scores),100);
 // 診断結果をSupabaseに保存し、完了したらボタンを有効化
 window._diagnosisSavePromise=(async()=>{
   try{
-    if(typeof supabase==='undefined')return;
+    if(typeof supabase==='undefined'){alert('【デバッグ】supabase未定義');return;}
+    const{data:{session}}=await supabase.auth.getSession();
     const{data:{user}}=await supabase.auth.getUser();
-    if(!user)return;
+    if(!user){
+      alert('【デバッグ】\nuser: null\nセッション: '+(session?'あり ('+session.user?.email+')':'なし'));
+      return;
+    }
 
     const now=new Date().toISOString();
 
