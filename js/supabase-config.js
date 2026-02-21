@@ -8,7 +8,7 @@
 // ============================================================
 
 const SUPABASE_URL = 'https://ddabcnvxdheuyeqelffx.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_-Eh2frvaFks4jUv3qzqJBw_IBaHAOdM';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkYWJjbnZ4ZGhldXllcWVsZmZ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2NDY5NTYsImV4cCI6MjA4NzIyMjk1Nn0.211clga5DD-BvSosAosGVa04QBL3SdEQuQlC6do--C4';
 
 // Supabase クライアント初期化
 // ※ supabase-js は CDN から読み込み（index.html の <script> タグで先に読み込む）
@@ -130,4 +130,5 @@ function escapeHtml(str) {
   div.textContent = str;
   return div.innerHTML;
 }
+
 
