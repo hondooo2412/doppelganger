@@ -7,8 +7,8 @@
 // 3. 下記のプレースホルダーを置き換える
 // ============================================================
 
-const SUPABASE_URL = 'https://YOUR_PROJECT_ID.supabase.co';
-const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY';
+const SUPABASE_URL = 'https://ddabcnvxdheuyeqelffx.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_-Eh2frvaFks4jUv3qzqJBw_IBaHAOdM';
 
 // Supabase クライアント初期化
 // ※ supabase-js は CDN から読み込み（index.html の <script> タグで先に読み込む）
@@ -130,3 +130,4 @@ function escapeHtml(str) {
   div.textContent = str;
   return div.innerHTML;
 }
+
