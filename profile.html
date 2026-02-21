@@ -113,6 +113,23 @@
   }
   .edit-profile-btn:hover{border-color:var(--accent);color:var(--text)}
 
+  /* クロップモーダル */
+  .crop-modal-inner{
+    width:100%;max-width:420px;padding:20px;
+  }
+  .crop-container{
+    width:100%;max-height:360px;
+    background:#000;border-radius:10px;
+    overflow:hidden;margin:16px 0 8px;
+  }
+  .crop-container img{
+    display:block;max-width:100%;
+  }
+  .crop-hint{
+    font-size:.75rem;color:var(--text2);
+    text-align:center;margin-bottom:16px;
+  }
+
   /* アカウントID入力 */
   .username-input-wrap{
     display:flex;align-items:center;gap:0;
@@ -204,14 +221,16 @@
         <div class="avatar-upload-area">
           <div class="avatar-preview" id="avatar-preview" title="クリックして画像を選択">
             <span id="avatar-preview-content">👤</span>
-            <div class="avatar-overlay">📷 変更</div>
+            <div class="avatar-overlay">📷</div>
           </div>
           <input type="file" id="avatar-input" accept="image/*" style="display:none">
           <div class="avatar-upload-info">
             <div class="upload-label">アイコン画像</div>
-            <div class="upload-hint">正方形にクロップされます<br>200×200px / WebP変換 / 50KB以下</div>
-            <button class="avatar-upload-btn" id="avatar-upload-btn">📷 画像を選択</button>
-            <button class="avatar-remove-btn" id="avatar-remove-btn" style="display:none">アイコンを削除</button>
+            <div class="upload-hint">アップロード後に範囲を指定できます</div>
+            <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+              <button class="avatar-upload-btn" id="avatar-upload-btn">📷 画像を選択</button>
+              <button class="avatar-remove-btn" id="avatar-remove-btn" style="display:none">削除</button>
+            </div>
           </div>
         </div>
 
@@ -321,6 +340,21 @@
   </div>
 </div>
 
+<!-- クロップモーダル -->
+<div class="modal-overlay" id="crop-modal">
+  <div class="modal crop-modal-inner">
+    <div class="modal-title">アイコンの範囲を選択</div>
+    <div class="crop-container">
+      <img id="crop-image" src="" alt="">
+    </div>
+    <p class="crop-hint">ドラッグで位置・ピンチ（スクロール）で拡大縮小</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary btn-sm" id="crop-cancel">キャンセル</button>
+      <button class="btn btn-primary btn-sm" id="crop-confirm">この範囲で決定</button>
+    </div>
+  </div>
+</div>
+
 <!-- ナビゲーションバー -->
 <nav class="nav-bar">
   <a href="board.html" class="nav-item">
@@ -337,6 +371,9 @@
   </a>
 </nav>
 
+<!-- Cropper.js -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css">
+<script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="js/supabase-config.js"></script>
@@ -373,6 +410,7 @@
   let currentProfile = null;
   let pendingAvatarBlob = null; // アップロード待ちのblob
   let selectedHobbies  = [];    // 選択中の大カテゴリーIDリスト
+  let cropperInstance  = null;  // Cropper.jsインスタンス
 
   async function init() {
     try {
@@ -582,20 +620,82 @@
     document.getElementById('avatar-input').click();
   });
 
-  document.getElementById('avatar-input').addEventListener('change', async (e) => {
+  document.getElementById('avatar-input').addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    try {
-      pendingAvatarBlob = await Avatar.processImage(file);
-      updateAvatarPreview();
-      showToast('画像を読み込みました。「保存する」で反映されます', 'success');
-    } catch (err) {
-      showToast(err.message, 'error');
+    // ファイルチェック
+    if (!file.type.startsWith('image/')) {
+      showToast('画像ファイルを選択してください', 'error');
+      e.target.value = '';
+      return;
     }
-    // input をリセット（同じファイルを再選択可能にする）
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('5MB以下の画像を選択してください', 'error');
+      e.target.value = '';
+      return;
+    }
+
+    // クロップモーダルを開く
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const cropImg = document.getElementById('crop-image');
+      cropImg.src = ev.target.result;
+
+      // 既存のCropperを破棄
+      if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
+
+      document.getElementById('crop-modal').classList.add('show');
+
+      // Cropper初期化（画像読み込み完了後）
+      cropImg.onload = () => {
+        cropperInstance = new Cropper(cropImg, {
+          aspectRatio: 1,
+          viewMode: 1,
+          dragMode: 'move',
+          autoCropArea: 0.8,
+          cropBoxMovable: true,
+          cropBoxResizable: true,
+          toggleDragModeOnDblclick: false,
+          background: false,
+        });
+      };
+    };
+    reader.readAsDataURL(file);
     e.target.value = '';
   });
+
+  // クロップ確定
+  document.getElementById('crop-confirm').addEventListener('click', async () => {
+    if (!cropperInstance) return;
+    const btn = document.getElementById('crop-confirm');
+    btn.disabled = true;
+    btn.textContent = '処理中...';
+
+    try {
+      const canvas = cropperInstance.getCroppedCanvas({ width: 200, height: 200 });
+      pendingAvatarBlob = await Avatar.processCroppedCanvas(canvas);
+      updateAvatarPreview();
+      closeCropModal();
+      showToast('画像を設定しました。「保存する」で反映されます', 'success');
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'この範囲で決定';
+    }
+  });
+
+  // クロップキャンセル
+  document.getElementById('crop-cancel').addEventListener('click', closeCropModal);
+  document.getElementById('crop-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'crop-modal') closeCropModal();
+  });
+
+  function closeCropModal() {
+    document.getElementById('crop-modal').classList.remove('show');
+    if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
+  }
 
   // アイコン削除
   document.getElementById('avatar-remove-btn').addEventListener('click', () => {
