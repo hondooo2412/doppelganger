@@ -1654,7 +1654,7 @@ ${buildSpectrumHTML(scores)}
 
 <a href="types.html?type=${t.n}" class="types-link-btn">📖 全32タイプ一覧を見る</a>
 <button class="retry-btn" onclick="retry()">もう一度診断する</button>
-<button onclick="goToBoard()" style="display:block;width:100%;padding:16px;margin-top:16px;background:linear-gradient(135deg,#6c5ce7,#a29bfe);color:#fff;border:none;border-radius:14px;font-size:1rem;font-weight:700;cursor:pointer;letter-spacing:.05em;">✨ コミュニティ掲示板へ進む →</button>
+<button id="go-board-btn" onclick="goToBoard()" style="display:block;width:100%;padding:16px;margin-top:16px;background:linear-gradient(135deg,#6c5ce7,#a29bfe);color:#fff;border:none;border-radius:14px;font-size:1rem;font-weight:700;cursor:pointer;letter-spacing:.05em;opacity:.6;">保存中...</button>
 `;
 
 // シェア用のデータをグローバルに保持
@@ -1663,8 +1663,8 @@ window._shareData={n:t.n,nm:t.nm,en:t.en,fam:t.fam,c:t.c,d:t.d,code:code};
 show('resultScreen');
 setTimeout(()=>drawRadar('radarChart',scores),100);
 
-// 診断結果をSupabaseに保存（非同期・サイレント）
-(async()=>{
+// 診断結果をSupabaseに保存し、完了したらボタンを有効化
+window._diagnosisSavePromise=(async()=>{
   try{
     if(typeof supabase==='undefined')return;
     const{data:{user}}=await supabase.auth.getUser();
@@ -1681,7 +1681,6 @@ setTimeout(()=>drawRadar('radarChart',scores),100);
     if(profile&&Array.isArray(profile.diagnosis_history)){
       history=[...profile.diagnosis_history];
     }
-    // 現在の結果（更新前）を履歴に追加（診断済みの場合のみ）
     if(profile&&profile.diagnosis_completed_at&&profile.type_number){
       const prev={
         type_code:profile.type_code,
@@ -1691,7 +1690,7 @@ setTimeout(()=>drawRadar('radarChart',scores),100);
         completed_at:profile.diagnosis_completed_at,
       };
       history.unshift(prev);
-      history=history.slice(0,3); // 最大3件
+      history=history.slice(0,3);
     }
 
     await supabase.from('users').update({
@@ -1703,14 +1702,22 @@ setTimeout(()=>drawRadar('radarChart',scores),100);
       diagnosis_completed_at:now,
       diagnosis_history:history,
     }).eq('id',user.id);
-    clearSave(); // 途中保存データをクリア
+    clearSave();
   }catch(e){console.error('診断結果保存エラー',e);}
+  finally{
+    // 保存完了（成功・失敗どちらでも）ボタンを有効化
+    const btn=document.getElementById('go-board-btn');
+    if(btn){btn.textContent='✨ コミュニティ掲示板へ進む →';btn.style.opacity='1';}
+  }
 })();
 }
 
 function goToBoard(){
   (async()=>{
     try{
+      // 保存処理が完了するまで待つ
+      if(window._diagnosisSavePromise) await window._diagnosisSavePromise;
+
       if(typeof supabase==='undefined'){window.location.href='board.html';return;}
       const{data:{user}}=await supabase.auth.getUser();
       if(!user){window.location.href='index.html';return;}
