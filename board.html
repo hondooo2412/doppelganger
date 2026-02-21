@@ -479,7 +479,7 @@
 
     // エリアカード（タイプ）
     document.getElementById('type-area-icon').textContent = getTypeEmoji(myProfile.type_number);
-    document.getElementById('type-area-name').textContent = 'Type ' + myProfile.type_number + 'の部屋';
+    document.getElementById('type-area-name').textContent = (myProfile.type_name || ('Type ' + myProfile.type_number)) + 'の部屋';
 
     // おすすめ（趣味設定済みの場合）
     const hobbies = myProfile.hobbies || [];
@@ -528,7 +528,7 @@
     const fam = myProfile.family || 'Architects';
     const areaLabel = currentAreaType === 'family'
       ? fam + ' Lounge'
-      : 'Type ' + myProfile.type_number + 'の部屋';
+      : (myProfile.type_name || ('Type ' + myProfile.type_number)) + 'の部屋';
 
     document.getElementById('cat-view-title').textContent = areaLabel;
     document.getElementById('cat-view-subtitle').textContent = 'カテゴリーを選んでください';
@@ -576,7 +576,7 @@
       const fam = myProfile.family || 'Architects';
       const areaLabel = currentAreaType === 'family'
         ? fam + ' Lounge'
-        : 'Type ' + myProfile.type_number + 'の部屋';
+        : (myProfile.type_name || ('Type ' + myProfile.type_number)) + 'の部屋';
 
       document.getElementById('subcat-view-title').textContent = cat ? cat.icon + ' ' + cat.name : 'カテゴリー';
       document.getElementById('subcat-view-subtitle').textContent = '板が入っている中カテゴリーを選んでください';
@@ -637,7 +637,7 @@
       const fam = myProfile.family || 'Architects';
       const areaLabel = currentAreaType === 'family'
         ? fam + ' Lounge'
-        : 'Type ' + myProfile.type_number + 'の部屋';
+        : (myProfile.type_name || ('Type ' + myProfile.type_number)) + 'の部屋';
 
       document.getElementById('boards-view-title').textContent = subcatName;
       document.getElementById('boards-view-subtitle').textContent = '板を選んでください';

@@ -88,12 +88,23 @@
     margin-top:8px;
   }
   .score-item{
-    display:flex;justify-content:space-between;align-items:center;
     padding:6px 10px;background:var(--surface2);border-radius:8px;
     font-size:.75rem;
   }
+  .score-item-header{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:4px;
+  }
   .score-name{color:var(--text2)}
   .score-value{color:var(--accent2);font-weight:600}
+  .score-bar-wrap{
+    height:5px;background:var(--surface3);border-radius:3px;overflow:hidden;
+  }
+  .score-bar{
+    height:100%;border-radius:3px;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));
+    transition:width .6s ease;
+  }
 
   .scores-toggle{
     display:block;margin:8px auto 0;
@@ -807,12 +818,19 @@
     const initial = entries.slice(0, 6);
     const rest = entries.slice(6);
 
-    container.innerHTML = initial.map(([key, val]) => `
+    const renderScoreItem = ([key, val]) => `
       <div class="score-item">
-        <span class="score-name">${P_NAMES[key] || key}</span>
-        <span class="score-value">${val}</span>
+        <div class="score-item-header">
+          <span class="score-name">${P_NAMES[key] || key}</span>
+          <span class="score-value">${val}</span>
+        </div>
+        <div class="score-bar-wrap">
+          <div class="score-bar" style="width:${Math.min(100, Math.max(0, val))}%"></div>
+        </div>
       </div>
-    `).join('');
+    `;
+
+    container.innerHTML = initial.map(renderScoreItem).join('');
 
     if (rest.length > 0) {
       const toggle = document.getElementById('scores-toggle');
@@ -820,12 +838,7 @@
 
       toggle.addEventListener('click', () => {
         expanded = !expanded;
-        container.innerHTML = (expanded ? entries : initial).map(([key, val]) => `
-          <div class="score-item">
-            <span class="score-name">${P_NAMES[key] || key}</span>
-            <span class="score-value">${val}</span>
-          </div>
-        `).join('');
+        container.innerHTML = (expanded ? entries : initial).map(renderScoreItem).join('');
         toggle.textContent = expanded ? '閉じる ▲' : 'もっと見る ▼';
       });
     } else {
