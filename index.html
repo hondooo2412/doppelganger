@@ -216,13 +216,15 @@
     try {
       await Auth.signIn(email, password);
       status.className = 'auth-status success';
-      status.textContent = 'ログイン成功！リダイレクト中...';
-      // 診断済みか確認して遷移先を決定
+      status.textContent = 'ログイン成功！移動中...';
+      // プロフィール状態に応じて遷移先を決定
       const profile = await getMyProfile(true);
-      if (profile && profile.diagnosis_completed_at) {
-        window.location.href = 'board.html';
-      } else {
+      if (!profile || !profile.nickname) {
+        window.location.href = 'profile.html?setup=1';
+      } else if (!profile.diagnosis_completed_at) {
         window.location.href = 'doppelganger-diagnosis.index.html';
+      } else {
+        window.location.href = 'board.html';
       }
     } catch (err) {
       status.className = 'auth-status error';
@@ -256,11 +258,11 @@
     try {
       await Auth.signUp(email, password);
       status.className = 'auth-status success';
-      status.textContent = '確認メールを送信しました。メールのリンクをクリックしてください。';
+      status.textContent = 'アカウントを作成しました！プロフィール設定へ移動中...';
+      setTimeout(() => { window.location.href = 'profile.html?setup=1'; }, 800);
     } catch (err) {
       status.className = 'auth-status error';
       status.textContent = translateAuthError(err.message);
-    } finally {
       btn.disabled = false;
       btn.textContent = 'アカウント作成';
     }

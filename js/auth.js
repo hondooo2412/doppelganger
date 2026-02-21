@@ -98,18 +98,23 @@ const Auth = {
   },
 
   // ============================================================
-  // プロフィール保存（ニックネーム・自己紹介）
+  // プロフィール保存（ニックネーム・自己紹介・username）
   // ============================================================
-  async saveProfile(nickname, bio, hobbies = []) {
+  async saveProfile(nickname, bio, hobbies = [], username = null) {
     const user = await getCurrentUser();
     if (!user) throw new Error('ログインが必要です');
 
     const updates = {
       nickname: nickname.trim().slice(0, 20),
       bio: bio ? bio.trim().slice(0, 100) : null,
-      hobbies: (hobbies || []).slice(0, 3),  // 最大3つ
+      hobbies: (hobbies || []).slice(0, 3),
       profile_completed_at: new Date().toISOString(),
     };
+
+    // usernameは初回のみ設定（nullなら更新しない）
+    if (username) {
+      updates.username = username.toLowerCase().slice(0, 20);
+    }
 
     const { error } = await supabase
       .from('users')
@@ -129,12 +134,18 @@ const Auth = {
     // ログイン済み → 適切なページへ
     if (user && window.location.pathname.endsWith('index.html')) {
       const profile = await getMyProfile();
-      if (profile && profile.diagnosis_completed_at) {
-        // 診断済みだがプロフィール未設定 → プロフィール設定へ
+      if (profile) {
+        // プロフィール未設定（ニックネームなし）→ プロフィール設定へ
         if (!profile.nickname) {
           window.location.href = 'profile.html?setup=1';
           return;
         }
+        // プロフィール設定済み・診断未完了 → 診断へ
+        if (!profile.diagnosis_completed_at) {
+          window.location.href = 'doppelganger-diagnosis.index.html';
+          return;
+        }
+        // 診断済み → 掲示板へ
         window.location.href = 'board.html';
         return;
       }

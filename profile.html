@@ -113,6 +113,40 @@
   }
   .edit-profile-btn:hover{border-color:var(--accent);color:var(--text)}
 
+  /* アカウントID入力 */
+  .username-input-wrap{
+    display:flex;align-items:center;gap:0;
+  }
+  .username-at{
+    padding:0 10px;height:44px;line-height:44px;
+    background:var(--surface2);border:1px solid var(--surface3);
+    border-right:none;border-radius:var(--radius) 0 0 var(--radius);
+    color:var(--text2);font-size:.95rem;font-weight:600;flex-shrink:0;
+  }
+  .username-input-wrap .form-input{
+    border-radius:0 var(--radius) var(--radius) 0;
+  }
+
+  /* 診断履歴 */
+  .history-list{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+  .history-item{
+    display:flex;align-items:center;gap:12px;
+    padding:12px 14px;
+    background:var(--surface);border:1px solid var(--surface3);
+    border-radius:var(--radius);
+  }
+  .history-num{
+    font-size:.72rem;color:var(--text2);
+    background:var(--surface2);padding:2px 7px;border-radius:20px;
+    flex-shrink:0;
+  }
+  .history-type{
+    flex:1;
+  }
+  .history-type-name{font-size:.88rem;font-weight:700;color:var(--text)}
+  .history-type-sub{font-size:.72rem;color:var(--text2);margin-top:1px}
+  .history-date{font-size:.7rem;color:var(--text2);flex-shrink:0}
+
   /* 趣味選択 */
   .hobby-section-label{
     font-size:.78rem;color:var(--text2);margin-bottom:10px;line-height:1.6;
@@ -152,11 +186,11 @@
     <!-- 初回設定ウェルカム（?setup=1 の時だけ表示） -->
     <div id="setup-welcome" style="display:none">
       <div class="profile-setup-welcome">
-        <div class="welcome-emoji">🎉</div>
-        <div class="welcome-title">はじめまして！</div>
+        <div class="welcome-emoji">👋</div>
+        <div class="welcome-title">ようこそ！</div>
         <div class="welcome-desc">
-          診断おつかれさまでした！<br>
-          あなたのプロフィールを設定しましょう。
+          まず、あなたのプロフィールを設定しましょう。<br>
+          その後、性格診断へと進みます。
         </div>
       </div>
     </div>
@@ -181,10 +215,23 @@
           </div>
         </div>
 
+        <!-- アカウントID（初回セットアップ時のみ表示、変更不可） -->
+        <div class="form-group" id="username-form-group" style="display:none">
+          <label class="form-label">アカウントID（必須・変更不可）</label>
+          <div class="username-input-wrap">
+            <span class="username-at">@</span>
+            <input type="text" class="form-input" id="username-input" maxlength="20"
+                   placeholder="半角英数字・アンダースコアのみ"
+                   pattern="[a-zA-Z0-9_]+" autocomplete="username">
+          </div>
+          <div class="form-hint">例: tanaka_taro｜一度設定したら変更できません</div>
+          <div class="form-error" id="username-error">アカウントIDを入力してください</div>
+        </div>
+
         <!-- ニックネーム -->
         <div class="form-group">
           <label class="form-label">ニックネーム（必須）</label>
-          <input type="text" class="form-input" id="nickname-input" maxlength="20" placeholder="みんなに表示される名前">
+          <input type="text" class="form-input" id="nickname-input" maxlength="20" placeholder="みんなに表示される名前（後から変更可）">
           <div class="char-count"><span id="nickname-count">0</span>/20</div>
           <div class="form-error" id="nickname-error">ニックネームを入力してください</div>
         </div>
@@ -218,6 +265,14 @@
 
     <!-- 統計 -->
     <div class="profile-stats" id="profile-stats"></div>
+
+    <!-- 診断履歴 -->
+    <div class="profile-section" id="history-section" style="display:none">
+      <div class="section-title">診断履歴（直近3回）</div>
+      <div class="card">
+        <div class="history-list" id="history-list"></div>
+      </div>
+    </div>
 
     <!-- P変数スコア -->
     <div class="profile-section" id="scores-section" style="display:none">
@@ -363,16 +418,24 @@
   function showEditMode(isFirstTime) {
     document.getElementById('profile-edit').style.display = 'block';
     document.getElementById('profile-card').style.display = 'none';
+    document.getElementById('history-section').style.display = 'none';
+    document.getElementById('scores-section').style.display = 'none';
 
     if (isFirstTime && !currentProfile.nickname) {
       document.getElementById('setup-welcome').style.display = 'block';
       document.getElementById('edit-title').textContent = '🎨 プロフィール設定';
       document.getElementById('cancel-edit-btn').style.display = 'none';
       document.getElementById('menu-section').style.display = 'none';
+      // usernameがまだ未設定なら入力欄を表示
+      if (!currentProfile.username) {
+        document.getElementById('username-form-group').style.display = 'block';
+      }
     } else {
       document.getElementById('setup-welcome').style.display = 'none';
       document.getElementById('edit-title').textContent = '✏️ プロフィール編集';
       document.getElementById('cancel-edit-btn').style.display = 'block';
+      // 既にusernameが設定されていたら非表示（変更不可）
+      document.getElementById('username-form-group').style.display = 'none';
     }
 
     // 既存値をプリフィル
@@ -409,6 +472,7 @@
         ${avatarHtml}
       </div>
       ${profile.nickname ? `<div class="profile-nickname">${escapeHtml(profile.nickname)}</div>` : ''}
+      ${profile.username ? `<div style="font-size:.78rem;color:var(--text2);margin-bottom:4px">@${escapeHtml(profile.username)}</div>` : ''}
       <div class="profile-type-name">Type ${profile.type_number || '?'}: ${escapeHtml(profile.type_name || '未診断')}</div>
       <div class="profile-type-sub">
         <span class="badge ${badgeClass}">${fam || '未分類'}</span>
@@ -422,10 +486,38 @@
     // 編集ボタン
     document.getElementById('edit-btn')?.addEventListener('click', () => showEditMode(false));
 
+    // 診断履歴
+    renderDiagnosisHistory(profile.diagnosis_history);
+
     // 診断スコア
     if (profile.diagnosis_scores) {
       renderScores(profile.diagnosis_scores);
     }
+  }
+
+  // --- 診断履歴表示 ---
+  function renderDiagnosisHistory(history) {
+    if (!Array.isArray(history) || history.length === 0) return;
+    const section = document.getElementById('history-section');
+    const list = document.getElementById('history-list');
+    section.style.display = 'block';
+
+    const labels = ['最新', '1回前', '2回前'];
+    list.innerHTML = history.slice(0, 3).map((h, i) => {
+      const date = h.completed_at
+        ? new Date(h.completed_at).toLocaleDateString('ja-JP', { year:'numeric', month:'short', day:'numeric' })
+        : '';
+      return `
+        <div class="history-item">
+          <span class="history-num">${labels[i] || (i + '回前')}</span>
+          <div class="history-type">
+            <div class="history-type-name">Type ${h.type_number || '?'}: ${escapeHtml(h.type_name || '不明')}</div>
+            <div class="history-type-sub">${escapeHtml(h.family || '')} Family ｜ ${escapeHtml(h.type_code || '')}</div>
+          </div>
+          <span class="history-date">${date}</span>
+        </div>
+      `;
+    }).join('');
   }
 
   // --- 趣味グリッド ---
@@ -528,8 +620,28 @@
   document.getElementById('save-profile-btn').addEventListener('click', async () => {
     const nickname = document.getElementById('nickname-input').value.trim();
     const bio = document.getElementById('bio-input').value.trim();
+    const usernameGroup = document.getElementById('username-form-group');
+    const isUsernameVisible = usernameGroup && usernameGroup.style.display !== 'none';
+    const usernameVal = isUsernameVisible ? document.getElementById('username-input').value.trim().toLowerCase() : null;
 
-    // バリデーション
+    // バリデーション: username（初回のみ）
+    if (isUsernameVisible) {
+      if (!usernameVal) {
+        document.getElementById('username-error').textContent = 'アカウントIDを入力してください';
+        document.getElementById('username-error').classList.add('show');
+        document.getElementById('username-input').focus();
+        return;
+      }
+      if (!/^[a-z0-9_]{3,20}$/.test(usernameVal)) {
+        document.getElementById('username-error').textContent = '3〜20文字の半角英数字・アンダースコアのみ使用できます';
+        document.getElementById('username-error').classList.add('show');
+        document.getElementById('username-input').focus();
+        return;
+      }
+      document.getElementById('username-error').classList.remove('show');
+    }
+
+    // バリデーション: nickname
     if (!nickname) {
       document.getElementById('nickname-error').classList.add('show');
       document.getElementById('nickname-input').focus();
@@ -551,23 +663,28 @@
         delete currentProfile._removeAvatar;
       }
 
-      // プロフィール保存（趣味も含む）
-      await Auth.saveProfile(nickname, bio, selectedHobbies);
+      // プロフィール保存（username / ニックネーム / 趣味 を含む）
+      await Auth.saveProfile(nickname, bio, selectedHobbies, usernameVal);
 
       // キャッシュ更新
       currentProfile = await getMyProfile(true);
 
       showToast('プロフィールを保存しました！', 'success');
 
-      // セットアップモードなら掲示板へ遷移
+      // セットアップモードなら診断ページへ遷移（新フロー）
       if (isSetupMode) {
-        setTimeout(() => { window.location.href = 'board.html'; }, 800);
+        setTimeout(() => { window.location.href = 'doppelganger-diagnosis.index.html'; }, 800);
       } else {
         showViewMode();
         initNavUser();
       }
     } catch (err) {
-      showToast('保存に失敗しました: ' + err.message, 'error');
+      if (err.message && err.message.includes('duplicate key') || (err.code === '23505')) {
+        document.getElementById('username-error').textContent = 'このアカウントIDはすでに使われています';
+        document.getElementById('username-error').classList.add('show');
+      } else {
+        showToast('保存に失敗しました: ' + err.message, 'error');
+      }
     } finally {
       btn.disabled = false;
       btn.textContent = '保存する';

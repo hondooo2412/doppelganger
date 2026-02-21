@@ -37,6 +37,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sy
 .start-btn{padding:18px 56px;font-size:1.1rem;font-weight:700;border:none;border-radius:50px;background:-webkit-linear-gradient(135deg,var(--accent),#a29bfe);background:linear-gradient(135deg,var(--accent),#a29bfe);color:#fff;cursor:pointer;transition:all .3s;-webkit-appearance:none;box-shadow:0 4px 20px rgba(108,92,231,.4);position:relative;overflow:hidden}
 .start-btn:hover{transform:translateY(-3px);box-shadow:0 8px 30px rgba(108,92,231,.6)}
 .start-btn:active{transform:translateY(0)}
+.start-sub{margin-top:12px;font-size:.75rem;color:var(--text2);line-height:1.6;opacity:.75;max-width:320px;text-align:center}
 .start-info{margin-top:28px;font-size:.8rem;color:var(--text2);line-height:1.6;opacity:.7}
 
 /* === Question Screen === */
@@ -233,7 +234,8 @@ canvas#radarChart{max-width:320px;width:100%;height:auto}
     <div class="logo">Doppelganger</div>
     <div class="logo-sub">Personality Architecture</div>
   </div>
-  <p class="subtitle">15次元の精神構造を解析し、<br>32タイプの中から<strong>あなたの本当の姿</strong>を映し出す</p>
+  <p class="subtitle">最新AIが導き出す<strong>あなたの本当の性格</strong>を知り、<br>最高の仲間たちと楽しめる<strong>世界唯一の掲示板</strong>へ</p>
+  <p class="start-sub">※ 診断結果は気分や状況によって変わることがあります。定期的に受け直すことで、今の自分をより深く知れます。</p>
   <button class="start-btn" onclick="startDiagnosis()">診断を始める</button>
   <p class="start-info">136問 ｜ 所要時間 約35〜45分<br>途中で戻ることもできます</p>
 </div>
@@ -1652,6 +1654,7 @@ ${buildSpectrumHTML(scores)}
 
 <a href="types.html?type=${t.n}" class="types-link-btn">📖 全32タイプ一覧を見る</a>
 <button class="retry-btn" onclick="retry()">もう一度診断する</button>
+<button onclick="goToBoard()" style="display:block;width:100%;padding:16px;margin-top:16px;background:linear-gradient(135deg,#6c5ce7,#a29bfe);color:#fff;border:none;border-radius:14px;font-size:1rem;font-weight:700;cursor:pointer;letter-spacing:.05em;">✨ コミュニティ掲示板へ進む →</button>
 `;
 
 // シェア用のデータをグローバルに保持
@@ -1659,6 +1662,67 @@ window._shareData={n:t.n,nm:t.nm,en:t.en,fam:t.fam,c:t.c,d:t.d,code:code};
 
 show('resultScreen');
 setTimeout(()=>drawRadar('radarChart',scores),100);
+
+// 診断結果をSupabaseに保存（非同期・サイレント）
+(async()=>{
+  try{
+    if(typeof supabase==='undefined')return;
+    const{data:{user}}=await supabase.auth.getUser();
+    if(!user)return;
+
+    const now=new Date().toISOString();
+
+    // 現在の履歴を取得して新しい結果を先頭に追加（最大3件）
+    const{data:profile}=await supabase.from('users')
+      .select('diagnosis_history,type_code,type_number,type_name,family,diagnosis_completed_at')
+      .eq('id',user.id).single();
+
+    let history=[];
+    if(profile&&Array.isArray(profile.diagnosis_history)){
+      history=[...profile.diagnosis_history];
+    }
+    // 現在の結果（更新前）を履歴に追加（診断済みの場合のみ）
+    if(profile&&profile.diagnosis_completed_at&&profile.type_number){
+      const prev={
+        type_code:profile.type_code,
+        type_number:profile.type_number,
+        type_name:profile.type_name,
+        family:profile.family,
+        completed_at:profile.diagnosis_completed_at,
+      };
+      history.unshift(prev);
+      history=history.slice(0,3); // 最大3件
+    }
+
+    await supabase.from('users').update({
+      type_code:code,
+      type_number:t.n,
+      type_name:t.nm,
+      family:t.fam,
+      diagnosis_scores:scores,
+      diagnosis_completed_at:now,
+      diagnosis_history:history,
+    }).eq('id',user.id);
+    clearSave(); // 途中保存データをクリア
+  }catch(e){console.error('診断結果保存エラー',e);}
+})();
+}
+
+function goToBoard(){
+  (async()=>{
+    try{
+      if(typeof supabase==='undefined'){window.location.href='board.html';return;}
+      const{data:{user}}=await supabase.auth.getUser();
+      if(!user){window.location.href='index.html';return;}
+      const{data:profile}=await supabase.from('users')
+        .select('nickname').eq('id',user.id).single();
+      if(profile&&profile.nickname){
+        window.location.href='board.html';
+      }else{
+        window.location.href='profile.html?setup=1';
+      }
+    }catch(e){window.location.href='board.html';}
+  })();
 }
 
 function retry(){cur=0;ans.fill(null);usedQuoteIdx=[];clearSave();show('startScreen')}
