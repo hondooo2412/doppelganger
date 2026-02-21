@@ -20,19 +20,30 @@
     margin:0 auto 14px;
     display:flex;align-items:center;justify-content:center;
     font-size:2.2rem;animation:float 4s ease-in-out infinite;
+    overflow:hidden;
+  }
+  .profile-icon img{width:100%;height:100%;object-fit:cover}
+  .profile-nickname{
+    font-size:1.2rem;font-weight:800;
+    color:var(--text);margin-bottom:2px;
   }
   .profile-type-name{
-    font-size:1.3rem;font-weight:900;
+    font-size:.95rem;font-weight:700;
     background:linear-gradient(135deg,var(--accent),var(--accent2),var(--pink));
     -webkit-background-clip:text;-webkit-text-fill-color:transparent;
     margin-bottom:4px;
   }
-  .profile-type-sub{font-size:.82rem;color:var(--text2);margin-bottom:12px}
+  .profile-type-sub{font-size:.82rem;color:var(--text2);margin-bottom:8px}
+  .profile-bio{
+    font-size:.82rem;color:var(--text2);line-height:1.6;
+    padding:8px 12px;background:var(--surface);border-radius:8px;
+    margin:8px 0;
+  }
   .profile-display-id{
     display:inline-block;
     padding:4px 14px;border-radius:20px;
     background:var(--surface);border:1px solid var(--surface3);
-    font-size:.82rem;color:var(--text);font-weight:600;
+    font-size:.78rem;color:var(--text2);font-weight:600;
     letter-spacing:.05em;
   }
 
@@ -91,6 +102,46 @@
     font-size:.75rem;cursor:pointer;transition:all .2s;
   }
   .scores-toggle:hover{border-color:var(--accent);color:var(--text)}
+
+  .edit-profile-btn{
+    margin-top:12px;
+    padding:8px 20px;
+    font-size:.8rem;font-weight:600;
+    background:var(--surface);border:1px solid var(--surface3);
+    border-radius:50px;color:var(--text2);
+    cursor:pointer;transition:all .2s;
+  }
+  .edit-profile-btn:hover{border-color:var(--accent);color:var(--text)}
+
+  /* 趣味選択 */
+  .hobby-section-label{
+    font-size:.78rem;color:var(--text2);margin-bottom:10px;line-height:1.6;
+  }
+  .hobby-grid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));
+    gap:8px;
+  }
+  .hobby-chip{
+    display:flex;align-items:center;gap:6px;
+    padding:9px 12px;
+    background:var(--surface);border:1.5px solid var(--surface3);
+    border-radius:10px;cursor:pointer;transition:all .2s;
+    font-size:.8rem;user-select:none;
+  }
+  .hobby-chip:hover{border-color:rgba(108,92,231,.4)}
+  .hobby-chip.selected{
+    border-color:var(--accent);
+    background:rgba(108,92,231,.1);
+    color:var(--accent2);font-weight:600;
+  }
+  .hobby-chip.disabled{
+    opacity:.35;cursor:not-allowed;
+  }
+  .hobby-chip-icon{font-size:1.1rem;flex-shrink:0}
+  .hobby-limit-hint{
+    font-size:.72rem;color:var(--text2);margin-top:8px;text-align:right;
+  }
+  .hobby-limit-hint.over{color:var(--danger)}
 </style>
 </head>
 <body>
@@ -98,7 +149,69 @@
 <div class="page" id="page">
   <div class="container">
 
-    <!-- プロフィールカード -->
+    <!-- 初回設定ウェルカム（?setup=1 の時だけ表示） -->
+    <div id="setup-welcome" style="display:none">
+      <div class="profile-setup-welcome">
+        <div class="welcome-emoji">🎉</div>
+        <div class="welcome-title">はじめまして！</div>
+        <div class="welcome-desc">
+          診断おつかれさまでした！<br>
+          あなたのプロフィールを設定しましょう。
+        </div>
+      </div>
+    </div>
+
+    <!-- プロフィール編集フォーム -->
+    <div id="profile-edit" style="display:none">
+      <div class="profile-edit-section">
+        <div class="profile-edit-title" id="edit-title">✏️ プロフィール編集</div>
+
+        <!-- アバター -->
+        <div class="avatar-upload-area">
+          <div class="avatar-preview" id="avatar-preview" title="クリックして画像を選択">
+            <span id="avatar-preview-content">👤</span>
+            <div class="avatar-overlay">📷 変更</div>
+          </div>
+          <input type="file" id="avatar-input" accept="image/*" style="display:none">
+          <div class="avatar-upload-info">
+            <div class="upload-label">アイコン画像</div>
+            <div class="upload-hint">正方形にクロップされます<br>200×200px / WebP変換 / 50KB以下</div>
+            <button class="avatar-upload-btn" id="avatar-upload-btn">📷 画像を選択</button>
+            <button class="avatar-remove-btn" id="avatar-remove-btn" style="display:none">アイコンを削除</button>
+          </div>
+        </div>
+
+        <!-- ニックネーム -->
+        <div class="form-group">
+          <label class="form-label">ニックネーム（必須）</label>
+          <input type="text" class="form-input" id="nickname-input" maxlength="20" placeholder="みんなに表示される名前">
+          <div class="char-count"><span id="nickname-count">0</span>/20</div>
+          <div class="form-error" id="nickname-error">ニックネームを入力してください</div>
+        </div>
+
+        <!-- 自己紹介 -->
+        <div class="form-group">
+          <label class="form-label">自己紹介（任意）</label>
+          <textarea class="form-input" id="bio-input" maxlength="100" placeholder="趣味や好きなことなど..." rows="3"></textarea>
+          <div class="char-count"><span id="bio-count">0</span>/100</div>
+        </div>
+
+        <!-- 趣味選択 -->
+        <div class="form-group" id="hobby-form-group">
+          <label class="form-label">好きなカテゴリー（最大3つ）</label>
+          <div class="hobby-section-label">
+            掲示板のTOPに、選んだカテゴリーが優先表示されます。
+          </div>
+          <div class="hobby-grid" id="hobby-grid"></div>
+          <div class="hobby-limit-hint" id="hobby-limit-hint">0 / 3 選択</div>
+        </div>
+
+        <button class="btn btn-primary btn-block" id="save-profile-btn">保存する</button>
+        <button class="btn btn-secondary btn-block btn-sm mt-8" id="cancel-edit-btn" style="display:none">キャンセル</button>
+      </div>
+    </div>
+
+    <!-- プロフィールカード（表示モード） -->
     <div class="profile-card" id="profile-card">
       <div class="loading"><div class="spinner"></div></div>
     </div>
@@ -116,7 +229,7 @@
     </div>
 
     <!-- メニュー -->
-    <div class="profile-section">
+    <div class="profile-section" id="menu-section">
       <div class="section-title">メニュー</div>
 
       <a href="doppelganger-diagnosis.index.html" class="menu-item">
@@ -130,6 +243,12 @@
         <span class="menu-label">掲示板へ</span>
         <span class="menu-arrow">›</span>
       </a>
+
+      <div class="menu-item" id="edit-hobby-btn">
+        <span class="menu-icon">🌟</span>
+        <span class="menu-label">趣味・カテゴリーを設定</span>
+        <span class="menu-arrow">›</span>
+      </div>
 
       <div class="menu-item" id="share-btn">
         <span class="menu-icon">📤</span>
@@ -153,13 +272,13 @@
     <span class="nav-icon">💬</span>
     <span>掲示板</span>
   </a>
-  <a href="doppelganger-diagnosis.index.html" class="nav-item">
-    <span class="nav-icon">🔮</span>
-    <span>診断</span>
+  <a href="matching.html" class="nav-item">
+    <span class="nav-icon">💕</span>
+    <span>マッチング</span>
   </a>
   <a href="profile.html" class="nav-item active">
-    <span class="nav-icon">👤</span>
-    <span>マイページ</span>
+    <span class="nav-icon" id="nav-my-avatar">👤</span>
+    <span id="nav-my-name">マイページ</span>
   </a>
 </nav>
 
@@ -167,6 +286,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="js/supabase-config.js"></script>
 <script src="js/auth.js"></script>
+<script src="js/avatar.js"></script>
 <script>
 (function() {
   const P_NAMES = {
@@ -176,40 +296,131 @@
     P13:'対話構造',P14:'愛着表現',P15:'葛藤対処',
   };
 
+  const HOBBY_CATEGORIES = [
+    { id:  1, name: '雑談・日常',             icon: '💬' },
+    { id:  2, name: '音楽',                  icon: '🎵' },
+    { id:  3, name: 'アニメ・マンガ・ゲーム', icon: '🎮' },
+    { id:  4, name: '映画・ドラマ・動画',     icon: '🎬' },
+    { id:  5, name: 'スポーツ・アウトドア',   icon: '⚽' },
+    { id:  6, name: '読書・学習',             icon: '📚' },
+    { id:  7, name: '創作・アート',           icon: '🎨' },
+    { id:  8, name: 'グルメ・食',             icon: '🍜' },
+    { id:  9, name: 'ファッション・美容',     icon: '👗' },
+    { id: 10, name: 'テクノロジー',           icon: '💻' },
+    { id: 11, name: 'オフ会・イベント',       icon: '🎉' },
+    { id: 12, name: 'お悩み・サポート',       icon: '🤝' },
+    { id: 13, name: 'Doppelganger',          icon: '🔮' },
+  ];
+
+  const params = new URLSearchParams(window.location.search);
+  let isSetupMode = params.get('setup') === '1';
+  let isHobbyTab  = params.get('tab') === 'hobby';
+  let currentProfile = null;
+  let pendingAvatarBlob = null; // アップロード待ちのblob
+  let selectedHobbies  = [];    // 選択中の大カテゴリーIDリスト
+
   async function init() {
     try {
       const user = await requireAuth();
       if (!user) return;
 
-      const profile = await getMyProfile(true);
-      if (!profile) {
+      currentProfile = await getMyProfile(true);
+      if (!currentProfile) {
         window.location.href = 'index.html';
         return;
       }
 
-      renderProfile(profile);
-      await loadStats(user.id);
+      // 趣味タブ直アクセス or セットアップモードの判定
+      if (isHobbyTab) {
+        showEditMode(false);
+        setTimeout(() => {
+          document.getElementById('hobby-form-group')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 200);
+      } else if (isSetupMode || !currentProfile.nickname) {
+        showEditMode(true);
+      } else {
+        showViewMode();
+      }
+
+      initNavUser();
     } catch (err) {
       showToast('プロフィールの読み込みに失敗しました', 'error');
     }
   }
 
+  // --- 表示モード ---
+  function showViewMode() {
+    document.getElementById('profile-edit').style.display = 'none';
+    document.getElementById('setup-welcome').style.display = 'none';
+    document.getElementById('profile-card').style.display = 'block';
+    document.getElementById('menu-section').style.display = 'block';
+
+    renderProfile(currentProfile);
+    loadStats(currentProfile.id);
+  }
+
+  // --- 編集モード ---
+  function showEditMode(isFirstTime) {
+    document.getElementById('profile-edit').style.display = 'block';
+    document.getElementById('profile-card').style.display = 'none';
+
+    if (isFirstTime && !currentProfile.nickname) {
+      document.getElementById('setup-welcome').style.display = 'block';
+      document.getElementById('edit-title').textContent = '🎨 プロフィール設定';
+      document.getElementById('cancel-edit-btn').style.display = 'none';
+      document.getElementById('menu-section').style.display = 'none';
+    } else {
+      document.getElementById('setup-welcome').style.display = 'none';
+      document.getElementById('edit-title').textContent = '✏️ プロフィール編集';
+      document.getElementById('cancel-edit-btn').style.display = 'block';
+    }
+
+    // 既存値をプリフィル
+    const nicknameInput = document.getElementById('nickname-input');
+    const bioInput = document.getElementById('bio-input');
+    nicknameInput.value = currentProfile.nickname || '';
+    bioInput.value = currentProfile.bio || '';
+    updateCharCount('nickname');
+    updateCharCount('bio');
+
+    // 趣味グリッドを初期化
+    selectedHobbies = Array.isArray(currentProfile.hobbies) ? [...currentProfile.hobbies] : [];
+    renderHobbyGrid();
+
+    // アバタープレビュー
+    updateAvatarPreview();
+  }
+
   function renderProfile(profile) {
     const fam = profile.family || '';
-    const colorVar = familyColor(fam);
+    const famRGB = _familyColorRGB(fam);
     const badgeClass = fam ? `badge-${fam.toLowerCase()}` : '';
 
+    // アバター表示
+    let avatarHtml;
+    if (profile.avatar_url) {
+      avatarHtml = `<img src="${escapeHtml(profile.avatar_url)}" alt="">`;
+    } else {
+      avatarHtml = getTypeEmoji(profile.type_number);
+    }
+
     document.getElementById('profile-card').innerHTML = `
-      <div class="profile-icon" style="background:rgba(${colorVar},.12);border:2px solid rgba(${colorVar},.3)">
-        ${getTypeEmoji(profile.type_number)}
+      <div class="profile-icon" style="background:rgba(${famRGB},.12);border:2px solid rgba(${famRGB},.3)">
+        ${avatarHtml}
       </div>
+      ${profile.nickname ? `<div class="profile-nickname">${escapeHtml(profile.nickname)}</div>` : ''}
       <div class="profile-type-name">Type ${profile.type_number || '?'}: ${escapeHtml(profile.type_name || '未診断')}</div>
       <div class="profile-type-sub">
         <span class="badge ${badgeClass}">${fam || '未分類'}</span>
       </div>
+      ${profile.bio ? `<div class="profile-bio">${escapeHtml(profile.bio)}</div>` : ''}
       <div class="profile-display-id">${escapeHtml(profile.display_id || '')}</div>
+      <button class="edit-profile-btn" id="edit-btn">✏️ プロフィール編集</button>
       ${!profile.diagnosis_completed_at ? '<div class="mt-16"><a href="doppelganger-diagnosis.index.html" class="btn btn-primary btn-sm">診断を受ける</a></div>' : ''}
     `;
+
+    // 編集ボタン
+    document.getElementById('edit-btn')?.addEventListener('click', () => showEditMode(false));
 
     // 診断スコア
     if (profile.diagnosis_scores) {
@@ -217,13 +428,165 @@
     }
   }
 
+  // --- 趣味グリッド ---
+  function renderHobbyGrid() {
+    const grid = document.getElementById('hobby-grid');
+    const hint = document.getElementById('hobby-limit-hint');
+    const MAX = 3;
+
+    grid.innerHTML = HOBBY_CATEGORIES.map(cat => {
+      const sel = selectedHobbies.includes(cat.id);
+      const dis = !sel && selectedHobbies.length >= MAX;
+      return `
+        <div class="hobby-chip ${sel ? 'selected' : ''} ${dis ? 'disabled' : ''}"
+             data-cat-id="${cat.id}">
+          <span class="hobby-chip-icon">${cat.icon}</span>
+          <span>${escapeHtml(cat.name)}</span>
+        </div>
+      `;
+    }).join('');
+
+    hint.textContent = `${selectedHobbies.length} / ${MAX} 選択`;
+    hint.classList.toggle('over', selectedHobbies.length > MAX);
+
+    grid.querySelectorAll('.hobby-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const id = parseInt(chip.dataset.catId);
+        if (selectedHobbies.includes(id)) {
+          selectedHobbies = selectedHobbies.filter(h => h !== id);
+        } else if (selectedHobbies.length < MAX) {
+          selectedHobbies.push(id);
+        } else {
+          showToast('趣味は最大3つまで選択できます', 'error');
+          return;
+        }
+        renderHobbyGrid();
+      });
+    });
+  }
+
+  // --- アバタープレビュー ---
+  function updateAvatarPreview() {
+    const preview = document.getElementById('avatar-preview-content');
+    const removeBtn = document.getElementById('avatar-remove-btn');
+
+    if (pendingAvatarBlob) {
+      preview.innerHTML = `<img src="${URL.createObjectURL(pendingAvatarBlob)}" alt="" style="width:80px;height:80px;object-fit:cover;border-radius:50%">`;
+      removeBtn.style.display = 'block';
+    } else if (currentProfile?.avatar_url) {
+      preview.innerHTML = `<img src="${escapeHtml(currentProfile.avatar_url)}" alt="" style="width:80px;height:80px;object-fit:cover;border-radius:50%">`;
+      removeBtn.style.display = 'block';
+    } else {
+      preview.textContent = currentProfile?.type_number ? getTypeEmoji(currentProfile.type_number) : '👤';
+      removeBtn.style.display = 'none';
+    }
+  }
+
+  // --- 画像選択イベント ---
+  document.getElementById('avatar-preview').addEventListener('click', () => {
+    document.getElementById('avatar-input').click();
+  });
+  document.getElementById('avatar-upload-btn').addEventListener('click', () => {
+    document.getElementById('avatar-input').click();
+  });
+
+  document.getElementById('avatar-input').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      pendingAvatarBlob = await Avatar.processImage(file);
+      updateAvatarPreview();
+      showToast('画像を読み込みました。「保存する」で反映されます', 'success');
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+    // input をリセット（同じファイルを再選択可能にする）
+    e.target.value = '';
+  });
+
+  // アイコン削除
+  document.getElementById('avatar-remove-btn').addEventListener('click', () => {
+    pendingAvatarBlob = null;
+    if (currentProfile) currentProfile._removeAvatar = true;
+    updateAvatarPreview();
+  });
+
+  // --- 文字数カウント ---
+  function updateCharCount(field) {
+    const input = document.getElementById(`${field}-input`);
+    const count = document.getElementById(`${field}-count`);
+    const max = field === 'nickname' ? 20 : 100;
+    count.textContent = input.value.length;
+    count.parentElement.classList.toggle('over', input.value.length > max);
+  }
+
+  document.getElementById('nickname-input').addEventListener('input', () => updateCharCount('nickname'));
+  document.getElementById('bio-input').addEventListener('input', () => updateCharCount('bio'));
+
+  // --- プロフィール保存 ---
+  document.getElementById('save-profile-btn').addEventListener('click', async () => {
+    const nickname = document.getElementById('nickname-input').value.trim();
+    const bio = document.getElementById('bio-input').value.trim();
+
+    // バリデーション
+    if (!nickname) {
+      document.getElementById('nickname-error').classList.add('show');
+      document.getElementById('nickname-input').focus();
+      return;
+    }
+    document.getElementById('nickname-error').classList.remove('show');
+
+    const btn = document.getElementById('save-profile-btn');
+    btn.disabled = true;
+    btn.textContent = '保存中...';
+
+    try {
+      // アバター画像のアップロード
+      if (pendingAvatarBlob) {
+        await Avatar.uploadAvatar(pendingAvatarBlob);
+        pendingAvatarBlob = null;
+      } else if (currentProfile?._removeAvatar) {
+        await Avatar.deleteAvatar();
+        delete currentProfile._removeAvatar;
+      }
+
+      // プロフィール保存（趣味も含む）
+      await Auth.saveProfile(nickname, bio, selectedHobbies);
+
+      // キャッシュ更新
+      currentProfile = await getMyProfile(true);
+
+      showToast('プロフィールを保存しました！', 'success');
+
+      // セットアップモードなら掲示板へ遷移
+      if (isSetupMode) {
+        setTimeout(() => { window.location.href = 'board.html'; }, 800);
+      } else {
+        showViewMode();
+        initNavUser();
+      }
+    } catch (err) {
+      showToast('保存に失敗しました: ' + err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '保存する';
+    }
+  });
+
+  // キャンセル
+  document.getElementById('cancel-edit-btn').addEventListener('click', () => {
+    pendingAvatarBlob = null;
+    showViewMode();
+  });
+
+  // --- スコア表示 ---
   function renderScores(scores) {
     const section = document.getElementById('scores-section');
     section.style.display = 'block';
 
     const container = document.getElementById('diagnosis-scores');
     const entries = Object.entries(scores);
-    // 最初は6個表示
     const initial = entries.slice(0, 6);
     const rest = entries.slice(6);
 
@@ -240,53 +603,52 @@
 
       toggle.addEventListener('click', () => {
         expanded = !expanded;
-        if (expanded) {
-          container.innerHTML = entries.map(([key, val]) => `
-            <div class="score-item">
-              <span class="score-name">${P_NAMES[key] || key}</span>
-              <span class="score-value">${val}</span>
-            </div>
-          `).join('');
-          toggle.textContent = '閉じる ▲';
-        } else {
-          container.innerHTML = initial.map(([key, val]) => `
-            <div class="score-item">
-              <span class="score-name">${P_NAMES[key] || key}</span>
-              <span class="score-value">${val}</span>
-            </div>
-          `).join('');
-          toggle.textContent = 'もっと見る ▼';
-        }
+        container.innerHTML = (expanded ? entries : initial).map(([key, val]) => `
+          <div class="score-item">
+            <span class="score-name">${P_NAMES[key] || key}</span>
+            <span class="score-value">${val}</span>
+          </div>
+        `).join('');
+        toggle.textContent = expanded ? '閉じる ▲' : 'もっと見る ▼';
       });
     } else {
       document.getElementById('scores-toggle').style.display = 'none';
     }
   }
 
+  // --- 統計読み込み ---
   async function loadStats(userId) {
-    // 投稿数といいね数を取得
-    const [postsResult, likesResult] = await Promise.all([
-      supabase.from('posts').select('id', { count: 'exact', head: true }).eq('user_id', userId),
-      supabase.from('likes').select('post_id', { count: 'exact', head: true })
-        .in('post_id',
-          (await supabase.from('posts').select('id').eq('user_id', userId)).data?.map(p => p.id) || []
-        ),
-    ]);
+    try {
+      const [postsResult, likesResult] = await Promise.all([
+        supabase.from('posts').select('id', { count: 'exact', head: true }).eq('user_id', userId),
+        supabase.from('likes').select('post_id', { count: 'exact', head: true })
+          .in('post_id',
+            (await supabase.from('posts').select('id').eq('user_id', userId)).data?.map(p => p.id) || []
+          ),
+      ]);
 
-    const postCount = postsResult.count || 0;
-    const likeCount = likesResult.count || 0;
-
-    document.getElementById('profile-stats').innerHTML = `
-      <div class="stat-item">
-        <div class="stat-value">${postCount}</div>
-        <div class="stat-label">投稿数</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-value">${likeCount}</div>
-        <div class="stat-label">もらった ❤️</div>
-      </div>
-    `;
+      document.getElementById('profile-stats').innerHTML = `
+        <div class="stat-item">
+          <div class="stat-value">${postsResult.count || 0}</div>
+          <div class="stat-label">投稿数</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">${likesResult.count || 0}</div>
+          <div class="stat-label">もらった ❤️</div>
+        </div>
+      `;
+    } catch(e) {
+      // 統計読み込み失敗は無視
+    }
   }
+
+  // --- 趣味編集メニュー ---
+  document.getElementById('edit-hobby-btn')?.addEventListener('click', () => {
+    showEditMode(false);
+    setTimeout(() => {
+      document.getElementById('hobby-form-group')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  });
 
   // --- シェア機能 ---
   document.getElementById('share-btn').addEventListener('click', async () => {
@@ -304,9 +666,8 @@
     if (navigator.share) {
       try {
         await navigator.share({ title: 'Doppelganger 診断結果', text: shareText });
-      } catch (e) { /* キャンセル */ }
+      } catch (e) {}
     } else {
-      // クリップボードにコピー
       try {
         await navigator.clipboard.writeText(shareText);
         showToast('クリップボードにコピーしました', 'success');
@@ -323,7 +684,7 @@
     }
   });
 
-  // タイプ絵文字（board.jsが読み込まれていない場合のフォールバック）
+  // タイプ絵文字フォールバック
   if (typeof getTypeEmoji === 'undefined') {
     window.getTypeEmoji = function(n) {
       const e = {1:'🦉',2:'🧭',3:'🛡️',4:'♟️',5:'🔍',6:'⚙️',7:'🏰',8:'👑',

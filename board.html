@@ -8,69 +8,198 @@
 <title>Doppelganger - 掲示板</title>
 <link rel="stylesheet" href="css/common.css">
 <style>
-  .board-top-header{
-    text-align:center;padding:16px 0 8px;animation:fadeIn .5s ease;
-  }
-  .board-top-logo{
-    font-size:1.4rem;font-weight:900;
-    background:linear-gradient(135deg,#6c5ce7,#a29bfe,#fd79a8);
-    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-    margin-bottom:4px;
-  }
-  .board-top-sub{font-size:.72rem;color:var(--text2);letter-spacing:.15em}
+/* ============================================================
+   掲示板 共通
+   ============================================================ */
+.board-logo {
+  font-size: 1.3rem; font-weight: 900;
+  background: linear-gradient(135deg, #6c5ce7, #a29bfe, #fd79a8);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.board-logo-sub { font-size: .68rem; color: var(--text2); letter-spacing: .15em; }
 
-  .my-type-banner{
-    display:flex;align-items:center;gap:12px;
-    padding:14px 16px;margin:16px 0;
-    background:var(--surface);border:1px solid var(--surface3);
-    border-radius:var(--radius);
-  }
-  .my-type-icon{
-    width:42px;height:42px;border-radius:50%;
-    display:flex;align-items:center;justify-content:center;
-    font-size:1.3rem;flex-shrink:0;
-  }
-  .my-type-info{flex:1}
-  .my-type-name{font-size:.9rem;font-weight:700}
-  .my-type-sub{font-size:.72rem;color:var(--text2);margin-top:2px}
+/* パンくずリスト */
+.breadcrumb {
+  display: flex; align-items: center; gap: 4px;
+  font-size: .75rem; color: var(--text2);
+  padding: 8px 0 12px; flex-wrap: wrap;
+}
+.breadcrumb-item { cursor: pointer; }
+.breadcrumb-item:hover { color: var(--accent2); }
+.breadcrumb-sep { opacity: .4; }
+.breadcrumb-current { color: var(--text); font-weight: 600; }
 
-  /* スレッド一覧ビュー */
-  .board-view-header{
-    display:flex;align-items:center;justify-content:space-between;
-    margin-bottom:14px;
-  }
-  .board-view-title{display:flex;align-items:center;gap:8px}
-  .board-view-icon{font-size:1.4rem}
-  .board-view-name{font-size:1rem;font-weight:700}
+/* ビュー表示制御 */
+.view { display: none; }
+.view.active { display: block; }
 
-  .new-thread-btn{
-    display:flex;align-items:center;gap:4px;
-    padding:8px 16px;
-    background:linear-gradient(135deg,var(--accent),var(--accent2));
-    color:#fff;border:none;border-radius:50px;
-    font-size:.8rem;font-weight:600;cursor:pointer;
-    transition:all .3s;
-  }
-  .new-thread-btn:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(108,92,231,.4)}
+/* ============================================================
+   ビュー① TOP
+   ============================================================ */
+.my-type-banner {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px; margin: 16px 0 20px;
+  background: var(--surface); border: 1px solid var(--surface3);
+  border-radius: var(--radius);
+}
+.my-type-icon {
+  width: 44px; height: 44px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.35rem; flex-shrink: 0;
+}
+.my-type-info { flex: 1; min-width: 0; }
+.my-type-name { font-size: .9rem; font-weight: 700; }
+.my-type-sub  { font-size: .72rem; color: var(--text2); margin-top: 2px; }
 
-  /* 新規スレッド作成モーダル */
-  .create-thread-form{margin-top:8px}
-  .char-count{text-align:right;font-size:.7rem;color:var(--text2);margin-top:4px}
+/* おすすめの板 */
+.recommend-section { margin-bottom: 24px; }
+.recommend-hint {
+  font-size: .75rem; color: var(--text2);
+  margin-bottom: 8px; padding-left: 4px;
+}
+.recommend-chips {
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+.recommend-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 6px 14px;
+  background: var(--surface); border: 1px solid var(--surface3);
+  border-radius: 50px; font-size: .8rem; cursor: pointer;
+  transition: all .2s;
+}
+.recommend-chip:hover { border-color: var(--accent); color: var(--accent2); }
 
-  /* ページネーション */
-  .pagination{
-    display:flex;align-items:center;justify-content:center;gap:8px;
-    margin-top:16px;
-  }
-  .pagination button{
-    padding:6px 14px;
-    border:1px solid var(--surface3);border-radius:8px;
-    background:var(--surface);color:var(--text2);
-    font-size:.8rem;cursor:pointer;transition:all .2s;
-  }
-  .pagination button:hover:not(:disabled){border-color:var(--accent);color:var(--text)}
-  .pagination button:disabled{opacity:.3;cursor:not-allowed}
-  .pagination .page-info{font-size:.75rem;color:var(--text2)}
+/* エリア選択カード */
+.area-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.area-card {
+  padding: 18px 14px;
+  background: var(--surface); border: 1px solid var(--surface3);
+  border-radius: var(--radius); cursor: pointer;
+  transition: all .25s; text-align: center;
+}
+.area-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow); }
+.area-card-icon { font-size: 1.8rem; margin-bottom: 8px; }
+.area-card-name { font-size: .85rem; font-weight: 700; margin-bottom: 4px; }
+.area-card-desc { font-size: .7rem; color: var(--text2); line-height: 1.4; }
+.area-card.family-card { border-left: 3px solid var(--accent); }
+.area-card.type-card   { border-left: 3px solid var(--accent2); }
+
+/* ============================================================
+   ビュー② 大カテゴリー一覧（2ch風）
+   ============================================================ */
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 8px;
+}
+.category-card {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px;
+  background: var(--surface); border: 1px solid var(--surface3);
+  border-radius: var(--radius); cursor: pointer;
+  transition: all .2s;
+}
+.category-card:hover { border-color: var(--accent); background: var(--surface2); }
+.category-icon { font-size: 1.3rem; flex-shrink: 0; }
+.category-name { font-size: .85rem; font-weight: 600; }
+
+/* ============================================================
+   ビュー③ 中カテゴリー一覧（板一覧）
+   ============================================================ */
+.subcategory-list { display: flex; flex-direction: column; gap: 8px; }
+.subcategory-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px;
+  background: var(--surface); border: 1px solid var(--surface3);
+  border-radius: var(--radius); cursor: pointer;
+  transition: all .2s;
+}
+.subcategory-row:hover { border-color: var(--accent); }
+.subcategory-icon { font-size: 1.1rem; flex-shrink: 0; }
+.subcategory-name { flex: 1; font-size: .88rem; font-weight: 600; }
+.subcategory-count { font-size: .72rem; color: var(--text2); }
+.subcategory-arrow { color: var(--text2); font-size: 1rem; }
+
+/* ============================================================
+   ビュー④ 板一覧（小カテゴリー）
+   ============================================================ */
+.board-list-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.new-board-btn {
+  display: flex; align-items: center; gap: 4px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff; border: none; border-radius: 50px;
+  font-size: .8rem; font-weight: 600; cursor: pointer;
+  transition: all .3s;
+}
+.new-board-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(108,92,231,.4); }
+
+.board-card-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 14px 16px;
+  background: var(--surface); border: 1px solid var(--surface3);
+  border-radius: var(--radius); cursor: pointer;
+  transition: all .2s; margin-bottom: 8px;
+  text-decoration: none; color: inherit;
+}
+.board-card-item:hover { border-color: var(--accent); }
+.board-card-icon { font-size: 1.4rem; flex-shrink: 0; margin-top: 2px; }
+.board-card-body { flex: 1; min-width: 0; }
+.board-card-name { font-size: .9rem; font-weight: 700; margin-bottom: 4px; }
+.board-card-desc { font-size: .75rem; color: var(--text2); line-height: 1.4; }
+.board-card-meta {
+  font-size: .7rem; color: var(--text2);
+  margin-top: 6px; display: flex; gap: 10px;
+}
+.board-card-arrow { color: var(--text2); align-self: center; font-size: 1.1rem; }
+
+.board-empty-hint {
+  text-align: center; padding: 32px 16px;
+  color: var(--text2); font-size: .85rem; line-height: 1.8;
+}
+.board-empty-hint strong { color: var(--text); }
+
+/* ============================================================
+   ビュー⑤ スレッド一覧
+   ============================================================ */
+.board-view-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.new-thread-btn {
+  display: flex; align-items: center; gap: 4px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff; border: none; border-radius: 50px;
+  font-size: .8rem; font-weight: 600; cursor: pointer;
+  transition: all .3s;
+}
+.new-thread-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(108,92,231,.4); }
+
+/* ページネーション */
+.pagination {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin-top: 16px;
+}
+.pagination button {
+  padding: 6px 14px;
+  border: 1px solid var(--surface3); border-radius: 8px;
+  background: var(--surface); color: var(--text2);
+  font-size: .8rem; cursor: pointer; transition: all .2s;
+}
+.pagination button:hover:not(:disabled) { border-color: var(--accent); color: var(--text); }
+.pagination button:disabled { opacity: .3; cursor: not-allowed; }
+.pagination .page-info { font-size: .75rem; color: var(--text2); }
+
+/* ============================================================
+   モーダル: 板を作成
+   ============================================================ */
+.char-count { text-align: right; font-size: .7rem; color: var(--text2); margin-top: 4px; }
+.form-error  { font-size: .8rem; color: var(--danger); margin-top: 8px; display: none; }
+.form-error.show { display: block; }
 </style>
 </head>
 <body>
@@ -78,45 +207,110 @@
 <div class="page" id="page">
   <div class="container">
 
-    <!-- ===== トップビュー: 板一覧 ===== -->
-    <div id="boards-view">
-      <div class="board-top-header">
-        <div class="board-top-logo">Doppelganger</div>
-        <div class="board-top-sub">Community Board</div>
+    <!-- ===== ビュー① TOP ===== -->
+    <div id="view-top" class="view active">
+      <div style="text-align:center;padding:14px 0 6px">
+        <div class="board-logo">Doppelganger</div>
+        <div class="board-logo-sub">Community Board</div>
       </div>
 
-      <!-- 自分のタイプ表示 -->
+      <!-- 自分のタイプバナー -->
       <div class="my-type-banner" id="my-type-banner"></div>
 
-      <!-- ファミリーラウンジ -->
-      <div class="section-title" id="family-section-title"></div>
-      <div id="family-boards"></div>
+      <!-- おすすめの板（趣味に応じたパーソナライズ） -->
+      <div class="recommend-section" id="recommend-section" style="display:none">
+        <div class="section-title">⭐ おすすめのカテゴリー</div>
+        <div class="recommend-hint">あなたの趣味設定に基づいています</div>
+        <div class="recommend-chips" id="recommend-chips"></div>
+      </div>
 
-      <!-- タイプ別ルーム -->
-      <div class="section-title mt-24">あなたのタイプの部屋</div>
-      <div id="type-boards"></div>
+      <!-- エリア選択 -->
+      <div class="section-title" id="family-section-label"></div>
+      <div class="area-cards" style="margin-bottom:24px">
+        <!-- ファミリーラウンジ -->
+        <div class="area-card family-card" id="btn-family-area">
+          <div class="area-card-icon" id="family-area-icon">🏛️</div>
+          <div class="area-card-name" id="family-area-name">Family Lounge</div>
+          <div class="area-card-desc">同じファミリーの仲間が集まる広場</div>
+        </div>
+        <!-- 同タイプの部屋 -->
+        <div class="area-card type-card" id="btn-type-area">
+          <div class="area-card-icon" id="type-area-icon">🎭</div>
+          <div class="area-card-name" id="type-area-name">タイプの部屋</div>
+          <div class="area-card-desc">完全に同じタイプの人だけの密な空間</div>
+        </div>
+      </div>
+
+      <!-- 趣味未設定のお知らせ -->
+      <div id="hobby-setup-hint" style="display:none">
+        <div class="recommend-section">
+          <div class="section-title">🌟 趣味を設定しよう</div>
+          <div class="recommend-hint">趣味を設定すると、おすすめのカテゴリーが表示されます</div>
+          <a href="profile.html?tab=hobby" class="btn btn-secondary btn-sm" style="display:inline-block;margin-top:4px">趣味を設定する →</a>
+        </div>
+      </div>
     </div>
 
-    <!-- ===== スレッド一覧ビュー ===== -->
-    <div id="threads-view" class="hidden">
+    <!-- ===== ビュー② 大カテゴリー一覧 ===== -->
+    <div id="view-categories" class="view">
       <div class="page-header">
-        <button class="back-btn" id="back-to-boards">←</button>
+        <button class="back-btn" id="back-from-categories">←</button>
         <div>
-          <div class="page-title" id="current-board-name"></div>
-          <div class="page-subtitle" id="current-board-desc"></div>
+          <div class="page-title" id="cat-view-title"></div>
+          <div class="page-subtitle" id="cat-view-subtitle"></div>
         </div>
       </div>
+      <div class="breadcrumb" id="breadcrumb-cat"></div>
+      <div class="category-grid" id="category-grid"></div>
+    </div>
+
+    <!-- ===== ビュー③ 中カテゴリー一覧 ===== -->
+    <div id="view-subcategories" class="view">
+      <div class="page-header">
+        <button class="back-btn" id="back-from-subcategories">←</button>
+        <div>
+          <div class="page-title" id="subcat-view-title"></div>
+          <div class="page-subtitle" id="subcat-view-subtitle"></div>
+        </div>
+      </div>
+      <div class="breadcrumb" id="breadcrumb-subcat"></div>
+      <div class="subcategory-list" id="subcategory-list"></div>
+    </div>
+
+    <!-- ===== ビュー④ 板一覧（小カテゴリー） ===== -->
+    <div id="view-boards" class="view">
+      <div class="page-header">
+        <button class="back-btn" id="back-from-boards">←</button>
+        <div>
+          <div class="page-title" id="boards-view-title"></div>
+          <div class="page-subtitle" id="boards-view-subtitle"></div>
+        </div>
+      </div>
+      <div class="breadcrumb" id="breadcrumb-boards"></div>
+
+      <div class="board-list-header">
+        <span style="font-size:.8rem;color:var(--text2)" id="boards-count-label"></span>
+        <button class="new-board-btn" id="new-board-btn">＋ 板を作る</button>
+      </div>
+      <div id="boards-list"></div>
+    </div>
+
+    <!-- ===== ビュー⑤ スレッド一覧 ===== -->
+    <div id="view-threads" class="view">
+      <div class="page-header">
+        <button class="back-btn" id="back-from-threads">←</button>
+        <div>
+          <div class="page-title" id="threads-board-name"></div>
+          <div class="page-subtitle" id="threads-board-desc"></div>
+        </div>
+      </div>
+      <div class="breadcrumb" id="breadcrumb-threads"></div>
 
       <div class="board-view-header">
-        <div class="board-view-title">
-          <span class="board-view-icon" id="board-view-icon"></span>
-          <span class="board-view-name">スレッド一覧</span>
-        </div>
-        <button class="new-thread-btn" id="new-thread-btn">＋ 新規スレッド</button>
+        <span style="font-size:.8rem;color:var(--text2)">スレッド一覧</span>
+        <button class="new-thread-btn" id="new-thread-btn">＋ スレッドを立てる</button>
       </div>
-
       <div id="threads-list"></div>
-
       <div class="pagination" id="pagination"></div>
     </div>
 
@@ -125,28 +319,57 @@
       <div class="spinner"></div>
       <span>読み込み中...</span>
     </div>
+
+  </div><!-- /container -->
+</div><!-- /page -->
+
+<!-- モーダル: 板を作成 -->
+<div class="modal-overlay" id="create-board-modal">
+  <div class="modal">
+    <div class="modal-title">新しい板を作る</div>
+    <p class="text-sm text-muted mb-16" id="create-board-hint" style="font-size:.8rem;color:var(--text2);margin-bottom:16px"></p>
+    <div class="form-group">
+      <label class="form-label">板のタイトル</label>
+      <input type="text" class="form-input" id="board-name-input"
+             placeholder="例: フェス好き集まれ！" maxlength="40">
+      <div class="char-count"><span id="board-name-count">0</span>/40</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">説明（任意）</label>
+      <textarea class="form-input" id="board-desc-input"
+                placeholder="この板について一言" maxlength="100" rows="2"></textarea>
+      <div class="char-count"><span id="board-desc-count">0</span>/100</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">アイコン（絵文字1文字）</label>
+      <input type="text" class="form-input" id="board-icon-input"
+             placeholder="例: 🎸" maxlength="2" style="max-width:80px">
+    </div>
+    <div class="form-error" id="create-board-error"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary btn-sm" id="cancel-create-board">キャンセル</button>
+      <button class="btn btn-primary btn-sm" id="submit-create-board">作成する</button>
+    </div>
   </div>
 </div>
 
-<!-- 新規スレッド作成モーダル -->
+<!-- モーダル: スレッドを作成 -->
 <div class="modal-overlay" id="create-thread-modal">
   <div class="modal">
-    <div class="modal-title">新しいスレッドを作成</div>
-    <div class="create-thread-form">
-      <div class="form-group">
-        <label class="form-label">タイトル</label>
-        <input type="text" class="form-input" id="thread-title-input"
-               placeholder="スレッドのタイトル" maxlength="100">
-        <div class="char-count"><span id="title-char-count">0</span>/100</div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">本文</label>
-        <textarea class="form-input" id="thread-content-input"
-                  placeholder="最初の投稿を書いてください" maxlength="2000" rows="5"></textarea>
-        <div class="char-count"><span id="content-char-count">0</span>/2000</div>
-      </div>
-      <div class="form-error" id="create-thread-error"></div>
+    <div class="modal-title">新しいスレッドを立てる</div>
+    <div class="form-group">
+      <label class="form-label">タイトル</label>
+      <input type="text" class="form-input" id="thread-title-input"
+             placeholder="スレッドのタイトル" maxlength="100">
+      <div class="char-count"><span id="title-char-count">0</span>/100</div>
     </div>
+    <div class="form-group">
+      <label class="form-label">本文</label>
+      <textarea class="form-input" id="thread-content-input"
+                placeholder="最初の投稿を書いてください" maxlength="2000" rows="5"></textarea>
+      <div class="char-count"><span id="content-char-count">0</span>/2000</div>
+    </div>
+    <div class="form-error" id="create-thread-error"></div>
     <div class="modal-actions">
       <button class="btn btn-secondary btn-sm" id="cancel-create-thread">キャンセル</button>
       <button class="btn btn-primary btn-sm" id="submit-create-thread">作成する</button>
@@ -160,13 +383,13 @@
     <span class="nav-icon">💬</span>
     <span>掲示板</span>
   </a>
-  <a href="doppelganger-diagnosis.index.html" class="nav-item">
-    <span class="nav-icon">🔮</span>
-    <span>診断</span>
+  <a href="matching.html" class="nav-item">
+    <span class="nav-icon">💕</span>
+    <span>マッチング</span>
   </a>
   <a href="profile.html" class="nav-item">
-    <span class="nav-icon">👤</span>
-    <span>マイページ</span>
+    <span class="nav-icon" id="nav-my-avatar">👤</span>
+    <span id="nav-my-name">マイページ</span>
   </a>
 </nav>
 
@@ -177,33 +400,43 @@
 <script src="js/moderation.js"></script>
 <script src="js/board.js"></script>
 <script>
-(function() {
-  let currentBoardId = null;
-  let currentPage = 1;
+(function () {
+  // ================================================================
+  // 状態管理
+  // ================================================================
+  let myProfile = null;
+  let currentAreaType   = null;  // 'family' | 'type'
+  let currentCategoryId  = null;
+  let currentSubcatId    = null;
+  let currentBoardId     = null;
+  let currentBoardName   = '';
+  let currentBoardDesc   = '';
+  let currentPage        = 1;
   const THREADS_PER_PAGE = 20;
 
-  // --- 初期化 ---
+  // ================================================================
+  // ビュー切り替え
+  // ================================================================
+  function showView(id) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  // ================================================================
+  // 初期化
+  // ================================================================
   async function init() {
     showLoading(true);
     try {
       const user = await requireAuth();
       if (!user) return;
+      myProfile = await requireDiagnosis();
+      if (!myProfile) return;
 
-      const profile = await requireDiagnosis();
-      if (!profile) return;
-
-      // URLパラメータで板指定がある場合
-      const params = new URLSearchParams(window.location.search);
-      const boardId = params.get('id');
-
-      // 自分のタイプ表示
-      renderMyTypeBanner(profile);
-
-      if (boardId) {
-        await showThreadsView(boardId);
-      } else {
-        await showBoardsView();
-      }
+      initNavUser();
+      renderTopView();
+      showView('view-top');
     } catch (err) {
       showToast('読み込みに失敗しました: ' + err.message, 'error');
     } finally {
@@ -211,79 +444,294 @@
     }
   }
 
-  // --- 自分のタイプバナー ---
-  function renderMyTypeBanner(profile) {
-    const fam = profile.family || 'Architects';
+  // ================================================================
+  // ビュー① TOP
+  // ================================================================
+  function renderTopView() {
+    const fam = myProfile.family || 'Architects';
+    const familyIcons = { Architects:'🏛️', Mystics:'🌙', Commanders:'⚔️', Catalysts:'🔥' };
+    const familyDescs = {
+      Architects: '分析・論理・構造を愛する者たちの広場',
+      Mystics:    '感性・没入・世界観を共有する者たちの広場',
+      Commanders: '企画・攻略・情報整理で楽しむ者たちの広場',
+      Catalysts:  '体験・共有・盛り上がりを愛する者たちの広場',
+    };
     const colorVar = familyColor(fam);
+
+    // タイプバナー
     document.getElementById('my-type-banner').innerHTML = `
-      <div class="my-type-icon" style="background:rgba(${colorVar},.12);border:1px solid rgba(${colorVar},.3)">
-        ${getTypeEmoji(profile.type_number)}
+      <div class="my-type-icon"
+           style="background:rgba(${_familyColorRGB(fam)},.12);border:1px solid rgba(${_familyColorRGB(fam)},.3)">
+        ${getTypeEmoji(myProfile.type_number)}
       </div>
       <div class="my-type-info">
-        <div class="my-type-name">Type ${profile.type_number}: ${escapeHtml(profile.type_name || '')}</div>
-        <div class="my-type-sub">${fam} Family ・ ${escapeHtml(profile.display_id || '')}</div>
+        <div class="my-type-name">Type ${myProfile.type_number}: ${escapeHtml(myProfile.type_name || '')}</div>
+        <div class="my-type-sub">${fam} Family ・ ${escapeHtml(myProfile.display_id || '')}</div>
       </div>
       <span class="badge badge-${fam.toLowerCase()}">${fam}</span>
     `;
 
-    // ファミリーセクションタイトル
-    const familyNames = {
-      Architects: '🏛️ Architects Lounge',
-      Mystics: '🌙 Mystics Lounge',
-      Commanders: '⚔️ Commanders Lounge',
-      Catalysts: '🔥 Catalysts Lounge',
-    };
-    document.getElementById('family-section-title').textContent =
-      familyNames[fam] || 'ファミリーラウンジ';
+    // エリアカード（ファミリー）
+    document.getElementById('family-area-icon').textContent = familyIcons[fam] || '🏛️';
+    document.getElementById('family-area-name').textContent = fam + ' Lounge';
+    document.querySelector('#btn-family-area .area-card-desc').textContent = familyDescs[fam] || '同じファミリーの仲間が集まる広場';
+    document.getElementById('family-section-label').textContent = '🚪 どのエリアに入る？';
+
+    // エリアカード（タイプ）
+    document.getElementById('type-area-icon').textContent = getTypeEmoji(myProfile.type_number);
+    document.getElementById('type-area-name').textContent = 'Type ' + myProfile.type_number + 'の部屋';
+
+    // おすすめ（趣味設定済みの場合）
+    const hobbies = myProfile.hobbies || [];
+    if (hobbies.length > 0) {
+      renderRecommendChips(hobbies);
+      document.getElementById('recommend-section').style.display = 'block';
+    } else {
+      document.getElementById('hobby-setup-hint').style.display = 'block';
+    }
   }
 
-  // --- 板一覧表示 ---
-  async function showBoardsView() {
-    document.getElementById('boards-view').classList.remove('hidden');
-    document.getElementById('threads-view').classList.add('hidden');
+  function renderRecommendChips(hobbyCategoryIds) {
+    const chips = document.getElementById('recommend-chips');
+    const catData = Board.getCategoryData();
+    chips.innerHTML = hobbyCategoryIds.map(id => {
+      const cat = catData.find(c => c.id === id);
+      if (!cat) return '';
+      return `
+        <span class="recommend-chip" data-cat-id="${id}">
+          ${cat.icon} ${cat.name}
+        </span>
+      `;
+    }).join('');
 
-    const boards = await Board.getBoards();
-    const familyBoards = boards.filter(b => b.board_type === 'family');
-    const typeBoards = boards.filter(b => b.board_type === 'type');
+    chips.querySelectorAll('.recommend-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const catId = parseInt(chip.dataset.catId);
+        enterCategoryView(catId);
+      });
+    });
+  }
 
-    document.getElementById('family-boards').innerHTML =
-      familyBoards.map(b => Board.renderBoardCard(b)).join('') ||
-      '<div class="empty-state"><div class="empty-text">ラウンジが見つかりません</div></div>';
+  // ================================================================
+  // エリア選択 → ビュー②（大カテゴリー）
+  // ================================================================
+  document.getElementById('btn-family-area').addEventListener('click', () => {
+    currentAreaType = 'family';
+    enterCategoryView(null);
+  });
+  document.getElementById('btn-type-area').addEventListener('click', () => {
+    currentAreaType = 'type';
+    enterCategoryView(null);
+  });
 
-    document.getElementById('type-boards').innerHTML =
-      typeBoards.map(b => Board.renderBoardCard(b)).join('') ||
-      '<div class="empty-state"><div class="empty-text">タイプ別ルームが見つかりません</div></div>';
+  function enterCategoryView(preselectedCatId) {
+    const fam = myProfile.family || 'Architects';
+    const areaLabel = currentAreaType === 'family'
+      ? fam + ' Lounge'
+      : 'Type ' + myProfile.type_number + 'の部屋';
 
-    // 板カードクリックイベント
-    document.querySelectorAll('.board-card').forEach(card => {
-      card.addEventListener('click', (e) => {
-        e.preventDefault();
-        const boardId = card.dataset.boardId;
-        history.pushState({ boardId }, '', `board.html?id=${boardId}`);
-        showThreadsView(boardId);
+    document.getElementById('cat-view-title').textContent = areaLabel;
+    document.getElementById('cat-view-subtitle').textContent = 'カテゴリーを選んでください';
+
+    // パンくず
+    document.getElementById('breadcrumb-cat').innerHTML = `
+      <span class="breadcrumb-item" id="bc-top-cat">TOP</span>
+      <span class="breadcrumb-sep">›</span>
+      <span class="breadcrumb-current">${escapeHtml(areaLabel)}</span>
+    `;
+    document.getElementById('bc-top-cat').addEventListener('click', () => showView('view-top'));
+
+    // カテゴリー一覧レンダリング
+    const catData = Board.getCategoryData();
+    document.getElementById('category-grid').innerHTML = catData.map(cat => `
+      <div class="category-card" data-cat-id="${cat.id}">
+        <span class="category-icon">${cat.icon}</span>
+        <span class="category-name">${escapeHtml(cat.name)}</span>
+      </div>
+    `).join('');
+
+    document.querySelectorAll('.category-card').forEach(card => {
+      card.addEventListener('click', () => {
+        enterSubcategoryView(parseInt(card.dataset.catId));
       });
     });
 
-    // URL更新
-    history.replaceState({}, '', 'board.html');
+    showView('view-categories');
+
+    // おすすめカテゴリーから来た場合は直接サブカテゴリーへ
+    if (preselectedCatId !== null) {
+      enterSubcategoryView(preselectedCatId);
+    }
   }
 
-  // --- スレッド一覧表示 ---
-  async function showThreadsView(boardId) {
-    currentBoardId = boardId;
-    currentPage = 1;
-
-    document.getElementById('boards-view').classList.add('hidden');
-    document.getElementById('threads-view').classList.remove('hidden');
+  // ================================================================
+  // ビュー③ 中カテゴリー（サブカテゴリー）
+  // ================================================================
+  async function enterSubcategoryView(catId) {
     showLoading(true);
-
     try {
+      currentCategoryId = catId;
+      const catData = Board.getCategoryData();
+      const cat = catData.find(c => c.id === catId);
+      const fam = myProfile.family || 'Architects';
+      const areaLabel = currentAreaType === 'family'
+        ? fam + ' Lounge'
+        : 'Type ' + myProfile.type_number + 'の部屋';
+
+      document.getElementById('subcat-view-title').textContent = cat ? cat.icon + ' ' + cat.name : 'カテゴリー';
+      document.getElementById('subcat-view-subtitle').textContent = '板が入っている中カテゴリーを選んでください';
+
+      document.getElementById('breadcrumb-subcat').innerHTML = `
+        <span class="breadcrumb-item" id="bc-top-sub">TOP</span>
+        <span class="breadcrumb-sep">›</span>
+        <span class="breadcrumb-item" id="bc-area-sub">${escapeHtml(areaLabel)}</span>
+        <span class="breadcrumb-sep">›</span>
+        <span class="breadcrumb-current">${cat ? escapeHtml(cat.name) : ''}</span>
+      `;
+      document.getElementById('bc-top-sub').addEventListener('click', () => showView('view-top'));
+      document.getElementById('bc-area-sub').addEventListener('click', () => showView('view-categories'));
+
+      // サブカテゴリー取得
+      const subcats = await Board.getSubcategories(catId);
+
+      if (subcats.length === 0) {
+        document.getElementById('subcategory-list').innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">📂</div>
+            <div class="empty-text">中カテゴリーがありません</div>
+          </div>
+        `;
+      } else {
+        document.getElementById('subcategory-list').innerHTML = subcats.map(sub => `
+          <div class="subcategory-row" data-subcat-id="${sub.id}" data-subcat-name="${escapeHtml(sub.name)}">
+            <span class="subcategory-icon">${sub.icon || '📋'}</span>
+            <span class="subcategory-name">${escapeHtml(sub.name)}</span>
+            <span class="subcategory-arrow">›</span>
+          </div>
+        `).join('');
+
+        document.querySelectorAll('.subcategory-row').forEach(row => {
+          row.addEventListener('click', () => {
+            enterBoardsView(parseInt(row.dataset.subcatId), row.dataset.subcatName);
+          });
+        });
+      }
+
+      showView('view-subcategories');
+    } catch (err) {
+      showToast('読み込みに失敗しました', 'error');
+    } finally {
+      showLoading(false);
+    }
+  }
+
+  // ================================================================
+  // ビュー④ 板一覧（小カテゴリー）
+  // ================================================================
+  async function enterBoardsView(subcatId, subcatName) {
+    showLoading(true);
+    try {
+      currentSubcatId = subcatId;
+      const catData = Board.getCategoryData();
+      const cat = catData.find(c => c.id === currentCategoryId);
+      const fam = myProfile.family || 'Architects';
+      const areaLabel = currentAreaType === 'family'
+        ? fam + ' Lounge'
+        : 'Type ' + myProfile.type_number + 'の部屋';
+
+      document.getElementById('boards-view-title').textContent = subcatName;
+      document.getElementById('boards-view-subtitle').textContent = '板を選んでください';
+
+      document.getElementById('breadcrumb-boards').innerHTML = `
+        <span class="breadcrumb-item" id="bc-top-b">TOP</span>
+        <span class="breadcrumb-sep">›</span>
+        <span class="breadcrumb-item" id="bc-area-b">${escapeHtml(areaLabel)}</span>
+        <span class="breadcrumb-sep">›</span>
+        <span class="breadcrumb-item" id="bc-cat-b">${cat ? escapeHtml(cat.name) : ''}</span>
+        <span class="breadcrumb-sep">›</span>
+        <span class="breadcrumb-current">${escapeHtml(subcatName)}</span>
+      `;
+      document.getElementById('bc-top-b').addEventListener('click', () => showView('view-top'));
+      document.getElementById('bc-area-b').addEventListener('click', () => showView('view-categories'));
+      document.getElementById('bc-cat-b').addEventListener('click', () => showView('view-subcategories'));
+
+      // 板一覧取得（このサブカテゴリー + このエリアでフィルタ）
+      const boards = await Board.getBoardsBySubcategory(subcatId, currentAreaType, myProfile);
+
+      document.getElementById('boards-count-label').textContent = `${boards.length}件の板`;
+
+      if (boards.length === 0) {
+        document.getElementById('boards-list').innerHTML = `
+          <div class="board-empty-hint">
+            <div style="font-size:2rem;margin-bottom:8px">📌</div>
+            まだ板がありません。<br>
+            <strong>「板を作る」</strong>から最初の板を立ち上げましょう！
+          </div>
+        `;
+      } else {
+        document.getElementById('boards-list').innerHTML = boards.map(b => `
+          <div class="board-card-item" data-board-id="${b.id}">
+            <span class="board-card-icon">${b.icon || '📋'}</span>
+            <div class="board-card-body">
+              <div class="board-card-name">${escapeHtml(b.name)}</div>
+              <div class="board-card-desc">${escapeHtml(b.description || '')}</div>
+              <div class="board-card-meta">
+                <span>🧵 スレッド: ${b.thread_count || 0}</span>
+                <span>💬 投稿: ${b.post_count || 0}</span>
+              </div>
+            </div>
+            <span class="board-card-arrow">›</span>
+          </div>
+        `).join('');
+
+        document.querySelectorAll('.board-card-item').forEach(card => {
+          card.addEventListener('click', () => {
+            enterThreadsView(card.dataset.boardId);
+          });
+        });
+      }
+
+      // 板作成ボタンのヒント更新
+      document.getElementById('create-board-hint').textContent =
+        `「${subcatName}」の中に板を作ります（${areaLabel}のメンバーのみ閲覧可能）`;
+
+      showView('view-boards');
+    } catch (err) {
+      showToast('読み込みに失敗しました', 'error');
+    } finally {
+      showLoading(false);
+    }
+  }
+
+  // ================================================================
+  // ビュー⑤ スレッド一覧
+  // ================================================================
+  async function enterThreadsView(boardId) {
+    showLoading(true);
+    try {
+      currentBoardId = boardId;
+      currentPage    = 1;
+
       const board = await Board.getBoard(boardId);
-      document.getElementById('current-board-name').textContent = board.name;
-      document.getElementById('current-board-desc').textContent = board.description || '';
-      document.getElementById('board-view-icon').textContent = board.icon || '📋';
+      currentBoardName = board.name;
+      currentBoardDesc = board.description || '';
+
+      document.getElementById('threads-board-name').textContent = currentBoardName;
+      document.getElementById('threads-board-desc').textContent = currentBoardDesc;
+
+      // パンくず（簡略版）
+      document.getElementById('breadcrumb-threads').innerHTML = `
+        <span class="breadcrumb-item" id="bc-top-t">TOP</span>
+        <span class="breadcrumb-sep">›</span>
+        <span class="breadcrumb-item" id="bc-boards-t">板一覧</span>
+        <span class="breadcrumb-sep">›</span>
+        <span class="breadcrumb-current">${escapeHtml(currentBoardName)}</span>
+      `;
+      document.getElementById('bc-top-t').addEventListener('click', () => showView('view-top'));
+      document.getElementById('bc-boards-t').addEventListener('click', () => showView('view-boards'));
 
       await loadThreads();
+      showView('view-threads');
     } catch (err) {
       showToast('板の読み込みに失敗しました', 'error');
     } finally {
@@ -291,51 +739,41 @@
     }
   }
 
-  // --- スレッド読み込み ---
   async function loadThreads() {
     const list = document.getElementById('threads-list');
     list.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
 
     try {
       const { threads, total } = await Board.getThreads(currentBoardId, {
-        page: currentPage,
-        limit: THREADS_PER_PAGE,
+        page: currentPage, limit: THREADS_PER_PAGE,
       });
 
       if (threads.length === 0) {
         list.innerHTML = `
           <div class="empty-state">
             <div class="empty-icon">💭</div>
-            <div class="empty-text">まだスレッドがありません。<br>最初のスレッドを作成しましょう！</div>
+            <div class="empty-text">まだスレッドがありません。<br>最初のスレッドを立てましょう！</div>
           </div>
         `;
       } else {
         list.innerHTML = threads.map(t => Board.renderThreadItem(t)).join('');
       }
-
-      // ページネーション
       renderPagination(total);
     } catch (err) {
       list.innerHTML = '<div class="empty-state"><div class="empty-text">読み込みに失敗しました</div></div>';
     }
   }
 
-  // --- ページネーション ---
   function renderPagination(total) {
     const totalPages = Math.ceil(total / THREADS_PER_PAGE);
     const pag = document.getElementById('pagination');
-
-    if (totalPages <= 1) {
-      pag.innerHTML = '';
-      return;
-    }
+    if (totalPages <= 1) { pag.innerHTML = ''; return; }
 
     pag.innerHTML = `
       <button id="prev-page" ${currentPage <= 1 ? 'disabled' : ''}>‹ 前</button>
       <span class="page-info">${currentPage} / ${totalPages}</span>
       <button id="next-page" ${currentPage >= totalPages ? 'disabled' : ''}>次 ›</button>
     `;
-
     document.getElementById('prev-page')?.addEventListener('click', () => {
       if (currentPage > 1) { currentPage--; loadThreads(); }
     });
@@ -344,24 +782,87 @@
     });
   }
 
-  // --- 戻るボタン ---
-  document.getElementById('back-to-boards').addEventListener('click', () => {
-    showBoardsView();
+  // ================================================================
+  // 戻るボタン
+  // ================================================================
+  document.getElementById('back-from-categories').addEventListener('click', () => showView('view-top'));
+  document.getElementById('back-from-subcategories').addEventListener('click', () => showView('view-categories'));
+  document.getElementById('back-from-boards').addEventListener('click', () => showView('view-subcategories'));
+  document.getElementById('back-from-threads').addEventListener('click', () => showView('view-boards'));
+
+  // ================================================================
+  // 板を作成モーダル
+  // ================================================================
+  const createBoardModal = document.getElementById('create-board-modal');
+  const boardNameInput   = document.getElementById('board-name-input');
+  const boardDescInput   = document.getElementById('board-desc-input');
+  const boardIconInput   = document.getElementById('board-icon-input');
+
+  document.getElementById('new-board-btn').addEventListener('click', () => {
+    boardNameInput.value = '';
+    boardDescInput.value = '';
+    boardIconInput.value = '';
+    document.getElementById('board-name-count').textContent = '0';
+    document.getElementById('board-desc-count').textContent = '0';
+    document.getElementById('create-board-error').classList.remove('show');
+    createBoardModal.classList.add('show');
+  });
+  document.getElementById('cancel-create-board').addEventListener('click', () => {
+    createBoardModal.classList.remove('show');
+  });
+  createBoardModal.addEventListener('click', e => {
+    if (e.target === createBoardModal) createBoardModal.classList.remove('show');
+  });
+  boardNameInput.addEventListener('input', () => {
+    document.getElementById('board-name-count').textContent = boardNameInput.value.length;
+  });
+  boardDescInput.addEventListener('input', () => {
+    document.getElementById('board-desc-count').textContent = boardDescInput.value.length;
   });
 
-  // --- ブラウザの戻る/進む対応 ---
-  window.addEventListener('popstate', (e) => {
-    if (e.state && e.state.boardId) {
-      showThreadsView(e.state.boardId);
-    } else {
-      showBoardsView();
+  document.getElementById('submit-create-board').addEventListener('click', async () => {
+    const errorEl  = document.getElementById('create-board-error');
+    const submitBtn = document.getElementById('submit-create-board');
+    errorEl.classList.remove('show');
+
+    const name = boardNameInput.value.trim();
+    const desc = boardDescInput.value.trim();
+    const icon = boardIconInput.value.trim() || '📋';
+
+    if (!name) {
+      errorEl.textContent = '板のタイトルを入力してください';
+      errorEl.classList.add('show');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = '作成中...';
+
+    try {
+      await Board.createBoard({
+        subcategoryId: currentSubcatId,
+        areaType: currentAreaType,
+        profile: myProfile,
+        name, desc, icon,
+      });
+      createBoardModal.classList.remove('show');
+      showToast('板を作成しました！', 'success');
+      await enterBoardsView(currentSubcatId, document.getElementById('boards-view-title').textContent);
+    } catch (err) {
+      errorEl.textContent = err.message;
+      errorEl.classList.add('show');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = '作成する';
     }
   });
 
-  // --- 新規スレッド作成 ---
-  const createModal = document.getElementById('create-thread-modal');
-  const titleInput = document.getElementById('thread-title-input');
-  const contentInput = document.getElementById('thread-content-input');
+  // ================================================================
+  // スレッドを作成モーダル
+  // ================================================================
+  const createThreadModal = document.getElementById('create-thread-modal');
+  const titleInput        = document.getElementById('thread-title-input');
+  const contentInput      = document.getElementById('thread-content-input');
 
   document.getElementById('new-thread-btn').addEventListener('click', () => {
     titleInput.value = '';
@@ -369,18 +870,15 @@
     document.getElementById('title-char-count').textContent = '0';
     document.getElementById('content-char-count').textContent = '0';
     document.getElementById('create-thread-error').classList.remove('show');
-    createModal.classList.add('show');
+    createThreadModal.classList.add('show');
   });
-
   document.getElementById('cancel-create-thread').addEventListener('click', () => {
-    createModal.classList.remove('show');
+    createThreadModal.classList.remove('show');
+  });
+  createThreadModal.addEventListener('click', e => {
+    if (e.target === createThreadModal) createThreadModal.classList.remove('show');
   });
 
-  createModal.addEventListener('click', (e) => {
-    if (e.target === createModal) createModal.classList.remove('show');
-  });
-
-  // 文字数カウント
   titleInput.addEventListener('input', () => {
     document.getElementById('title-char-count').textContent = titleInput.value.length;
   });
@@ -388,13 +886,12 @@
     document.getElementById('content-char-count').textContent = contentInput.value.length;
   });
 
-  // 送信
   document.getElementById('submit-create-thread').addEventListener('click', async () => {
-    const errorEl = document.getElementById('create-thread-error');
+    const errorEl  = document.getElementById('create-thread-error');
     const submitBtn = document.getElementById('submit-create-thread');
     errorEl.classList.remove('show');
 
-    const title = titleInput.value.trim();
+    const title   = titleInput.value.trim();
     const content = contentInput.value.trim();
 
     if (!title || !content) {
@@ -408,9 +905,8 @@
 
     try {
       const thread = await Board.createThread(currentBoardId, title, content);
-      createModal.classList.remove('show');
+      createThreadModal.classList.remove('show');
       showToast('スレッドを作成しました！', 'success');
-      // 作成したスレッドに遷移
       window.location.href = `thread.html?id=${thread.id}`;
     } catch (err) {
       errorEl.textContent = err.message;
@@ -421,12 +917,16 @@
     }
   });
 
-  // --- ローディング表示 ---
+  // ================================================================
+  // ローディング
+  // ================================================================
   function showLoading(show) {
     document.getElementById('loading').classList.toggle('hidden', !show);
   }
 
-  // --- 起動 ---
+  // ================================================================
+  // 起動
+  // ================================================================
   init();
 })();
 </script>

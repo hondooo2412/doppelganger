@@ -19,6 +19,10 @@ CREATE TABLE users (
   diagnosis_scores JSONB,                         -- {P1:72, P2:35, ...P15:68}
   diagnosis_progress JSONB,                       -- 途中セーブ用 {cur, ans[], ts}
   diagnosis_completed_at TIMESTAMPTZ,
+  nickname TEXT,                                    -- 表示名（max 20文字）
+  avatar_url TEXT,                                  -- アバター画像URL（Supabase Storage）
+  bio TEXT,                                         -- 自己紹介（max 100文字）
+  profile_completed_at TIMESTAMPTZ,                -- プロフィール設定完了日時
   ban_status TEXT NOT NULL DEFAULT 'active' CHECK (ban_status IN ('active','warned','banned')),
   violation_count INT NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -385,3 +389,255 @@ INSERT INTO boards (slug, board_type, name, description, icon, type_filter, sort
   ('type-30', 'type', 'Type 30: 嵐の開拓者の部屋',     '嵐を巻き起こしながら前進する者たちの空間','🌪️', 30, 130),
   ('type-31', 'type', 'Type 31: 聖なる犠牲者の部屋',   '自らを犠牲にして守る者たちの空間',     '✨', 31, 131),
   ('type-32', 'type', 'Type 32: 仮面の太陽の部屋',     '仮面の裏に太陽を隠す者たちの空間',     '🎭', 32, 132);
+
+-- ============================================================
+-- 9. アバター画像用 Storage バケット
+-- ============================================================
+
+-- avatarsバケット作成（公開読み取り）
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('avatars', 'avatars', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- 誰でも閲覧可能
+CREATE POLICY "avatar_select" ON storage.objects FOR SELECT
+  USING (bucket_id = 'avatars');
+
+-- 自分のフォルダのみアップロード可能（パス: {user_id}/avatar.webp）
+CREATE POLICY "avatar_insert" ON storage.objects FOR INSERT
+  WITH CHECK (
+    bucket_id = 'avatars'
+    AND auth.uid()::text = (storage.foldername(name))[1]
+  );
+
+-- 自分のファイルのみ更新可能
+CREATE POLICY "avatar_update" ON storage.objects FOR UPDATE
+  USING (
+    bucket_id = 'avatars'
+    AND auth.uid()::text = (storage.foldername(name))[1]
+  );
+
+-- 自分のファイルのみ削除可能
+CREATE POLICY "avatar_delete" ON storage.objects FOR DELETE
+  USING (
+    bucket_id = 'avatars'
+    AND auth.uid()::text = (storage.foldername(name))[1]
+  );
+
+-- ============================================================
+-- 10. 既存DBへの追加用 ALTER文（Supabase SQLエディタで実行）
+-- ※ 新規作成時は上記CREATE TABLEで含まれるので不要
+-- ============================================================
+/*
+-- プロフィールカラム追加（既存usersテーブルへの追加）
+ALTER TABLE users ADD COLUMN IF NOT EXISTS nickname TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_completed_at TIMESTAMPTZ;
+
+-- Storageバケット作成
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('avatars', 'avatars', true)
+ON CONFLICT (id) DO NOTHING;
+*/
+
+-- ============================================================
+-- 11. カテゴリー体系（掲示板の大・中カテゴリー）
+-- 【設計方針】
+--   大カテゴリー > 中カテゴリー > 板（boards）> スレッド > 投稿
+--   大・中カテゴリーはDBに保存し、後からINSERT追加するだけで拡張可能。
+--   外部キーは上→下方向のみなので、上流に追加しても既存データは消えない。
+-- ============================================================
+
+-- 大カテゴリー（例: 音楽、ゲーム、雑談）
+CREATE TABLE board_categories (
+  id        SERIAL PRIMARY KEY,
+  name      TEXT NOT NULL,
+  icon      TEXT NOT NULL DEFAULT '📋',
+  sort_order INT  NOT NULL DEFAULT 0
+);
+
+-- 中カテゴリー（例: J-POP、ロック、ライブ）
+-- ON DELETE RESTRICT: 大カテゴリーを削除しようとしても中が存在する限り失敗 → データ保護
+CREATE TABLE board_subcategories (
+  id          SERIAL PRIMARY KEY,
+  category_id INT  NOT NULL REFERENCES board_categories(id) ON DELETE RESTRICT,
+  name        TEXT NOT NULL,
+  icon        TEXT DEFAULT '📋',
+  sort_order  INT  NOT NULL DEFAULT 0
+);
+
+-- ============================================================
+-- 12. boards テーブルの拡張（ユーザー作成の小カテゴリー＝板に対応）
+-- ============================================================
+
+-- subcategory_id: ユーザー作成板が属する中カテゴリー（管理板はNULL）
+-- created_by:     板を作成したユーザー（管理板はNULL）
+-- post_count:     板内の総投稿数（パフォーマンス用カウンター）
+ALTER TABLE boards
+  ADD COLUMN IF NOT EXISTS subcategory_id INT  REFERENCES board_subcategories(id) ON DELETE RESTRICT,
+  ADD COLUMN IF NOT EXISTS created_by     UUID REFERENCES users(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS post_count     INT  NOT NULL DEFAULT 0;
+
+-- ============================================================
+-- 13. users テーブルの拡張（趣味選択）
+-- ============================================================
+
+-- hobbies: 大カテゴリーIDの配列（例: [1, 2, 7] ＝ 雑談・音楽・創作）、最大3つ
+ALTER TABLE users
+  ADD COLUMN IF NOT EXISTS hobbies JSONB NOT NULL DEFAULT '[]';
+
+-- ============================================================
+-- 14. カテゴリーテーブルの RLS
+-- ============================================================
+
+ALTER TABLE board_categories    ENABLE ROW LEVEL SECURITY;
+ALTER TABLE board_subcategories ENABLE ROW LEVEL SECURITY;
+
+-- 大・中カテゴリーはログイン済みユーザーなら誰でも閲覧可
+CREATE POLICY "board_categories_select"    ON board_categories    FOR SELECT USING (auth.uid() IS NOT NULL);
+CREATE POLICY "board_subcategories_select" ON board_subcategories FOR SELECT USING (auth.uid() IS NOT NULL);
+
+-- ユーザーが板（小カテゴリー）を作成するためのポリシー
+-- 条件: 診断完了 + BAN なし + subcategory_id が必須
+CREATE POLICY "boards_insert" ON boards FOR INSERT
+  WITH CHECK (
+    auth.uid() = created_by
+    AND subcategory_id IS NOT NULL
+    AND EXISTS (
+      SELECT 1 FROM users u
+      WHERE u.id = auth.uid()
+        AND u.diagnosis_completed_at IS NOT NULL
+        AND u.ban_status = 'active'
+    )
+  );
+
+-- ============================================================
+-- 15. 初期データ: 大カテゴリー（13種）
+-- ============================================================
+
+INSERT INTO board_categories (name, icon, sort_order) VALUES
+  ('雑談・日常',             '💬',  1),
+  ('音楽',                  '🎵',  2),
+  ('アニメ・マンガ・ゲーム', '🎮',  3),
+  ('映画・ドラマ・動画',     '🎬',  4),
+  ('スポーツ・アウトドア',   '⚽',  5),
+  ('読書・学習',             '📚',  6),
+  ('創作・アート',           '🎨',  7),
+  ('グルメ・食',             '🍜',  8),
+  ('ファッション・美容',     '👗',  9),
+  ('テクノロジー',           '💻', 10),
+  ('オフ会・イベント',       '🎉', 11),
+  ('お悩み・サポート',       '🤝', 12),
+  ('Doppelganger',          '🔮', 13);
+
+-- ============================================================
+-- 16. 初期データ: 中カテゴリー（約55種）
+-- ※ category_id は上記INSERTの順序と対応（1=雑談, 2=音楽 ...）
+-- 後から中カテゴリーを追加する場合は INSERT INTO board_subcategories (...) VALUES (...) を追加するだけ。
+-- ============================================================
+
+INSERT INTO board_subcategories (category_id, name, icon, sort_order) VALUES
+  -- 雑談・日常 (1)
+  (1, '日常雑談',           '💭', 1),
+  (1, '愚痴・ストレス発散', '😤', 2),
+  (1, '相談してみよう',     '🙋', 3),
+  (1, 'ひとりごと',         '🗨️', 4),
+  (1, 'ネタ・笑える話',     '😂', 5),
+
+  -- 音楽 (2)
+  (2, 'J-POP・邦楽',             '🎤', 1),
+  (2, 'ロック・バンド',          '🎸', 2),
+  (2, 'アイドル・アーティスト応援','⭐', 3),
+  (2, 'クラシック・ジャズ',      '🎻', 4),
+  (2, 'ライブ・フェス',          '🎪', 5),
+  (2, '楽器・演奏',              '🎹', 6),
+  (2, '洋楽・K-POP',             '🌏', 7),
+
+  -- アニメ・マンガ・ゲーム (3)
+  (3, 'アニメ全般',          '📺', 1),
+  (3, 'マンガ・ラノベ',      '📖', 2),
+  (3, 'ゲーム全般',          '🎮', 3),
+  (3, 'スマホゲーム',        '📱', 4),
+  (3, 'PCゲーム・コンシューマ','🖥️', 5),
+  (3, 'コスプレ・二次創作',  '🎭', 6),
+
+  -- 映画・ドラマ・動画 (4)
+  (4, '映画全般',          '🎬', 1),
+  (4, '国内ドラマ',        '📡', 2),
+  (4, '海外ドラマ・映画',  '🌍', 3),
+  (4, 'YouTube・配信',     '▶️', 4),
+  (4, 'お笑い・バラエティ','😆', 5),
+
+  -- スポーツ・アウトドア (5)
+  (5, 'スポーツ観戦全般',        '🏟️', 1),
+  (5, '野球・サッカー・バスケ',  '⚾', 2),
+  (5, '格闘技・プロレス',        '🥊', 3),
+  (5, '運動・フィットネス',      '🏃', 4),
+  (5, 'キャンプ・登山',          '⛺', 5),
+  (5, '旅行・おでかけ',          '✈️', 6),
+
+  -- 読書・学習 (6)
+  (6, '読書全般',       '📚', 1),
+  (6, '資格・勉強・受験','📝', 2),
+  (6, '語学・海外文化', '🌐', 3),
+  (6, '哲学・思想',     '🤔', 4),
+  (6, 'ニュース・時事', '📰', 5),
+
+  -- 創作・アート (7)
+  (7, 'イラスト・絵',    '🖼️', 1),
+  (7, '小説・詩・創作',  '✍️', 2),
+  (7, '写真・カメラ',    '📷', 3),
+  (7, 'ハンドメイド・工作','🧵', 4),
+  (7, 'デザイン・建築',  '🏗️', 5),
+
+  -- グルメ・食 (8)
+  (8, 'グルメ・外食',    '🍽️', 1),
+  (8, '料理・レシピ',    '👨‍🍳', 2),
+  (8, 'お酒・バー',      '🍺', 3),
+  (8, 'カフェ・スイーツ','☕', 4),
+
+  -- ファッション・美容 (9)
+  (9, 'メンズファッション',       '👔', 1),
+  (9, 'レディースファッション',   '👗', 2),
+  (9, 'コスメ・スキンケア',       '💄', 3),
+  (9, 'ヘアスタイル',             '💇', 4),
+
+  -- テクノロジー (10)
+  (10, 'プログラミング・開発', '💻', 1),
+  (10, 'ガジェット・スマホ',   '📱', 2),
+  (10, 'AI・最新技術',         '🤖', 3),
+  (10, 'VR・AR',               '🥽', 4),
+
+  -- オフ会・イベント (11)
+  (11, 'オフ会計画・告知',         '📅', 1),
+  (11, '同じ趣味で集まろう',       '🤝', 2),
+  (11, 'オンラインゲーム仲間募集', '🎮', 3),
+
+  -- お悩み・サポート (12)
+  (12, '人間関係の悩み', '💔', 1),
+  (12, '仕事・キャリア', '💼', 2),
+  (12, 'メンタルヘルス', '🌱', 3),
+  (12, '恋愛相談',       '💌', 4),
+
+  -- Doppelganger (13)
+  (13, '診断結果を語ろう',   '🔮', 1),
+  (13, 'タイプ別あるある',   '😅', 2),
+  (13, 'フィードバック・要望','📢', 3),
+  (13, 'サービスについて',   'ℹ️', 4);
+
+-- ============================================================
+-- 17. 後からカテゴリーを追加するときのテンプレート（参考用コメント）
+-- ============================================================
+/*
+-- 大カテゴリーを追加する場合（例: 「ペット・動物」を追加）
+INSERT INTO board_categories (name, icon, sort_order) VALUES ('ペット・動物', '🐾', 14);
+
+-- 中カテゴリーを追加する場合（例: 上記大カテゴリーIDを確認してから実行）
+-- SELECT id FROM board_categories WHERE name = 'ペット・動物';  → 結果例: 14
+INSERT INTO board_subcategories (category_id, name, icon, sort_order) VALUES
+  (14, '犬', '🐕', 1),
+  (14, '猫', '🐈', 2);
+
+-- ※ 既存の板・スレッド・投稿は category_id / subcategory_id の変更をしない限り一切影響なし
+*/

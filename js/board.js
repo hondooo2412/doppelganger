@@ -5,7 +5,100 @@
 
 const Board = {
   // ============================================================
-  // 板一覧を取得（自分がアクセスできる板のみRLSで自動フィルタ）
+  // 大カテゴリーデータ（DBと同期したJS定数）
+  // ※ カテゴリーを追加した場合はここにも追記する（id は DB の SERIAL 順）
+  // ============================================================
+  getCategoryData() {
+    return [
+      { id:  1, name: '雑談・日常',             icon: '💬' },
+      { id:  2, name: '音楽',                  icon: '🎵' },
+      { id:  3, name: 'アニメ・マンガ・ゲーム', icon: '🎮' },
+      { id:  4, name: '映画・ドラマ・動画',     icon: '🎬' },
+      { id:  5, name: 'スポーツ・アウトドア',   icon: '⚽' },
+      { id:  6, name: '読書・学習',             icon: '📚' },
+      { id:  7, name: '創作・アート',           icon: '🎨' },
+      { id:  8, name: 'グルメ・食',             icon: '🍜' },
+      { id:  9, name: 'ファッション・美容',     icon: '👗' },
+      { id: 10, name: 'テクノロジー',           icon: '💻' },
+      { id: 11, name: 'オフ会・イベント',       icon: '🎉' },
+      { id: 12, name: 'お悩み・サポート',       icon: '🤝' },
+      { id: 13, name: 'Doppelganger',          icon: '🔮' },
+    ];
+  },
+
+  // ============================================================
+  // 中カテゴリー（サブカテゴリー）を大カテゴリーIDで取得
+  // ============================================================
+  async getSubcategories(categoryId) {
+    const { data, error } = await supabase
+      .from('board_subcategories')
+      .select('*')
+      .eq('category_id', categoryId)
+      .order('sort_order', { ascending: true });
+    if (error) throw error;
+    return data;
+  },
+
+  // ============================================================
+  // 板一覧をサブカテゴリー + エリア（family/type）でフィルタ取得
+  // ============================================================
+  async getBoardsBySubcategory(subcategoryId, areaType, profile) {
+    let query = supabase
+      .from('boards')
+      .select('*')
+      .eq('subcategory_id', subcategoryId)
+      .eq('board_type', areaType);
+
+    if (areaType === 'family') {
+      query = query.eq('family_filter', profile.family);
+    } else {
+      query = query.eq('type_filter', profile.type_number);
+    }
+
+    const { data, error } = await query.order('created_at', { ascending: false });
+    if (error) throw error;
+    return data;
+  },
+
+  // ============================================================
+  // 板（小カテゴリー）を作成（ユーザー）
+  // ============================================================
+  async createBoard({ subcategoryId, areaType, profile, name, desc, icon }) {
+    // バリデーション
+    const nameCheck = Moderation.checkTitle(name);
+    if (!nameCheck.ok) throw new Error(nameCheck.reason);
+
+    const user = await getCurrentUser();
+    if (!user) throw new Error('ログインが必要です');
+
+    const insertData = {
+      subcategory_id: subcategoryId,
+      board_type:     areaType,
+      name:           name.trim().slice(0, 40),
+      description:    desc ? desc.trim().slice(0, 100) : null,
+      icon:           icon || '📋',
+      created_by:     user.id,
+      slug:           `user-${user.id.slice(0,8)}-${Date.now()}`,
+    };
+
+    if (areaType === 'family') {
+      insertData.family_filter = profile.family;
+    } else {
+      insertData.type_filter = profile.type_number;
+    }
+
+    const { data, error } = await supabase
+      .from('boards')
+      .insert(insertData)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  // ============================================================
+  // 板一覧を取得（後方互換のため残す）
   // ============================================================
   async getBoards() {
     const { data, error } = await supabase
@@ -40,7 +133,7 @@ const Board = {
       .from('threads')
       .select(`
         *,
-        user:users!threads_user_id_fkey(display_id, type_name, type_number, family)
+        user:users!threads_user_id_fkey(display_id, type_name, type_number, family, nickname, avatar_url)
       `, { count: 'exact' })
       .eq('board_id', boardId)
       .order('is_pinned', { ascending: false })
@@ -79,7 +172,7 @@ const Board = {
       .from('posts')
       .select(`
         *,
-        user:users!posts_user_id_fkey(display_id, type_name, type_number, family)
+        user:users!posts_user_id_fkey(display_id, type_name, type_number, family, nickname, avatar_url)
       `, { count: 'exact' })
       .eq('thread_id', threadId)
       .eq('is_deleted', false)
@@ -150,7 +243,7 @@ const Board = {
       })
       .select(`
         *,
-        user:users!posts_user_id_fkey(display_id, type_name, type_number, family)
+        user:users!posts_user_id_fkey(display_id, type_name, type_number, family, nickname, avatar_url)
       `)
       .single();
 
@@ -276,15 +369,16 @@ const Board = {
     const locked = thread.is_locked ? '<span class="thread-locked">🔒</span>' : '';
     const user = thread.user || {};
     const badge = user.family ? `badge-${user.family.toLowerCase()}` : '';
+    const displayName = user.nickname || user.type_name || '不明';
 
     return `
       <a href="thread.html?id=${thread.id}" class="thread-item">
-        <span class="thread-icon">💬</span>
+        <span class="thread-icon">${typeof renderUserAvatar === 'function' ? renderUserAvatar(user, 28) : '💬'}</span>
         <div class="thread-body">
           <div class="thread-title">${pinned}${locked} ${escapeHtml(thread.title)}</div>
           <div class="thread-meta">
-            <span class="badge ${badge}">${escapeHtml(user.type_name || '不明')}</span>
-            <span>${escapeHtml(user.display_id || '')}</span>
+            <span style="font-weight:600;color:var(--text)">${escapeHtml(displayName)}</span>
+            <span class="badge ${badge}">${escapeHtml(user.type_name || '')}</span>
             <span>💬 ${thread.reply_count}</span>
             <span>${timeAgo(thread.updated_at)}</span>
           </div>
@@ -298,18 +392,19 @@ const Board = {
     const user = post.user || {};
     const family = user.family || 'Architects';
     const badgeClass = `badge-${family.toLowerCase()}`;
-    const colorVar = familyColor(family);
+    const displayName = user.nickname || user.type_name || '不明';
+    const avatarHtml = typeof renderUserAvatar === 'function'
+      ? renderUserAvatar(user, 36)
+      : `<div class="user-type-icon" style="background:rgba(${familyColor(family)},.12);border:1px solid rgba(${familyColor(family)},.3)">${getTypeEmoji(user.type_number)}</div>`;
 
     return `
       <div class="post-card" data-post-id="${post.id}">
         <div class="post-header">
           <div class="user-badge">
-            <div class="user-type-icon" style="background:rgba(${colorVar},.12);border:1px solid rgba(${colorVar},.3)">
-              ${getTypeEmoji(user.type_number)}
-            </div>
+            ${avatarHtml}
             <div class="user-info">
-              <span class="user-type-name">${escapeHtml(user.type_name || '不明')}</span>
-              <span class="user-display-id">${escapeHtml(user.display_id || '')}</span>
+              <span class="user-type-name">${escapeHtml(displayName)}</span>
+              <span class="user-display-id">${escapeHtml(user.type_name || '')} ${escapeHtml(user.display_id || '')}</span>
             </div>
           </div>
           <span class="badge ${badgeClass}">${family}</span>
