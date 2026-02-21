@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Doppelganger - マッチング</title>
+<link rel="stylesheet" href="css/common.css">
+<style>
+  .matching-header{text-align:center;margin-bottom:20px;animation:fadeIn .5s ease}
+  .matching-logo{font-size:1.2rem;font-weight:900;background:linear-gradient(135deg,#6c5ce7,#a29bfe,#fd79a8);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .matching-sub{font-size:.72rem;color:var(--text2);letter-spacing:.15em;margin-top:2px}
+
+  /* モード切替 */
+  .mode-tabs{display:flex;gap:4px;background:var(--surface);border-radius:12px;padding:4px;margin-bottom:20px;border:1px solid var(--surface3)}
+  .mode-tab{flex:1;padding:10px;text-align:center;font-size:.85rem;font-weight:600;color:var(--text2);border:none;background:none;border-radius:10px;cursor:pointer;transition:all .2s}
+  .mode-tab.active{color:#fff}
+  .mode-tab.friend.active{background:var(--accent)}
+  .mode-tab.love.active{background:linear-gradient(135deg,var(--pink),#fd79a8)}
+
+  /* マッチカード */
+  .match-card{background:var(--surface);border:1px solid var(--surface3);border-radius:var(--radius);padding:18px;margin-bottom:12px;animation:fadeIn .4s ease;transition:border-color .3s}
+  .match-card:hover{border-color:rgba(108,92,231,.3)}
+  .match-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:10px}
+  .match-user{display:flex;align-items:center;gap:10px}
+  .match-avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+  .match-user-info{min-width:0}
+  .match-type-name{font-size:.9rem;font-weight:700}
+  .match-display-id{font-size:.7rem;color:var(--text2);display:flex;align-items:center;gap:4px;margin-top:2px}
+
+  .match-score{text-align:right;flex-shrink:0}
+  .match-score-emoji{font-size:1.1rem}
+  .match-score-num{font-size:1.3rem;font-weight:900;display:block;line-height:1.2}
+  .match-score-label{font-size:.65rem;opacity:.8}
+
+  .match-bio{font-size:.82rem;color:var(--text2);line-height:1.6;margin-bottom:10px;padding:8px 12px;background:var(--surface2);border-radius:8px}
+  .match-reasons{margin-bottom:12px}
+  .match-reason{font-size:.78rem;color:var(--text);line-height:1.6;padding:2px 0}
+  .match-action{text-align:center}
+  .match-unlock-btn{background:linear-gradient(135deg,var(--accent),var(--pink))!important;box-shadow:0 4px 16px rgba(108,92,231,.3)}
+
+  /* マッチ成立モーダル */
+  .match-success{text-align:center;padding:32px 20px}
+  .match-success-emoji{font-size:3rem;animation:float 2s ease-in-out infinite;margin-bottom:16px}
+  .match-success-title{font-size:1.2rem;font-weight:900;background:linear-gradient(135deg,var(--accent),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+  .match-success-desc{font-size:.85rem;color:var(--text2);line-height:1.6;margin-bottom:20px}
+  .match-success-pair{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:20px}
+  .match-success-user{text-align:center}
+  .match-success-avatar{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin:0 auto 6px}
+  .match-success-name{font-size:.78rem;font-weight:600}
+  .match-success-heart{font-size:1.5rem;animation:pulse 1s ease infinite}
+
+  /* 課金確認モーダル */
+  .payment-detail{background:var(--surface2);border-radius:10px;padding:14px;margin:12px 0}
+  .payment-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:.85rem}
+  .payment-total{font-size:1rem;font-weight:700;color:var(--accent2);border-top:1px solid var(--surface3);padding-top:8px;margin-top:4px}
+  .payment-note{font-size:.7rem;color:var(--text2);margin-top:8px;line-height:1.5}
+
+  /* テストモードバナー */
+  .test-banner{background:linear-gradient(135deg,rgba(253,203,110,.15),rgba(225,112,85,.15));border:1px solid rgba(253,203,110,.3);border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:.75rem;color:var(--warning);line-height:1.5;text-align:center}
+</style>
+</head>
+<body>
+
+<div class="page" id="page">
+  <div class="container">
+    <div class="matching-header">
+      <div class="matching-logo">Doppelganger</div>
+      <div class="matching-sub">Matching</div>
+    </div>
+
+    <div class="test-banner">
+      🧪 テストモード: サンプルユーザーとのマッチング体験です。実際の課金は発生しません。
+    </div>
+
+    <!-- モード切替 -->
+    <div class="mode-tabs">
+      <button class="mode-tab friend active" data-mode="friend">👫 友人を探す</button>
+      <button class="mode-tab love" data-mode="love">💕 恋人を探す</button>
+    </div>
+
+    <!-- 候補一覧 -->
+    <div class="section-title" id="candidates-title">相性の良い候補</div>
+    <div id="candidates-list"></div>
+
+    <!-- ローディング -->
+    <div class="loading hidden" id="loading">
+      <div class="spinner"></div>
+      <span>候補を探しています...</span>
+    </div>
+  </div>
+</div>
+
+<!-- 課金確認モーダル -->
+<div class="modal-overlay" id="payment-modal">
+  <div class="modal">
+    <div class="modal-title">🔓 マッチングする</div>
+    <p class="text-sm text-muted">この相手とマッチングすると、個人チャットが解放されます。</p>
+
+    <div class="payment-detail">
+      <div class="payment-row">
+        <span>マッチング料</span>
+        <span>¥500</span>
+      </div>
+      <div class="payment-row">
+        <span>App Store 手数料</span>
+        <span>含む</span>
+      </div>
+      <div class="payment-row payment-total">
+        <span>合計</span>
+        <span>¥500（税込）</span>
+      </div>
+    </div>
+    <div class="payment-note">
+      ※ テストモードのため実際の決済は発生しません<br>
+      ※ 本番ではApp Store / Google Play のアプリ内課金で処理されます
+    </div>
+
+    <div id="payment-target" style="display:none"></div>
+
+    <div class="modal-actions">
+      <button class="btn btn-secondary btn-sm" id="payment-cancel">キャンセル</button>
+      <button class="btn btn-primary btn-sm" id="payment-confirm" style="background:linear-gradient(135deg,var(--accent),var(--pink))">
+        💳 購入する（¥500）
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- マッチ成立モーダル -->
+<div class="modal-overlay" id="match-success-modal">
+  <div class="modal">
+    <div class="match-success">
+      <div class="match-success-emoji">🎉</div>
+      <div class="match-success-title">マッチ成立！</div>
+      <div class="match-success-pair" id="match-pair"></div>
+      <div class="match-success-desc">
+        おめでとうございます！<br>個人チャットが解放されました。<br>メッセージを送ってみましょう。
+      </div>
+      <button class="btn btn-primary" id="go-to-chat" style="background:linear-gradient(135deg,var(--accent),var(--pink))">
+        💬 チャットを始める
+      </button>
+      <button class="btn btn-secondary btn-sm mt-16" id="back-to-list">候補一覧に戻る</button>
+    </div>
+  </div>
+</div>
+
+<!-- ナビゲーションバー -->
+<nav class="nav-bar">
+  <a href="board.html" class="nav-item">
+    <span class="nav-icon">💬</span>
+    <span>掲示板</span>
+  </a>
+  <a href="matching.html" class="nav-item active">
+    <span class="nav-icon">💕</span>
+    <span>マッチング</span>
+  </a>
+  <a href="profile.html" class="nav-item">
+    <span class="nav-icon" id="nav-my-avatar">👤</span>
+    <span id="nav-my-name">マイページ</span>
+  </a>
+</nav>
+
+<script src="js/matching.js"></script>
+<script>
+(function() {
+  let currentMode = 'friend';
+  let myScores = null;
+  let candidates = [];
+  let selectedUserId = null;
+  const unlockedUsers = new Set(); // テスト用: マッチ成立したユーザー
+
+  // --- 初期化 ---
+  function init() {
+    // localStorageから診断結果を取得（テスト用簡易取得）
+    myScores = loadMyScores();
+    if (!myScores) {
+      // 診断未完了の場合、デモ用のスコアを使用
+      myScores = {P1:45,P2:55,P3:60,P4:40,P5:50,P6:65,P7:55,P8:48,P9:42,P10:58,P11:52,P12:45,P13:55,P14:48,P15:50};
+    }
+    loadCandidates();
+  }
+
+  // 診断結果をlocalStorageから探す（簡易版）
+  function loadMyScores() {
+    try {
+      const save = localStorage.getItem('doppelganger_save');
+      if (save) {
+        const data = JSON.parse(save);
+        if (data.scores) return data.scores;
+      }
+    } catch(e) {}
+    return null;
+  }
+
+  // --- 候補一覧読み込み ---
+  function loadCandidates() {
+    const list = document.getElementById('candidates-list');
+    list.innerHTML = '<div class="loading"><div class="spinner"></div><span>候補を探しています...</span></div>';
+
+    // 少し遅延を入れてUX演出
+    setTimeout(() => {
+      candidates = Matching.getCandidates(myScores, currentMode);
+      const title = document.getElementById('candidates-title');
+      title.textContent = currentMode === 'love' ? '💕 恋人候補' : '👫 友人候補';
+
+      list.innerHTML = candidates.map(c =>
+        Matching.renderCandidateCard(c, myScores, currentMode, !unlockedUsers.has(c.id))
+      ).join('');
+
+      // マッチングボタンのイベント
+      list.querySelectorAll('.match-unlock-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          selectedUserId = btn.dataset.userId;
+          showPaymentModal(selectedUserId);
+        });
+      });
+    }, 800);
+  }
+
+  // --- モード切替 ---
+  document.querySelectorAll('.mode-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      currentMode = tab.dataset.mode;
+      loadCandidates();
+    });
+  });
+
+  // --- 課金確認モーダル ---
+  function showPaymentModal(userId) {
+    const user = candidates.find(c => c.id === userId);
+    if (!user) return;
+
+    document.getElementById('payment-target').innerHTML = `
+      <div style="text-align:center;margin-top:12px">
+        <span class="badge badge-${user.family.toLowerCase()}">${user.type_name} (${user.display_id})</span>
+      </div>
+    `;
+    document.getElementById('payment-target').style.display = 'block';
+    document.getElementById('payment-modal').classList.add('show');
+  }
+
+  document.getElementById('payment-cancel').addEventListener('click', () => {
+    document.getElementById('payment-modal').classList.remove('show');
+  });
+  document.getElementById('payment-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'payment-modal') {
+      document.getElementById('payment-modal').classList.remove('show');
+    }
+  });
+
+  // --- 課金実行（テスト） ---
+  document.getElementById('payment-confirm').addEventListener('click', () => {
+    const btn = document.getElementById('payment-confirm');
+    btn.disabled = true;
+    btn.textContent = '処理中...';
+
+    // 課金処理のシミュレーション（1.5秒）
+    setTimeout(() => {
+      document.getElementById('payment-modal').classList.remove('show');
+      btn.disabled = false;
+      btn.textContent = '💳 購入する（¥500）';
+
+      // マッチ成立
+      unlockedUsers.add(selectedUserId);
+      showMatchSuccess(selectedUserId);
+    }, 1500);
+  });
+
+  // --- マッチ成立モーダル ---
+  function showMatchSuccess(userId) {
+    const user = candidates.find(c => c.id === userId);
+    if (!user) return;
+
+    const myEmoji = '👤';
+    const otherEmoji = getTypeEmoji(user.type_number);
+
+    document.getElementById('match-pair').innerHTML = `
+      <div class="match-success-user">
+        <div class="match-success-avatar" style="background:var(--surface2);border:1px solid var(--surface3)">${myEmoji}</div>
+        <div class="match-success-name">あなた</div>
+      </div>
+      <div class="match-success-heart">💕</div>
+      <div class="match-success-user">
+        <div class="match-success-avatar" style="background:rgba(${familyColor(user.family)},.12);border:1px solid rgba(${familyColor(user.family)},.3)">${otherEmoji}</div>
+        <div class="match-success-name">${escapeHtml(user.type_name)}</div>
+      </div>
+    `;
+
+    document.getElementById('match-success-modal').classList.add('show');
+  }
+
+  document.getElementById('go-to-chat').addEventListener('click', () => {
+    document.getElementById('match-success-modal').classList.remove('show');
+    alert('💬 チャット機能は今後のアップデートで実装予定です！\n\nマッチ成立後、ここから個人チャットが始まります。');
+  });
+
+  document.getElementById('back-to-list').addEventListener('click', () => {
+    document.getElementById('match-success-modal').classList.remove('show');
+    loadCandidates(); // リスト更新（ロック解除済みの表示に変わる）
+  });
+
+  document.getElementById('match-success-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'match-success-modal') {
+      document.getElementById('match-success-modal').classList.remove('show');
+      loadCandidates();
+    }
+  });
+
+  // --- 起動 ---
+  init();
+})();
+</script>
+</body>
+</html>

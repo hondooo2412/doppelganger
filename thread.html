@@ -132,13 +132,13 @@
     <span class="nav-icon">💬</span>
     <span>掲示板</span>
   </a>
-  <a href="doppelganger-diagnosis.index.html" class="nav-item">
-    <span class="nav-icon">🔮</span>
-    <span>診断</span>
+  <a href="matching.html" class="nav-item">
+    <span class="nav-icon">💕</span>
+    <span>マッチング</span>
   </a>
   <a href="profile.html" class="nav-item">
-    <span class="nav-icon">👤</span>
-    <span>マイページ</span>
+    <span class="nav-icon" id="nav-my-avatar">👤</span>
+    <span id="nav-my-name">マイページ</span>
   </a>
 </nav>
 
@@ -164,6 +164,8 @@
 
       const profile = await requireDiagnosis();
       if (!profile) return;
+
+      initNavUser();
 
       const params = new URLSearchParams(window.location.search);
       const threadId = params.get('id');

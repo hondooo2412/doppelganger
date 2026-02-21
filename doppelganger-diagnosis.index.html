@@ -1666,13 +1666,9 @@ setTimeout(()=>drawRadar('radarChart',scores),100);
 // 診断結果をSupabaseに保存し、完了したらボタンを有効化
 window._diagnosisSavePromise=(async()=>{
   try{
-    if(typeof supabase==='undefined'){alert('【デバッグ】supabase未定義');return;}
-    const{data:{session}}=await supabase.auth.getSession();
+    if(typeof supabase==='undefined')return;
     const{data:{user}}=await supabase.auth.getUser();
-    if(!user){
-      alert('【デバッグ】\nuser: null\nセッション: '+(session?'あり ('+session.user?.email+')':'なし'));
-      return;
-    }
+    if(!user)return;
 
     const now=new Date().toISOString();
 
@@ -1709,7 +1705,6 @@ window._diagnosisSavePromise=(async()=>{
     clearSave();
   }catch(e){
     console.error('診断結果保存エラー',e);
-    alert('【デバッグ】保存エラー:\n' + (e.message||JSON.stringify(e)));
   }finally{
     // 保存完了（成功・失敗どちらでも）ボタンを有効化
     const btn=document.getElementById('go-board-btn');
