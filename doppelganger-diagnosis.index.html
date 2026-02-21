@@ -1703,8 +1703,10 @@ window._diagnosisSavePromise=(async()=>{
       diagnosis_history:history,
     }).eq('id',user.id);
     clearSave();
-  }catch(e){console.error('診断結果保存エラー',e);}
-  finally{
+  }catch(e){
+    console.error('診断結果保存エラー',e);
+    alert('【デバッグ】保存エラー:\n' + (e.message||JSON.stringify(e)));
+  }finally{
     // 保存完了（成功・失敗どちらでも）ボタンを有効化
     const btn=document.getElementById('go-board-btn');
     if(btn){btn.textContent='✨ コミュニティ掲示板へ進む →';btn.style.opacity='1';}
