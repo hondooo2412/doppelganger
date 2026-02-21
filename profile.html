@@ -818,17 +818,19 @@
     const initial = entries.slice(0, 6);
     const rest = entries.slice(6);
 
-    const renderScoreItem = ([key, val]) => `
+    const renderScoreItem = ([key, val]) => {
+      const v = Math.ceil(val);
+      return `
       <div class="score-item">
         <div class="score-item-header">
           <span class="score-name">${P_NAMES[key] || key}</span>
-          <span class="score-value">${val}</span>
+          <span class="score-value">${v}</span>
         </div>
         <div class="score-bar-wrap">
-          <div class="score-bar" style="width:${Math.min(100, Math.max(0, val))}%"></div>
+          <div class="score-bar" style="width:${Math.min(100, Math.max(0, v))}%"></div>
         </div>
       </div>
-    `;
+    `};
 
     container.innerHTML = initial.map(renderScoreItem).join('');
 
